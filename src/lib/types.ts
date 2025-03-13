@@ -1,4 +1,5 @@
 
+// Frontend types
 export type JobStatus = 'idle' | 'running' | 'success' | 'failed' | 'paused';
 
 export interface Project {
@@ -56,4 +57,12 @@ export interface Role {
   permissions: Permission[];
   createdAt: string;
   updatedAt: string;
+}
+
+// API interfaces for backend communication
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }

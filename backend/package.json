@@ -1,0 +1,21 @@
+
+{
+  "name": "corntab-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^0.8.0",
+    "elysia": "^0.8.17",
+    "mssql": "^10.0.2",
+    "reflect-metadata": "^0.2.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "typescript": "^5.3.3"
+  },
+  "module": "src/index.ts"
+}
