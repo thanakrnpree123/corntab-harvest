@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, Search, Menu, X } from "lucide-react";
+import { Bell, Search, Menu, X, Users } from "lucide-react";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -32,6 +32,12 @@ export function Navbar() {
             <a href="/" className="text-sm font-medium text-foreground">Dashboard</a>
             <a href="/jobs" className="text-sm font-medium text-muted-foreground hover:text-foreground">Jobs</a>
             <a href="/logs" className="text-sm font-medium text-muted-foreground hover:text-foreground">Logs</a>
+            <a href="/users" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>Users</span>
+              </div>
+            </a>
             <a href="/settings" className="text-sm font-medium text-muted-foreground hover:text-foreground">Settings</a>
           </nav>
         </div>
@@ -64,6 +70,10 @@ export function Navbar() {
             </a>
             <a href="/logs" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
               Logs
+            </a>
+            <a href="/users" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
+              <Users className="h-4 w-4 mr-1" />
+              Users
             </a>
             <a href="/settings" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
               Settings

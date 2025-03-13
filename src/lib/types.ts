@@ -37,3 +37,23 @@ export interface JobLog {
   output: string;
   error: string | null;
 }
+
+export type Permission = 'view' | 'create' | 'update';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  createdAt: string;
+  updatedAt: string;
+  avatar?: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: Permission[];
+  createdAt: string;
+  updatedAt: string;
+}
