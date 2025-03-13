@@ -1,75 +1,29 @@
 
 import { Elysia } from 'elysia';
-import { AppDataSource } from '../data-source';
-import { Role } from '../entity/Role';
-
-const roleRepository = AppDataSource.getRepository(Role);
+import { RoleController } from '../controllers/role.controller';
 
 export const roleRoutes = new Elysia({ prefix: '/roles' })
-  // Get all roles
+  // ดึงข้อมูลบทบาททั้งหมด
   .get('/', async () => {
-    try {
-      const roles = await roleRepository.find();
-      return { success: true, data: roles };
-    } catch (error) {
-      return { success: false, error: `Failed to fetch roles: ${error.message}` };
-    }
+    return await RoleController.getAllRoles();
   })
 
-  // Get role by ID
+  // ดึงข้อมูลบทบาทตาม ID
   .get('/:id', async ({ params: { id } }) => {
-    try {
-      const role = await roleRepository.findOneBy({ id });
-      
-      if (!role) {
-        return { success: false, error: 'Role not found' };
-      }
-      
-      return { success: true, data: role };
-    } catch (error) {
-      return { success: false, error: `Failed to fetch role: ${error.message}` };
-    }
+    return await RoleController.getRoleById(id);
   })
 
-  // Create new role
+  // สร้างบทบาทใหม่
   .post('/', async ({ body }) => {
-    try {
-      const newRole = roleRepository.create(body as Partial<Role>);
-      const result = await roleRepository.save(newRole);
-      return { success: true, data: result, message: 'Role created successfully' };
-    } catch (error) {
-      return { success: false, error: `Failed to create role: ${error.message}` };
-    }
+    return await RoleController.createRole(body);
   })
 
-  // Update role
+  // อัพเดทบทบาท
   .put('/:id', async ({ params: { id }, body }) => {
-    try {
-      const role = await roleRepository.findOneBy({ id });
-      
-      if (!role) {
-        return { success: false, error: 'Role not found' };
-      }
-      
-      roleRepository.merge(role, body as Partial<Role>);
-      const result = await roleRepository.save(role);
-      return { success: true, data: result, message: 'Role updated successfully' };
-    } catch (error) {
-      return { success: false, error: `Failed to update role: ${error.message}` };
-    }
+    return await RoleController.updateRole(id, body);
   })
 
-  // Delete role
+  // ลบบทบาท
   .delete('/:id', async ({ params: { id } }) => {
-    try {
-      const result = await roleRepository.delete(id);
-      
-      if (result.affected === 0) {
-        return { success: false, error: 'Role not found' };
-      }
-      
-      return { success: true, message: 'Role deleted successfully' };
-    } catch (error) {
-      return { success: false, error: `Failed to delete role: ${error.message}` };
-    }
+    return await RoleController.deleteRole(id);
   });

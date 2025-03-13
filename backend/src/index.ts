@@ -6,18 +6,24 @@ import { projectRoutes } from './routes/project.routes';
 import { jobRoutes } from './routes/job.routes';
 import { userRoutes } from './routes/user.routes';
 import { roleRoutes } from './routes/role.routes';
+import { authRoutes } from './routes/auth.routes';
+import { schedulerService } from './services/scheduler.service';
 
-// Initialize database connection
+// เริ่มต้นการเชื่อมต่อฐานข้อมูล
 AppDataSource.initialize()
   .then(() => {
     console.log("Data Source has been initialized!");
+    // เริ่มต้น scheduler service หลังจากเชื่อมต่อฐานข้อมูลสำเร็จ
+    schedulerService.initialize()
+      .then(() => console.log("Scheduler service initialized"))
+      .catch(err => console.error("Failed to initialize scheduler:", err));
   })
   .catch((error) => {
     console.error("Error during Data Source initialization:", error);
     process.exit(1);
   });
 
-// Create and configure Elysia app
+// สร้างและกำหนดค่า Elysia app
 const app = new Elysia()
   .use(cors())
   .get('/', () => ({ 
@@ -26,6 +32,7 @@ const app = new Elysia()
   }))
   .group('/api', (app) => 
     app
+      .use(authRoutes)
       .use(projectRoutes)
       .use(jobRoutes)
       .use(userRoutes)
