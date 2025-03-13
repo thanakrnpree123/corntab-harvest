@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import { JobsTable } from "@/components/JobsTable";
 import { CreateJobModal } from "@/components/CreateJobModal";
 import { JobDetails } from "@/components/JobDetails";
-import { CronJob } from "@/lib/types";
+import { ProjectSelector } from "@/components/ProjectSelector";
+import { CronJob, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -15,6 +16,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Play, Pause, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+
+// Mock data for projects
+const mockProjects: Project[] = [
+  {
+    id: "1",
+    name: "Website Maintenance",
+    description: "Jobs for website maintenance and monitoring",
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-01-01T00:00:00Z",
+  },
+  {
+    id: "2",
+    name: "Database Management",
+    description: "Jobs for database backups and maintenance",
+    createdAt: "2023-01-15T00:00:00Z",
+    updatedAt: "2023-01-15T00:00:00Z",
+  }
+];
 
 // Mock data for initial display
 const mockJobs: CronJob[] = [
@@ -32,7 +51,8 @@ const mockJobs: CronJob[] = [
     tags: ["database", "backup"],
     successCount: 86,
     failCount: 2,
-    averageRuntime: 45
+    averageRuntime: 45,
+    projectId: "2"
   },
   {
     id: "2",
@@ -48,7 +68,8 @@ const mockJobs: CronJob[] = [
     tags: ["logs", "maintenance"],
     successCount: 12,
     failCount: 0,
-    averageRuntime: 15
+    averageRuntime: 15,
+    projectId: "1"
   },
   {
     id: "3",
@@ -64,7 +85,8 @@ const mockJobs: CronJob[] = [
     tags: ["processing", "python"],
     successCount: 48,
     failCount: 3,
-    averageRuntime: 120
+    averageRuntime: 120,
+    projectId: "2"
   },
   {
     id: "4",
@@ -80,7 +102,8 @@ const mockJobs: CronJob[] = [
     tags: ["system", "maintenance"],
     successCount: 8,
     failCount: 1,
-    averageRuntime: 300
+    averageRuntime: 300,
+    projectId: "1"
   },
   {
     id: "5",
@@ -96,15 +119,43 @@ const mockJobs: CronJob[] = [
     tags: ["monitoring", "website"],
     successCount: 287,
     failCount: 3,
-    averageRuntime: 2
+    averageRuntime: 2,
+    projectId: "1"
   }
 ];
 
 const Index = () => {
+  const [projects, setProjects] = useState<Project[]>(mockProjects);
   const [jobs, setJobs] = useState<CronJob[]>(mockJobs);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || "");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+
+  // Filter jobs by selected project
+  const filteredJobs = selectedProjectId 
+    ? jobs.filter(job => job.projectId === selectedProjectId)
+    : jobs;
+
+  useEffect(() => {
+    // Select the first project if none is selected and there are projects
+    if (!selectedProjectId && projects.length > 0) {
+      setSelectedProjectId(projects[0].id);
+    }
+  }, [projects, selectedProjectId]);
+
+  const handleCreateProject = (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => {
+    const newProject: Project = {
+      id: String(projects.length + 1),
+      name: projectData.name,
+      description: projectData.description,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setProjects([...projects, newProject]);
+    setSelectedProjectId(newProject.id);
+  };
 
   const handleCreateJob = (jobData: any) => {
     const newJob: CronJob = {
@@ -114,14 +165,15 @@ const Index = () => {
       schedule: jobData.schedule,
       status: "idle",
       lastRun: null,
-      nextRun: null, // In a real app, calculate based on schedule
+      nextRun: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       description: jobData.description,
       tags: [],
       successCount: 0,
       failCount: 0,
-      averageRuntime: 0
+      averageRuntime: 0,
+      projectId: jobData.projectId || selectedProjectId
     };
 
     setJobs([...jobs, newJob]);
@@ -132,8 +184,8 @@ const Index = () => {
     setIsDetailSheetOpen(true);
   };
 
-  const countJobsByStatus = (status: string) => {
-    return jobs.filter(job => job.status === status).length;
+  const countJobsByStatus = (status: string, jobList: CronJob[]) => {
+    return jobList.filter(job => job.status === status).length;
   };
 
   return (
@@ -144,9 +196,28 @@ const Index = () => {
         <div className="flex flex-col gap-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-              Add New Job
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                Add New Job
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <ProjectSelector
+              projects={projects}
+              selectedProjectId={selectedProjectId}
+              onSelectProject={setSelectedProjectId}
+              onCreateProject={handleCreateProject}
+            />
+            
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground">Last Refresh:</span>
+              <span>{new Date().toLocaleTimeString()}</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Clock className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -155,7 +226,7 @@ const Index = () => {
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total Jobs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{jobs.length}</div>
+                <div className="text-3xl font-bold">{filteredJobs.length}</div>
               </CardContent>
             </Card>
             <Card>
@@ -164,7 +235,7 @@ const Index = () => {
                 <CheckCircle2 className="h-4 w-4 text-success" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{countJobsByStatus("running") + countJobsByStatus("idle")}</div>
+                <div className="text-3xl font-bold">{countJobsByStatus("running", filteredJobs) + countJobsByStatus("idle", filteredJobs)}</div>
               </CardContent>
             </Card>
             <Card>
@@ -173,7 +244,7 @@ const Index = () => {
                 <Pause className="h-4 w-4 text-warning" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{countJobsByStatus("paused")}</div>
+                <div className="text-3xl font-bold">{countJobsByStatus("paused", filteredJobs)}</div>
               </CardContent>
             </Card>
             <Card>
@@ -182,7 +253,7 @@ const Index = () => {
                 <AlertTriangle className="h-4 w-4 text-error" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{countJobsByStatus("failed")}</div>
+                <div className="text-3xl font-bold">{countJobsByStatus("failed", filteredJobs)}</div>
               </CardContent>
             </Card>
           </div>
@@ -195,37 +266,29 @@ const Index = () => {
                 <TabsTrigger value="paused">Paused</TabsTrigger>
                 <TabsTrigger value="failed">Failed</TabsTrigger>
               </TabsList>
-              
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">Last Refresh:</span>
-                <span>{new Date().toLocaleTimeString()}</span>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <Clock className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
             
             <TabsContent value="all" className="mt-4">
-              <JobsTable jobs={jobs} onViewDetails={handleViewJobDetails} />
+              <JobsTable jobs={filteredJobs} onViewDetails={handleViewJobDetails} />
             </TabsContent>
             
             <TabsContent value="active" className="mt-4">
               <JobsTable 
-                jobs={jobs.filter(job => job.status === "running" || job.status === "idle")} 
+                jobs={filteredJobs.filter(job => job.status === "running" || job.status === "idle")} 
                 onViewDetails={handleViewJobDetails} 
               />
             </TabsContent>
             
             <TabsContent value="paused" className="mt-4">
               <JobsTable 
-                jobs={jobs.filter(job => job.status === "paused")} 
+                jobs={filteredJobs.filter(job => job.status === "paused")} 
                 onViewDetails={handleViewJobDetails} 
               />
             </TabsContent>
             
             <TabsContent value="failed" className="mt-4">
               <JobsTable 
-                jobs={jobs.filter(job => job.status === "failed")} 
+                jobs={filteredJobs.filter(job => job.status === "failed")} 
                 onViewDetails={handleViewJobDetails} 
               />
             </TabsContent>
@@ -235,7 +298,9 @@ const Index = () => {
         <CreateJobModal 
           isOpen={isCreateModalOpen} 
           onClose={() => setIsCreateModalOpen(false)} 
-          onCreateJob={handleCreateJob} 
+          onCreateJob={handleCreateJob}
+          projects={projects}
+          selectedProjectId={selectedProjectId}
         />
         
         <JobDetails 

@@ -20,19 +20,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Project } from "@/lib/types";
 
 interface CreateJobModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateJob: (jobData: any) => void;
+  projects: Project[];
+  selectedProjectId: string;
 }
 
-export function CreateJobModal({ isOpen, onClose, onCreateJob }: CreateJobModalProps) {
+export function CreateJobModal({ 
+  isOpen, 
+  onClose, 
+  onCreateJob, 
+  projects, 
+  selectedProjectId 
+}: CreateJobModalProps) {
   const [jobName, setJobName] = useState("");
   const [command, setCommand] = useState("");
   const [schedule, setSchedule] = useState("");
   const [description, setDescription] = useState("");
   const [scheduleType, setScheduleType] = useState("cron");
+  const [projectId, setProjectId] = useState(selectedProjectId);
 
   const handleCreateJob = () => {
     if (!jobName || !command || !schedule) {
@@ -45,6 +55,7 @@ export function CreateJobModal({ isOpen, onClose, onCreateJob }: CreateJobModalP
       command,
       schedule,
       description,
+      projectId,
     };
 
     onCreateJob(newJob);
@@ -59,6 +70,7 @@ export function CreateJobModal({ isOpen, onClose, onCreateJob }: CreateJobModalP
     setSchedule("");
     setDescription("");
     setScheduleType("cron");
+    setProjectId(selectedProjectId);
   };
 
   const handleCancel = () => {
@@ -82,6 +94,22 @@ export function CreateJobModal({ isOpen, onClose, onCreateJob }: CreateJobModalP
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="project">Project *</Label>
+            <Select value={projectId} onValueChange={setProjectId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="name">Job Name *</Label>
             <Input

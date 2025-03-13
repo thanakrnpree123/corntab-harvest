@@ -1,6 +1,14 @@
 
 export type JobStatus = 'idle' | 'running' | 'success' | 'failed' | 'paused';
 
+export interface Project {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CronJob {
   id: string;
   name: string;
@@ -16,6 +24,7 @@ export interface CronJob {
   failCount?: number;
   successCount?: number;
   averageRuntime?: number; // in seconds
+  projectId: string; // Added project reference
 }
 
 export interface JobLog {
