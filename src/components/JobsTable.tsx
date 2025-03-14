@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { CronJob } from "@/lib/types";
-import { MoreHorizontal, Play, Pause, AlertCircle } from "lucide-react";
+import { MoreHorizontal, Play, Pause, AlertCircle, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface JobsTableProps {
   jobs: CronJob[];
@@ -65,7 +66,23 @@ export function JobsTable({ jobs, onViewDetails, onToggleStatus }: JobsTableProp
               <TableRow key={job.id} onClick={() => onViewDetails(job)} className="cursor-pointer hover:bg-muted/30">
                 <TableCell className="font-medium">{job.name}</TableCell>
                 <TableCell>
-                  <code className="px-1 py-0.5 bg-muted rounded text-sm">{job.schedule}</code>
+                  <div className="flex items-center gap-2">
+                    <code className="px-1 py-0.5 bg-muted rounded text-sm">{job.schedule}</code>
+                    {job.useLocalTime && job.timezone && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Local time: {job.timezone}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={job.status} pulsing={job.status === "running"} />

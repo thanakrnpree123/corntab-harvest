@@ -3,6 +3,8 @@ import { AppDataSource } from "../data-source";
 import { CronJob } from "../entity/CronJob";
 import { JobLog } from "../entity/JobLog";
 import { JobController } from "../controllers/job.controller";
+import { format, parseISO, addSeconds } from "date-fns";
+import { toZonedTime, format as formatTz } from "date-fns-tz";
 
 class SchedulerService {
   private jobRepository = AppDataSource.getRepository(CronJob);
@@ -54,7 +56,19 @@ class SchedulerService {
     this.activeJobs.set(job.id, timeout);
     
     // อัพเดทเวลาที่จะทำงานต่อไป
-    const nextRun = new Date(Date.now() + interval);
+    let nextRun = new Date(Date.now() + interval);
+    
+    // ถ้าใช้ local time ให้ปรับตาม timezone ที่ระบุ
+    if (job.useLocalTime && job.timezone) {
+      try {
+        // แปลงเวลาให้เป็น timezone ที่กำหนด
+        nextRun = toZonedTime(nextRun, job.timezone);
+        console.log(`Next run for job "${job.name}" in ${job.timezone}: ${formatTz(nextRun, "yyyy-MM-dd HH:mm:ss", { timeZone: job.timezone })}`);
+      } catch (error) {
+        console.error(`Error converting time to timezone ${job.timezone}: ${error.message}`);
+      }
+    }
+    
     this.jobRepository.update(job.id, { nextRun });
   }
 

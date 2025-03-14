@@ -47,6 +47,12 @@ export class CronJob {
   @Column({ nullable: true, type: "float" })
   averageRuntime: number;
 
+  @Column({ default: "UTC" })
+  timezone: string;
+
+  @Column({ default: false })
+  useLocalTime: boolean;
+
   @Column()
   projectId: string;
 

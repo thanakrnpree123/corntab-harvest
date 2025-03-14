@@ -26,6 +26,8 @@ export interface CronJob {
   successCount?: number;
   averageRuntime?: number; // in seconds
   projectId: string; // Added project reference
+  timezone?: string; // Added timezone support
+  useLocalTime?: boolean; // Whether to use local time or UTC
 }
 
 export interface JobLog {

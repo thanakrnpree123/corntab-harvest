@@ -21,6 +21,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Project } from "@/lib/types";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// รายการ timezone ยอดนิยม
+const commonTimezones = [
+  { value: "UTC", label: "UTC" },
+  { value: "Asia/Bangkok", label: "Asia/Bangkok (UTC+7)" },
+  { value: "Asia/Tokyo", label: "Asia/Tokyo (UTC+9)" },
+  { value: "America/New_York", label: "America/New_York (UTC-5/-4)" },
+  { value: "America/Los_Angeles", label: "America/Los_Angeles (UTC-8/-7)" },
+  { value: "Europe/London", label: "Europe/London (UTC+0/+1)" },
+  { value: "Europe/Paris", label: "Europe/Paris (UTC+1/+2)" },
+  { value: "Australia/Sydney", label: "Australia/Sydney (UTC+10/+11)" },
+];
 
 interface CreateJobModalProps {
   isOpen: boolean;
@@ -43,6 +56,14 @@ export function CreateJobModal({
   const [description, setDescription] = useState("");
   const [scheduleType, setScheduleType] = useState("cron");
   const [projectId, setProjectId] = useState(selectedProjectId);
+  const [useLocalTime, setUseLocalTime] = useState(true);
+  const [timezone, setTimezone] = useState(() => {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Bangkok";
+    } catch {
+      return "Asia/Bangkok"; // Default to Bangkok timezone if browser API not available
+    }
+  });
 
   const handleCreateJob = () => {
     if (!jobName || !command || !schedule) {
@@ -56,6 +77,8 @@ export function CreateJobModal({
       schedule,
       description,
       projectId,
+      timezone: useLocalTime ? timezone : "UTC",
+      useLocalTime,
     };
 
     onCreateJob(newJob);
@@ -71,6 +94,8 @@ export function CreateJobModal({
     setDescription("");
     setScheduleType("cron");
     setProjectId(selectedProjectId);
+    setUseLocalTime(true);
+    // ไม่รีเซ็ต timezone เพื่อให้ผู้ใช้ไม่ต้องเลือกใหม่ทุกครั้ง
   };
 
   const handleCancel = () => {
@@ -157,6 +182,38 @@ export function CreateJobModal({
               placeholder={scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
             />
           </div>
+
+          <div className="flex items-center space-x-2 mt-1">
+            <Checkbox 
+              id="use-local-time" 
+              checked={useLocalTime} 
+              onCheckedChange={(checked) => setUseLocalTime(checked as boolean)}
+            />
+            <Label 
+              htmlFor="use-local-time" 
+              className="text-sm font-normal"
+            >
+              Use local time instead of UTC
+            </Label>
+          </div>
+
+          {useLocalTime && (
+            <div className="grid gap-2">
+              <Label htmlFor="timezone">Timezone</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger id="timezone">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {commonTimezones.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label htmlFor="description">Description</Label>
