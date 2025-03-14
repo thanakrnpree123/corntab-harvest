@@ -24,12 +24,20 @@ import {
 interface JobsTableProps {
   jobs: CronJob[];
   onViewDetails: (job: CronJob) => void;
+  onToggleStatus?: (jobId: string) => void;
 }
 
-export function JobsTable({ jobs, onViewDetails }: JobsTableProps) {
+export function JobsTable({ jobs, onViewDetails, onToggleStatus }: JobsTableProps) {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "—";
     return new Date(dateString).toLocaleString();
+  };
+
+  const handleStatusToggle = (jobId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleStatus) {
+      onToggleStatus(jobId);
+    }
   };
 
   return (
@@ -79,11 +87,11 @@ export function JobsTable({ jobs, onViewDetails }: JobsTableProps) {
                           <Play className="h-4 w-4 mr-2" /> Run Now
                         </DropdownMenuItem>
                         {job.status !== "paused" ? (
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleStatusToggle(job.id, e)}>
                             <Pause className="h-4 w-4 mr-2" /> Pause
                           </DropdownMenuItem>
                         ) : (
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleStatusToggle(job.id, e)}>
                             <Play className="h-4 w-4 mr-2" /> Resume
                           </DropdownMenuItem>
                         )}
