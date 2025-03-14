@@ -1,8 +1,18 @@
+
 # Welcome to your Lovable project
 
 ## Project info
 
 **URL**: https://lovable.dev/projects/1ce2dfb6-96da-47b7-ab8d-799eb7893f6b
+
+## CornTab - Cron Job Management System
+
+CornTab is a professional cron job management system that allows teams to schedule, monitor, and manage automated tasks efficiently. Key features include:
+
+- Job scheduling with cron expressions
+- Project organization for team collaboration
+- Real-time monitoring and alerts
+- Comprehensive job history and logs
 
 ## How can I edit this code?
 
@@ -52,13 +62,20 @@ npm run dev
 
 ## What technologies are used for this project?
 
-This project is built with .
+This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Frontend:
+  - Vite
+  - TypeScript
+  - React
+  - shadcn-ui
+  - Tailwind CSS
+  
+- Backend:
+  - MSSQL (Microsoft SQL Server)
+  - TypeORM
+  - Bun Runtime
+  - Elysia Framework
 
 ## How can I deploy this project?
 
