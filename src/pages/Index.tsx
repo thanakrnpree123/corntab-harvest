@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Play, Pause, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for projects
 const mockProjects: Project[] = [
@@ -131,6 +132,7 @@ const Index = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const { toast } = useToast();
 
   // Filter jobs by selected project
   const filteredJobs = selectedProjectId 
@@ -155,6 +157,7 @@ const Index = () => {
 
     setProjects([...projects, newProject]);
     setSelectedProjectId(newProject.id);
+    toast.success(`Project "${projectData.name}" was created successfully`);
   };
 
   const handleCreateJob = (jobData: any) => {
@@ -177,6 +180,7 @@ const Index = () => {
     };
 
     setJobs([...jobs, newJob]);
+    toast.success(`Job "${jobData.name}" was created successfully`);
   };
 
   const handleViewJobDetails = (job: CronJob) => {
@@ -186,6 +190,34 @@ const Index = () => {
 
   const countJobsByStatus = (status: string, jobList: CronJob[]) => {
     return jobList.filter(job => job.status === status).length;
+  };
+
+  const toggleJobStatus = (jobId: string) => {
+    setJobs(currentJobs => 
+      currentJobs.map(job => {
+        if (job.id === jobId) {
+          const newStatus = job.status === "paused" ? "idle" : "paused";
+          
+          // Show notification based on status change
+          if (newStatus === "paused") {
+            toast({
+              title: "Job Paused",
+              description: `${job.name} has been paused`,
+              variant: "default",
+            });
+          } else {
+            toast({
+              title: "Job Activated",
+              description: `${job.name} is now active`,
+              variant: "default",
+            });
+          }
+          
+          return { ...job, status: newStatus };
+        }
+        return job;
+      })
+    );
   };
 
   return (
@@ -214,7 +246,12 @@ const Index = () => {
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Last Refresh:</span>
               <span>{new Date().toLocaleTimeString()}</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => toast.info("Dashboard refreshed")}
+              >
                 <Clock className="h-4 w-4" />
               </Button>
             </div>
@@ -266,16 +303,36 @@ const Index = () => {
                 <TabsTrigger value="paused">Paused</TabsTrigger>
                 <TabsTrigger value="failed">Failed</TabsTrigger>
               </TabsList>
+              
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  const failedCount = countJobsByStatus("failed", filteredJobs);
+                  if (failedCount > 0) {
+                    toast.error(`You have ${failedCount} failed jobs that need attention`);
+                  } else {
+                    toast.success("All jobs are operating normally");
+                  }
+                }}
+              >
+                Check Status
+              </Button>
             </div>
             
             <TabsContent value="all" className="mt-4">
-              <JobsTable jobs={filteredJobs} onViewDetails={handleViewJobDetails} />
+              <JobsTable 
+                jobs={filteredJobs} 
+                onViewDetails={handleViewJobDetails} 
+                onToggleStatus={toggleJobStatus}
+              />
             </TabsContent>
             
             <TabsContent value="active" className="mt-4">
               <JobsTable 
                 jobs={filteredJobs.filter(job => job.status === "running" || job.status === "idle")} 
                 onViewDetails={handleViewJobDetails} 
+                onToggleStatus={toggleJobStatus}
               />
             </TabsContent>
             
@@ -283,6 +340,7 @@ const Index = () => {
               <JobsTable 
                 jobs={filteredJobs.filter(job => job.status === "paused")} 
                 onViewDetails={handleViewJobDetails} 
+                onToggleStatus={toggleJobStatus}
               />
             </TabsContent>
             
@@ -290,6 +348,7 @@ const Index = () => {
               <JobsTable 
                 jobs={filteredJobs.filter(job => job.status === "failed")} 
                 onViewDetails={handleViewJobDetails} 
+                onToggleStatus={toggleJobStatus}
               />
             </TabsContent>
           </Tabs>

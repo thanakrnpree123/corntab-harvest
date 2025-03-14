@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -5,8 +6,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 5
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -166,6 +167,51 @@ function toast({ ...props }: Toast) {
     dismiss,
     update,
   }
+}
+
+// Helper functions for common toast types
+toast.success = (props: string | Omit<Toast, "variant">) => {
+  if (typeof props === "string") {
+    return toast({
+      title: "Success",
+      description: props,
+      variant: "default",
+    })
+  }
+  return toast({ ...props, variant: "default" })
+}
+
+toast.error = (props: string | Omit<Toast, "variant">) => {
+  if (typeof props === "string") {
+    return toast({
+      title: "Error",
+      description: props,
+      variant: "destructive",
+    })
+  }
+  return toast({ ...props, variant: "destructive" })
+}
+
+toast.warning = (props: string | Omit<Toast, "variant">) => {
+  if (typeof props === "string") {
+    return toast({
+      title: "Warning",
+      description: props,
+      variant: "default",
+    })
+  }
+  return toast({ ...props })
+}
+
+toast.info = (props: string | Omit<Toast, "variant">) => {
+  if (typeof props === "string") {
+    return toast({
+      title: "Info",
+      description: props,
+      variant: "default",
+    })
+  }
+  return toast({ ...props })
 }
 
 function useToast() {
