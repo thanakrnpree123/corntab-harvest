@@ -29,7 +29,6 @@ function App() {
           <Route path="/" element={<Index />} />
           <Route path="/jobs" element={<JobsPage />} />
           <Route path="/logs" element={<LogsPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/users" element={<UserManagementPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
