@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { JobStatus } from "@/lib/types";
 
 interface StatusBadgeProps {
-  status: JobStatus;
+  status: JobStatus |string;
   className?: string;
   pulsing?: boolean;
 }

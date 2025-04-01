@@ -31,6 +31,10 @@ export interface CronJob {
   nextRun: string | null;
   createdAt: string;
   updatedAt: string;
+  tags: string;
+  successCount:number;
+  failCount:number;
+  averageRuntime:any;
 }
 
 export interface JobLog {
@@ -63,3 +67,6 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+
+export type JobStatus = "idle" | "running" | "success" | "failed" | "paused";
+
