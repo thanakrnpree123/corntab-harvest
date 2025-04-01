@@ -23,13 +23,15 @@ interface ProjectSelectorProps {
   selectedProjectId: string;
   onSelectProject: (projectId: string) => void;
   onCreateProject: (project: Omit<Project, "id" | "createdAt" | "updatedAt">) => void;
+  compact?: boolean; // Add the compact prop as an optional boolean
 }
 
 export function ProjectSelector({ 
   projects, 
   selectedProjectId, 
   onSelectProject,
-  onCreateProject
+  onCreateProject,
+  compact = false // Set default value to false
 }: ProjectSelectorProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
@@ -53,8 +55,8 @@ export function ProjectSelector({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 min-w-[240px]">
+    <div className={`flex items-center gap-2 ${compact ? 'w-full' : ''}`}>
+      <div className={`flex items-center gap-1.5 ${compact ? 'w-full' : 'min-w-[240px]'}`}>
         <FolderCog className="h-5 w-5 text-muted-foreground" />
         <Select value={selectedProjectId} onValueChange={onSelectProject}>
           <SelectTrigger className="w-full">
