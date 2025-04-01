@@ -53,11 +53,6 @@ export function Navbar() {
       path: "/users",
       icon: Users,
     },
-    {
-      label: "Settings",
-      path: "/settings",
-      icon: Settings,
-    },
   ];
 
   return (
