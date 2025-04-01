@@ -1,5 +1,5 @@
 
-import { ApiResponse, CronJob, JobLog, Project, User } from './types';
+import { ApiResponse, CronJob, JobLog, Project, User, Role, Permission } from './types';
 
 const API_URL = 'http://localhost:3000/api';
 
@@ -191,19 +191,31 @@ class ApiService {
     return this.fetchWithAuth<User>(`/users/${id}`);
   }
 
-  // สร้างผู้ใช้ใหม่
-  async createUser(userData: Partial<User>): Promise<ApiResponse<User>> {
-    return this.fetchWithAuth<User>('/users', 'POST', userData);
-  }
-
   // อัพเดทผู้ใช้
   async updateUser(id: string, userData: Partial<User>): Promise<ApiResponse<User>> {
     return this.fetchWithAuth<User>(`/users/${id}`, 'PUT', userData);
   }
 
-  // ลบผู้ใช้
-  async deleteUser(id: string): Promise<ApiResponse<void>> {
-    return this.fetchWithAuth<void>(`/users/${id}`, 'DELETE');
+  // ---------- Roles ----------
+  
+  // ดึงข้อมูล roles ทั้งหมด
+  async getRoles(): Promise<ApiResponse<Role[]>> {
+    return this.fetchWithAuth<Role[]>('/roles');
+  }
+  
+  // ดึงข้อมูล role ตาม ID
+  async getRole(id: string): Promise<ApiResponse<Role>> {
+    return this.fetchWithAuth<Role>(`/roles/${id}`);
+  }
+  
+  // สร้าง role ใหม่
+  async createRole(roleData: { name: string, permissions: Permission[] }): Promise<ApiResponse<Role>> {
+    return this.fetchWithAuth<Role>('/roles', 'POST', roleData);
+  }
+  
+  // อัพเดท role
+  async updateRole(id: string, roleData: Partial<Role>): Promise<ApiResponse<Role>> {
+    return this.fetchWithAuth<Role>(`/roles/${id}`, 'PUT', roleData);
   }
 }
 

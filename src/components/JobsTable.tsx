@@ -1,52 +1,38 @@
 
 import { useState } from "react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/StatusBadge";
 import { CronJob } from "@/lib/types";
-import { MoreHorizontal, Play, Pause, AlertCircle, Clock } from "lucide-react";
+import { StatusBadge } from "@/components/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { Eye, Pause, Play } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface JobsTableProps {
   jobs: CronJob[];
   onViewDetails: (job: CronJob) => void;
-  onToggleStatus?: (jobId: string) => void;
+  onToggleStatus: (jobId: string) => React.ReactNode;
+  onDeleteJob: (jobId: string) => React.ReactNode;
 }
 
-export function JobsTable({ jobs, onViewDetails, onToggleStatus }: JobsTableProps) {
+export function JobsTable({ jobs, onViewDetails, onToggleStatus, onDeleteJob }: JobsTableProps) {
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "—";
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString();
   };
 
-  const handleStatusToggle = (jobId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onToggleStatus) {
-      onToggleStatus(jobId);
-    }
-  };
-
   return (
-    <div className="rounded-md border bg-white">
+    <div className="w-full overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[250px]">Name</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Endpoint</TableHead>
             <TableHead>Schedule</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Last Run</TableHead>
@@ -57,68 +43,44 @@ export function JobsTable({ jobs, onViewDetails, onToggleStatus }: JobsTableProp
         <TableBody>
           {jobs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 No jobs found.
               </TableCell>
             </TableRow>
           ) : (
             jobs.map((job) => (
-              <TableRow key={job.id} onClick={() => onViewDetails(job)} className="cursor-pointer hover:bg-muted/30">
+              <TableRow key={job.id}>
                 <TableCell className="font-medium">{job.name}</TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
-                    <code className="px-1 py-0.5 bg-muted rounded text-sm">{job.schedule}</code>
-                    {job.useLocalTime && job.timezone && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="flex items-center">
-                              <Clock className="h-4 w-4 text-muted-foreground" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Local time: {job.timezone}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
+                  <div className="flex items-center">
+                    <span className="mr-2 px-2 py-1 text-xs font-medium bg-slate-100 rounded">
+                      {job.httpMethod}
+                    </span>
+                    <span className="text-sm truncate max-w-xs">{job.endpoint}</span>
                   </div>
                 </TableCell>
+                <TableCell className="font-mono text-xs">{job.schedule}</TableCell>
                 <TableCell>
-                  <StatusBadge status={job.status} pulsing={job.status === "running"} />
+                  <StatusBadge status={job.status} />
                 </TableCell>
-                <TableCell>{formatDate(job.lastRun)}</TableCell>
-                <TableCell>{formatDate(job.nextRun)}</TableCell>
+                <TableCell>
+                  {job.lastRun ? formatDate(job.lastRun) : "-"}
+                </TableCell>
+                <TableCell>
+                  {job.nextRun ? formatDate(job.nextRun) : "-"}
+                </TableCell>
                 <TableCell className="text-right">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <Play className="h-4 w-4 mr-2" /> Run Now
-                        </DropdownMenuItem>
-                        {job.status !== "paused" ? (
-                          <DropdownMenuItem onClick={(e) => handleStatusToggle(job.id, e)}>
-                            <Pause className="h-4 w-4 mr-2" /> Pause
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={(e) => handleStatusToggle(job.id, e)}>
-                            <Play className="h-4 w-4 mr-2" /> Resume
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">
-                          <AlertCircle className="h-4 w-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onViewDetails(job)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">View details</span>
+                    </Button>
+                    {onToggleStatus(job.id)}
+                    {onDeleteJob(job.id)}
                   </div>
                 </TableCell>
               </TableRow>

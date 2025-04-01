@@ -13,7 +13,9 @@ export interface Project {
 export interface CronJob {
   id: string;
   name: string;
-  command: string;
+  endpoint: string;
+  httpMethod: string;
+  requestBody?: string;
   schedule: string;
   status: JobStatus;
   lastRun: string | null;
@@ -41,7 +43,7 @@ export interface JobLog {
   error: string | null;
 }
 
-export type Permission = 'view' | 'create' | 'update';
+export type Permission = 'view' | 'create' | 'update' | 'delete';
 
 export interface User {
   id: string;

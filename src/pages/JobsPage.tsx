@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { PlusCircle } from "lucide-react";
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -23,15 +25,12 @@ export default function JobsPage() {
   const { toast } = useToast();
 
   // Fetch projects
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
       try {
         const response = await apiService.getProjects();
         if (response.success && response.data) {
-          if (response.data.length > 0 && !selectedProjectId) {
-            setSelectedProjectId(response.data[0].id);
-          }
           return response.data;
         }
         return [];
@@ -80,6 +79,7 @@ export default function JobsPage() {
         if (response.success && response.data) {
           setSelectedProjectId(response.data.id);
           toast.success(`Project "${projectData.name}" was created successfully`);
+          refetchProjects();
         } else {
           toast.error(`Failed to create project: ${response.error}`);
         }
@@ -146,6 +146,21 @@ export default function JobsPage() {
       });
   };
 
+  const handleDeleteJob = (jobId: string) => {
+    apiService.deleteJob(jobId)
+      .then(response => {
+        if (response.success) {
+          toast.success("Job deleted successfully");
+          refetchJobs();
+        } else {
+          toast.error(`Failed to delete job: ${response.error}`);
+        }
+      })
+      .catch(error => {
+        toast.error(`Error deleting job: ${error.message}`);
+      });
+  };
+
   return (
     <PageLayout title="Jobs">
       <div className="flex flex-col gap-6">
@@ -157,9 +172,12 @@ export default function JobsPage() {
             onCreateProject={handleCreateProject}
           />
           
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            Add New Job
-          </Button>
+          {selectedProjectId && (
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add New Job
+            </Button>
+          )}
         </div>
         
         <Card>
@@ -168,12 +186,97 @@ export default function JobsPage() {
               <div className="flex items-center justify-center p-8">
                 <span className="text-muted-foreground">Loading jobs...</span>
               </div>
+            ) : selectedProjectId ? (
+              jobs.length > 0 ? (
+                <JobsTable 
+                  jobs={jobs} 
+                  onViewDetails={handleViewJobDetails} 
+                  onToggleStatus={(jobId) => {
+                    const job = jobs.find(j => j.id === jobId);
+                    if (!job) return;
+                    
+                    // Determine the action based on current status
+                    const action = job.status === "paused" ? "activate" : "pause";
+                    const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant={action === "pause" ? "outline" : "default"} 
+                            size="sm"
+                          >
+                            {action === "pause" ? "Pause" : "Activate"}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {action === "pause" ? "Pause Job" : "Activate Job"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {action === "pause" 
+                                ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.` 
+                                : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={onConfirm}>
+                              {action === "pause" ? "Pause Job" : "Activate Job"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    );
+                    
+                    return (
+                      <ActionDialog 
+                        onConfirm={() => toggleJobStatus(jobId)} 
+                      />
+                    );
+                  }}
+                  onDeleteJob={(jobId) => {
+                    const job = jobs.find(j => j.id === jobId);
+                    if (!job) return;
+                    
+                    return (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">Delete</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{job.name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteJob(jobId)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Job
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    );
+                  }}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <p className="text-muted-foreground mb-4">No jobs found for this project</p>
+                  <Button onClick={() => setIsCreateModalOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add First Job
+                  </Button>
+                </div>
+              )
             ) : (
-              <JobsTable 
-                jobs={jobs} 
-                onViewDetails={handleViewJobDetails} 
-                onToggleStatus={toggleJobStatus}
-              />
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <p className="text-muted-foreground">Select a project to see its jobs</p>
+              </div>
             )}
           </CardContent>
         </Card>

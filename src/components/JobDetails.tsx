@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { CronJob } from "@/lib/types";
 import {
   Sheet,
   SheetContent,
@@ -7,12 +6,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { CronJob, JobLog } from "@/lib/types";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Pause, Clock, AlertTriangle, CheckCircle2, RotateCcw, Settings } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowUpRight, Calendar, Clock } from "lucide-react";
 
 interface JobDetailsProps {
   job: CronJob | null;
@@ -21,251 +26,170 @@ interface JobDetailsProps {
 }
 
 export function JobDetails({ job, isOpen, onClose }: JobDetailsProps) {
-  const [activeTab, setActiveTab] = useState("overview");
-
-  // Mock logs data
-  const mockLogs: JobLog[] = job ? [
-    {
-      id: "1",
-      jobId: job.id,
-      status: "success",
-      startTime: "2023-04-01T00:00:00Z",
-      endTime: "2023-04-01T00:00:05Z",
-      duration: 5,
-      output: "Job completed successfully.",
-      error: null,
-    },
-    {
-      id: "2",
-      jobId: job.id,
-      status: "failed",
-      startTime: "2023-03-31T00:00:00Z",
-      endTime: "2023-03-31T00:00:02Z",
-      duration: 2,
-      output: "",
-      error: "Error: Connection timeout",
-    }
-  ] : [];
+  if (!job) return null;
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "—";
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleString();
   };
 
-  if (!job) return null;
-
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-lg md:max-w-xl lg:max-w-2xl">
-        <SheetHeader className="pb-4">
-          <div className="flex justify-between items-center">
-            <SheetTitle className="text-xl">{job.name}</SheetTitle>
-            <StatusBadge status={job.status} pulsing={job.status === "running"} className="ml-2" />
-          </div>
-          <SheetDescription>
-            {job.description || "No description provided."}
-          </SheetDescription>
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            {job.name}
+            <StatusBadge status={job.status} />
+          </SheetTitle>
+          <SheetDescription>{job.description}</SheetDescription>
         </SheetHeader>
-        
-        <div className="flex gap-2 my-4">
-          {job.status !== "running" ? (
-            <Button size="sm" className="flex items-center gap-1">
-              <Play className="h-4 w-4" /> Run Now
-            </Button>
-          ) : (
-            <Button size="sm" variant="destructive" className="flex items-center gap-1">
-              <RotateCcw className="h-4 w-4" /> Stop
-            </Button>
-          )}
-          
-          {job.status !== "paused" ? (
-            <Button size="sm" variant="outline" className="flex items-center gap-1">
-              <Pause className="h-4 w-4" /> Pause
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" className="flex items-center gap-1">
-              <Play className="h-4 w-4" /> Resume
-            </Button>
-          )}
-          
-          <Button size="sm" variant="outline" className="flex items-center gap-1">
-            <Settings className="h-4 w-4" /> Edit
-          </Button>
-        </div>
 
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <TabsList className="mb-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="history">Run History</TabsTrigger>
-            <TabsTrigger value="configuration">Configuration</TabsTrigger>
+        <Tabs defaultValue="details" className="mt-6">
+          <TabsList className="grid grid-cols-3">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="logs">Logs</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 border rounded-md bg-muted/30">
-                <div className="flex items-center text-muted-foreground mb-2">
-                  <Clock className="h-4 w-4 mr-2" /> Schedule
-                </div>
-                <code className="text-sm">{job.schedule}</code>
-              </div>
-              
-              <div className="p-4 border rounded-md bg-muted/30">
-                <div className="flex items-center text-muted-foreground mb-2">
-                  <Clock className="h-4 w-4 mr-2" /> Timing
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Last Run:</div>
-                    <div>{formatDate(job.lastRun)}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Next Run:</div>
-                    <div>{formatDate(job.nextRun)}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md bg-muted/30">
-                <div className="flex items-center text-muted-foreground mb-2">
-                  <CheckCircle2 className="h-4 w-4 mr-2" /> Success Rate
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Success:</div>
-                    <div>{job.successCount || 0}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Failed:</div>
-                    <div>{job.failCount || 0}</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-md bg-muted/30">
-                <div className="flex items-center text-muted-foreground mb-2">
-                  <Clock className="h-4 w-4 mr-2" /> Average Runtime
-                </div>
-                <div className="text-sm">
-                  {job.averageRuntime ? `${job.averageRuntime}s` : "No data available"}
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-4 border rounded-md bg-muted/30">
-              <div className="flex items-center text-muted-foreground mb-2">
-                Command
-              </div>
-              <pre className="bg-muted p-3 rounded-md text-sm whitespace-pre-wrap overflow-x-auto">
-                {job.command}
-              </pre>
-            </div>
 
-            <div className="p-4 border rounded-md">
-              <h3 className="font-medium mb-2">Recent Executions</h3>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Duration</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockLogs.length > 0 ? mockLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        <StatusBadge status={log.status} />
-                      </TableCell>
-                      <TableCell>{formatDate(log.startTime)}</TableCell>
-                      <TableCell>{log.duration ? `${log.duration}s` : "—"}</TableCell>
-                    </TableRow>
-                  )) : (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center text-muted-foreground">
-                        No execution history available
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="history" className="space-y-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Output/Error</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockLogs.length > 0 ? mockLogs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell>
-                      <StatusBadge status={log.status} />
-                    </TableCell>
-                    <TableCell>{formatDate(log.startTime)}</TableCell>
-                    <TableCell>{log.duration ? `${log.duration}s` : "—"}</TableCell>
-                    <TableCell className="max-w-[300px] truncate">
-                      {log.error ? (
-                        <div className="flex items-center text-error">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          {log.error}
-                        </div>
-                      ) : log.output}
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
-                      No execution history available
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TabsContent>
-          
-          <TabsContent value="configuration" className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium mb-1">Command</h3>
-                <pre className="bg-muted p-3 rounded-md text-sm whitespace-pre-wrap overflow-x-auto">
-                  {job.command}
-                </pre>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-1">Schedule</h3>
-                <code className="bg-muted p-2 rounded-md text-sm">{job.schedule}</code>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-1">Created</h3>
-                <div>{formatDate(job.createdAt)}</div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium mb-1">Last Updated</h3>
-                <div>{formatDate(job.updatedAt)}</div>
-              </div>
-              
-              {job.tags && job.tags.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {job.tags.map((tag, index) => (
-                      <div key={index} className="bg-muted px-2 py-1 rounded-md text-xs">
-                        {tag}
+          <TabsContent value="details" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Endpoint Information</CardTitle>
+              </CardHeader>
+              <CardContent className="pb-1">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-1">HTTP Method</h3>
+                    <div className="inline-flex px-2 py-1 bg-primary/10 text-primary rounded text-sm font-medium">
+                      {job.httpMethod}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-1">Endpoint URL</h3>
+                    <div className="flex items-center gap-2">
+                      <p className="break-all">{job.endpoint}</p>
+                      <a 
+                        href={job.endpoint} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary"
+                      >
+                        <ArrowUpRight className="h-4 w-4" />
+                        <span className="sr-only">Open URL</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {job.requestBody && (
+                    <div>
+                      <h3 className="font-medium text-sm text-muted-foreground mb-1">Request Body</h3>
+                      <div className="bg-muted p-3 rounded overflow-auto max-h-[200px]">
+                        <pre className="text-xs font-mono whitespace-pre-wrap">
+                          {job.requestBody}
+                        </pre>
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {job.tags && job.tags.length > 0 && (
+                    <div>
+                      <h3 className="font-medium text-sm text-muted-foreground mb-1">Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {job.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-1 bg-secondary text-secondary-foreground rounded-full text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="border-t pt-4 flex justify-between text-xs text-muted-foreground">
+                <div>Created: {formatDate(job.createdAt)}</div>
+                <div>Updated: {formatDate(job.updatedAt)}</div>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="schedule" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Schedule Configuration</CardTitle>
+                <CardDescription>
+                  When and how this job is scheduled to run
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground mb-1">Schedule Expression</h3>
+                  <div className="bg-muted p-2 font-mono text-sm rounded">
+                    {job.schedule}
                   </div>
                 </div>
-              )}
-            </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-1">Timezone</h3>
+                    <p className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      {job.timezone || 'UTC'}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground mb-1">Next Run</h3>
+                    <p className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      {formatDate(job.nextRun)}
+                    </p>
+                  </div>
+                </div>
+
+                {(job.successCount !== undefined || job.failCount !== undefined) && (
+                  <div className="grid grid-cols-3 gap-4 pt-2">
+                    <div>
+                      <h3 className="font-medium text-sm text-muted-foreground mb-1">Success</h3>
+                      <p className="text-lg font-medium text-success">{job.successCount || 0}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm text-muted-foreground mb-1">Failed</h3>
+                      <p className="text-lg font-medium text-destructive">{job.failCount || 0}</p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm text-muted-foreground mb-1">Avg. Runtime</h3>
+                      <p className="text-lg font-medium">
+                        {job.averageRuntime || 0}s
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="logs" className="mt-4">
+            <Card className="overflow-hidden">
+              <CardHeader>
+                <CardTitle className="text-base">Execution History</CardTitle>
+                <CardDescription>
+                  Recent job execution logs
+                </CardDescription>
+              </CardHeader>
+              <ScrollArea className="h-[300px]">
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Placeholder for job logs */}
+                    <div className="flex items-center justify-center h-[200px]">
+                      <p className="text-muted-foreground">Log data loading...</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </ScrollArea>
+            </Card>
           </TabsContent>
         </Tabs>
       </SheetContent>

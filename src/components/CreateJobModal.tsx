@@ -23,7 +23,16 @@ import { toast } from "sonner";
 import { Project } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// รายการ timezone ยอดนิยม
+// Common HTTP methods
+const httpMethods = [
+  { value: "GET", label: "GET" },
+  { value: "POST", label: "POST" },
+  { value: "PATCH", label: "PATCH" },
+  { value: "PUT", label: "PUT" },
+  { value: "DELETE", label: "DELETE" },
+];
+
+// Common timezone list
 const commonTimezones = [
   { value: "UTC", label: "UTC" },
   { value: "Asia/Bangkok", label: "Asia/Bangkok (UTC+7)" },
@@ -51,7 +60,9 @@ export function CreateJobModal({
   selectedProjectId 
 }: CreateJobModalProps) {
   const [jobName, setJobName] = useState("");
-  const [command, setCommand] = useState("");
+  const [endpoint, setEndpoint] = useState("");
+  const [httpMethod, setHttpMethod] = useState("GET");
+  const [requestBody, setRequestBody] = useState("");
   const [schedule, setSchedule] = useState("");
   const [description, setDescription] = useState("");
   const [scheduleType, setScheduleType] = useState("cron");
@@ -66,14 +77,16 @@ export function CreateJobModal({
   });
 
   const handleCreateJob = () => {
-    if (!jobName || !command || !schedule) {
+    if (!jobName || !endpoint || !schedule) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     const newJob = {
       name: jobName,
-      command,
+      endpoint,
+      httpMethod,
+      requestBody: httpMethod !== "GET" ? requestBody : "",
       schedule,
       description,
       projectId,
@@ -89,7 +102,9 @@ export function CreateJobModal({
 
   const resetForm = () => {
     setJobName("");
-    setCommand("");
+    setEndpoint("");
+    setHttpMethod("GET");
+    setRequestBody("");
     setSchedule("");
     setDescription("");
     setScheduleType("cron");
@@ -141,20 +156,48 @@ export function CreateJobModal({
               id="name"
               value={jobName}
               onChange={(e) => setJobName(e.target.value)}
-              placeholder="Daily Database Backup"
+              placeholder="Daily API Health Check"
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="command">Command *</Label>
-            <Textarea
-              id="command"
-              value={command}
-              onChange={(e) => setCommand(e.target.value)}
-              placeholder="pg_dump -U postgres database > backup.sql"
-              className="min-h-[80px]"
+            <Label htmlFor="httpMethod">HTTP Method</Label>
+            <Select value={httpMethod} onValueChange={setHttpMethod}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select HTTP method" />
+              </SelectTrigger>
+              <SelectContent>
+                {httpMethods.map((method) => (
+                  <SelectItem key={method.value} value={method.value}>
+                    {method.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="endpoint">Endpoint URL *</Label>
+            <Input
+              id="endpoint"
+              value={endpoint}
+              onChange={(e) => setEndpoint(e.target.value)}
+              placeholder="https://api.example.com/health"
             />
           </div>
+
+          {httpMethod !== "GET" && (
+            <div className="grid gap-2">
+              <Label htmlFor="requestBody">Request Body (JSON)</Label>
+              <Textarea
+                id="requestBody"
+                value={requestBody}
+                onChange={(e) => setRequestBody(e.target.value)}
+                placeholder='{"key": "value"}'
+                className="min-h-[80px] font-mono text-sm"
+              />
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label>Schedule Type</Label>
@@ -221,7 +264,7 @@ export function CreateJobModal({
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Backup of the main database that runs every night at midnight"
+              placeholder="Regular health check of the API endpoints"
               className="min-h-[80px]"
             />
           </div>

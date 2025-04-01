@@ -53,7 +53,22 @@ export const JobController = {
   // สร้างงานใหม่
   createJob: async (jobData: Partial<CronJob>) => {
     try {
+      // Ensure the job has an endpoint
+      if (!jobData.endpoint) {
+        return { success: false, error: "Endpoint URL is required" };
+      }
+
       const newJob = jobRepository.create(jobData);
+      
+      // Set defaults
+      if (!newJob.status) {
+        newJob.status = "idle";
+      }
+      
+      if (!newJob.httpMethod) {
+        newJob.httpMethod = "GET";
+      }
+
       const result = await jobRepository.save(newJob);
       return { success: true, data: result, message: "Job created successfully" };
     } catch (error) {

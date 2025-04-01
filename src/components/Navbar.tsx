@@ -2,198 +2,194 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Bell, Search, Menu, X, Users, Layout, FileText, Settings } from "lucide-react";
 import {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { cn } from "@/lib/utils";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlarmClock,
+  Bell,
+  ClipboardList,
+  GanttChart,
+  HelpCircle,
+  LogOut,
+  Menu,
+  Settings,
+  Users,
+} from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   
   const isActive = (path: string) => {
     return location.pathname === path;
   };
 
+  const menuItems = [
+    {
+      label: "Dashboard",
+      path: "/",
+      icon: GanttChart,
+    },
+    {
+      label: "Jobs",
+      path: "/jobs",
+      icon: AlarmClock,
+    },
+    {
+      label: "Logs",
+      path: "/logs",
+      icon: ClipboardList,
+    },
+    {
+      label: "Permissions",
+      path: "/users",
+      icon: Users,
+    },
+    {
+      label: "Settings",
+      path: "/settings",
+      icon: Settings,
+    },
+  ];
+
   return (
-    <header className="border-b bg-white sticky top-0 z-10">
-      <div className="container flex h-14 items-center px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4 mr-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CT</span>
-            </div>
-            <span className="hidden md:block text-lg font-medium">CronTab</span>
+    <header className="sticky top-0 z-30 w-full border-b bg-background">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+            <AlarmClock className="h-6 w-6" />
+            <span>CornTab</span>
           </Link>
-        </div>
-        
-        <div className="hidden md:flex items-center space-x-1 flex-1">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link to="/">
-                  <NavigationMenuLink 
-                    className={cn(
-                      navigationMenuTriggerStyle(), 
-                      "px-3 py-1 h-9",
-                      isActive("/") && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <Layout className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Dashboard</span>
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/jobs">
-                  <NavigationMenuLink 
-                    className={cn(
-                      navigationMenuTriggerStyle(), 
-                      "px-3 py-1 h-9",
-                      isActive("/jobs") && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <span className="text-sm">Jobs</span>
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/logs">
-                  <NavigationMenuLink 
-                    className={cn(
-                      navigationMenuTriggerStyle(), 
-                      "px-3 py-1 h-9",
-                      isActive("/logs") && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Logs</span>
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/users">
-                  <NavigationMenuLink 
-                    className={cn(
-                      navigationMenuTriggerStyle(), 
-                      "px-3 py-1 h-9",
-                      isActive("/users") && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Users</span>
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/settings">
-                  <NavigationMenuLink 
-                    className={cn(
-                      navigationMenuTriggerStyle(), 
-                      "px-3 py-1 h-9",
-                      isActive("/settings") && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Settings</span>
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <form className="hidden md:block">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search..."
-                className="w-44 pl-8 bg-background h-9 text-sm"
-              />
-            </div>
-          </form>
-          <Button variant="ghost" size="icon" className="h-9 w-9">
-            <Bell className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-      
-      {isMenuOpen && (
-        <div className="md:hidden border-t p-4">
-          <nav className="grid gap-2">
-            <Link 
-              to="/" 
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
-                isActive("/") ? "bg-accent text-accent-foreground" : "text-foreground"
-              )}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Layout className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <Link 
-              to="/jobs" 
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
-                isActive("/jobs") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-              )}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Jobs
-            </Link>
-            <Link 
-              to="/logs" 
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
-                isActive("/logs") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-              )}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <FileText className="h-4 w-4 mr-1" />
-              Logs
-            </Link>
-            <Link 
-              to="/users" 
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
-                isActive("/users") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-              )}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Users className="h-4 w-4 mr-1" />
-              Users
-            </Link>
-            <Link 
-              to="/settings" 
-              className={cn(
-                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
-                isActive("/settings") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-              )}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Settings className="h-4 w-4 mr-1" />
-              Settings
-            </Link>
+
+          <nav className="hidden md:flex items-center gap-6">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-primary ${
+                  isActive(item.path)
+                    ? "text-primary font-semibold"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            ))}
           </nav>
         </div>
-      )}
+
+        <div className="flex items-center gap-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full">
+                <Bell className="h-4 w-4" />
+                <span className="sr-only">Notifications</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[300px]">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                No notifications
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                <Avatar>
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback>AD</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">Admin</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    admin@example.com
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/settings">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/users">
+                  <Users className="mr-2 h-4 w-4" />
+                  <span>Permissions</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Help & Support</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                aria-label="Toggle Menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[250px]">
+              <div className="flex flex-col gap-6 pt-6">
+                <Link
+                  to="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-2 font-bold text-xl mb-4"
+                >
+                  <AlarmClock className="h-6 w-6" />
+                  <span>CornTab</span>
+                </Link>
+                <nav className="flex flex-col gap-2">
+                  {menuItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent ${
+                        isActive(item.path)
+                          ? "bg-accent text-accent-foreground font-medium"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
     </header>
   );
 }
