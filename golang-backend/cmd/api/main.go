@@ -79,13 +79,13 @@ func main() {
 	// Swagger documentation
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	
-	// Setup routes
-	routes.SetupRoutes(e, db, cfg)
-	
 	// Initialize job scheduler
 	scheduler := scheduler.New(db, logger)
 	go scheduler.Start()
 	defer scheduler.Stop()
+	
+	// Setup routes
+	routes.SetupRoutes(e, db, cfg, scheduler)
 	
 	// Start server
 	go func() {

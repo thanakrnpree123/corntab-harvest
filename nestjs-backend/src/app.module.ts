@@ -26,15 +26,19 @@ import { HealthModule } from './health/health.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        type: configService.get('DB_TYPE', 'mysql') as any,
+        type: configService.get('DB_TYPE', 'mssql') as any,
         host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 3306),
-        username: configService.get('DB_USERNAME', 'root'),
-        password: configService.get('DB_PASSWORD', 'password'),
+        port: configService.get<number>('DB_PORT', 1433),
+        username: configService.get('DB_USERNAME', 'sa'),
+        password: configService.get('DB_PASSWORD', 'YourStrong@Passw0rd'),
         database: configService.get('DB_DATABASE', 'crontab'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
+        options: {
+          encrypt: true,
+          trustServerCertificate: true,
+        },
       }),
     }),
     
