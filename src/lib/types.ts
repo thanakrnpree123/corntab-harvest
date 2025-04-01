@@ -31,7 +31,7 @@ export interface CronJob {
   nextRun: string | null;
   createdAt: string;
   updatedAt: string;
-  tags: string;
+  tags: string[];
   successCount:number;
   failCount:number;
   averageRuntime:any;

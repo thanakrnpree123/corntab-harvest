@@ -115,7 +115,7 @@ export default function UserManagementPage() {
 
       // Update the user's role
       const updateResponse = await apiService.updateUser(selectedUser.id, {
-        role: role.id
+        roleId: role.id
       });
 
       if (updateResponse.success) {
