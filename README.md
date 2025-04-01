@@ -1,86 +1,103 @@
 
-# Welcome to your Lovable project
+# CronTab
 
-## Project info
+CronTab is a comprehensive job scheduling and monitoring solution designed for DevOps teams and system administrators. It provides an intuitive user interface for managing cron jobs, monitoring their execution, and viewing logs across different projects.
 
-**URL**: https://lovable.dev/projects/1ce2dfb6-96da-47b7-ab8d-799eb7893f6b
+## Features
 
-## CornTab - Cron Job Management System
+- **Job Management**: Create, update, and delete cron jobs with detailed configurations
+- **Project Organization**: Group jobs into projects for better organization
+- **Job Scheduling**: Schedule jobs using standard cron expressions with timezone support
+- **Job Monitoring**: Monitor job execution status, run time, and success/failure counts
+- **Detailed Logs**: View detailed logs for each job execution
+- **Azure Application Insights Integration**: View logs stored in Azure Application Insights
+- **User Management**: Role-based access control for team collaboration
+- **Multiple Backend Options**: Choose between different backend implementations (Node.js/NestJS or Go)
 
-CornTab is a professional cron job management system that allows teams to schedule, monitor, and manage automated tasks efficiently. Key features include:
+## User Stories
 
-- Job scheduling with cron expressions
-- Project organization for team collaboration
-- Real-time monitoring and alerts
-- Comprehensive job history and logs
+### As a System Administrator
 
-## How can I edit this code?
+1. **Job Management**
+   - I want to create cron jobs with specific schedules so that tasks run automatically at the defined times
+   - I want to group related jobs into projects to keep them organized
+   - I want to view all my scheduled jobs in one dashboard to get an overview of system automation
+   - I want to pause/resume jobs without deleting them to temporarily stop tasks when needed
+   - I want to run jobs manually outside of their schedule to test them or perform immediate tasks
 
-There are several ways of editing your application.
+2. **Monitoring**
+   - I want to see the status of all jobs (running, successful, failed, paused) to ensure everything is working correctly
+   - I want to receive notifications when jobs fail so I can address issues quickly
+   - I want to view job execution history to understand patterns and identify recurring issues
+   - I want to see execution metrics like average runtime and success rate to evaluate job performance
 
-**Use Lovable**
+3. **Logging**
+   - I want to view detailed logs for each job execution to troubleshoot issues
+   - I want to export logs for archiving or further analysis in other tools
+   - I want to integrate with Azure Application Insights to leverage existing logging infrastructure
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1ce2dfb6-96da-47b7-ab8d-799eb7893f6b) and start prompting.
+4. **Configuration**
+   - I want to set timezone preferences for job schedules to accommodate distributed teams
+   - I want to configure notification preferences to control how I'm alerted about job statuses
+   - I want to set automatic retry policies for failed jobs to improve resilience
 
-Changes made via Lovable will be committed automatically to this repo.
+### As a DevOps Engineer
 
-**Use your preferred IDE**
+1. **Team Collaboration**
+   - I want to create user accounts for team members so they can access the system based on their roles
+   - I want to assign different permissions to users depending on their responsibilities
+   - I want to see who created or modified jobs for accountability
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. **Integration**
+   - I want to integrate with external notification systems for alerts (future feature)
+   - I want the ability to trigger webhooks on job completion to create event-driven workflows (future feature)
+   - I want to integrate with cloud provider services for extended functionality (future feature)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. **Advanced Configuration**
+   - I want to set dependencies between jobs so they run in the correct order (future feature)
+   - I want to configure resource limits for jobs to prevent system overload (future feature)
+   - I want to schedule jobs with more complex patterns beyond standard cron syntax (future feature)
 
-Follow these steps:
+### As a Developer
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. **Job Creation**
+   - I want to test commands before scheduling them to ensure they work as expected
+   - I want to add detailed descriptions and tags to jobs for better documentation
+   - I want to clone existing jobs to create similar ones without starting from scratch
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. **Monitoring**
+   - I want to see the output of job executions to verify they're producing the expected results
+   - I want to filter jobs by tags, status, or project to focus on relevant information
+   - I want to search through job logs to find specific information
 
-# Step 3: Install the necessary dependencies.
-npm i
+## Architecture
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+The application consists of three main components:
 
-**Edit a file directly in GitHub**
+1. **Frontend**: React application with Tailwind CSS and Shadcn UI components
+2. **Backend**: Available in multiple implementations:
+   - Node.js with NestJS framework (nestjs-backend)
+   - Go with Echo framework (golang-backend)
+3. **Database**: MySQL or PostgreSQL (configurable)
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Installation
 
-**Use GitHub Codespaces**
+### Prerequisites
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Node.js (v16 or higher)
+- MySQL or PostgreSQL
+- For Golang backend: Go 1.18 or higher
 
-## What technologies are used for this project?
+### Setup
 
-This project is built with:
+1. Clone the repository
+2. Configure the backend of your choice (see respective README.md in backend folders)
+3. Start the backend server
+4. Configure the frontend to connect to your backend
+5. Start the frontend application
 
-- Frontend:
-  - Vite
-  - TypeScript
-  - React
-  - shadcn-ui
-  - Tailwind CSS
-  
-- Backend:
-  - MSSQL (Microsoft SQL Server)
-  - TypeORM
-  - Bun Runtime
-  - Elysia Framework
+Refer to the README files in each directory for detailed setup instructions.
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/1ce2dfb6-96da-47b7-ab8d-799eb7893f6b) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+This project is licensed under the MIT License - see the LICENSE file for details.

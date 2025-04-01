@@ -1,45 +1,120 @@
 
 import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Bell, Search, Menu, X, Users } from "lucide-react";
+import { Bell, Search, Menu, X, Users, Layout, FileText, Settings } from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
     <header className="border-b bg-white sticky top-0 z-10">
-      <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4">
+      <div className="container flex h-14 items-center px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-4 mr-4">
           <Button
             variant="ghost"
             size="icon"
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
-          <a href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-white font-bold">CT</span>
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-md bg-primary flex items-center justify-center">
+              <span className="text-white font-bold text-sm">CT</span>
             </div>
-            <span className="hidden md:block text-xl font-bold">CornTab</span>
-          </a>
+            <span className="hidden md:block text-lg font-medium">CronTab</span>
+          </Link>
         </div>
         
-        <div className="hidden md:flex items-center gap-6">
-          <nav className="flex items-center gap-4">
-            <a href="/" className="text-sm font-medium text-foreground">Dashboard</a>
-            <a href="/jobs" className="text-sm font-medium text-muted-foreground hover:text-foreground">Jobs</a>
-            <a href="/logs" className="text-sm font-medium text-muted-foreground hover:text-foreground">Logs</a>
-            <a href="/users" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-              <div className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
-                <span>Users</span>
-              </div>
-            </a>
-            <a href="/settings" className="text-sm font-medium text-muted-foreground hover:text-foreground">Settings</a>
-          </nav>
+        <div className="hidden md:flex items-center space-x-1 flex-1">
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <Link to="/">
+                  <NavigationMenuLink 
+                    className={cn(
+                      navigationMenuTriggerStyle(), 
+                      "px-3 py-1 h-9",
+                      isActive("/") && "bg-accent text-accent-foreground"
+                    )}
+                  >
+                    <Layout className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Dashboard</span>
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/jobs">
+                  <NavigationMenuLink 
+                    className={cn(
+                      navigationMenuTriggerStyle(), 
+                      "px-3 py-1 h-9",
+                      isActive("/jobs") && "bg-accent text-accent-foreground"
+                    )}
+                  >
+                    <span className="text-sm">Jobs</span>
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/logs">
+                  <NavigationMenuLink 
+                    className={cn(
+                      navigationMenuTriggerStyle(), 
+                      "px-3 py-1 h-9",
+                      isActive("/logs") && "bg-accent text-accent-foreground"
+                    )}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Logs</span>
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/users">
+                  <NavigationMenuLink 
+                    className={cn(
+                      navigationMenuTriggerStyle(), 
+                      "px-3 py-1 h-9",
+                      isActive("/users") && "bg-accent text-accent-foreground"
+                    )}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Users</span>
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/settings">
+                  <NavigationMenuLink 
+                    className={cn(
+                      navigationMenuTriggerStyle(), 
+                      "px-3 py-1 h-9",
+                      isActive("/settings") && "bg-accent text-accent-foreground"
+                    )}
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    <span className="text-sm">Settings</span>
+                  </NavigationMenuLink>
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
         
         <div className="flex items-center gap-4">
@@ -48,13 +123,13 @@ export function Navbar() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search jobs..."
-                className="w-48 lg:w-64 pl-8 bg-background"
+                placeholder="Search..."
+                className="w-44 pl-8 bg-background h-9 text-sm"
               />
             </div>
           </form>
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="h-9 w-9">
+            <Bell className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -62,22 +137,60 @@ export function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden border-t p-4">
           <nav className="grid gap-2">
-            <a href="/" className="flex items-center gap-2 p-2 text-foreground rounded-md hover:bg-accent">
+            <Link 
+              to="/" 
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
+                isActive("/") ? "bg-accent text-accent-foreground" : "text-foreground"
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Layout className="h-4 w-4" />
               Dashboard
-            </a>
-            <a href="/jobs" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
+            </Link>
+            <Link 
+              to="/jobs" 
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
+                isActive("/jobs") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
               Jobs
-            </a>
-            <a href="/logs" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
+            </Link>
+            <Link 
+              to="/logs" 
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
+                isActive("/logs") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <FileText className="h-4 w-4 mr-1" />
               Logs
-            </a>
-            <a href="/users" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
+            </Link>
+            <Link 
+              to="/users" 
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
+                isActive("/users") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
               <Users className="h-4 w-4 mr-1" />
               Users
-            </a>
-            <a href="/settings" className="flex items-center gap-2 p-2 text-muted-foreground rounded-md hover:bg-accent hover:text-foreground">
+            </Link>
+            <Link 
+              to="/settings" 
+              className={cn(
+                "flex items-center gap-2 p-2 rounded-md hover:bg-accent hover:text-accent-foreground",
+                isActive("/settings") ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              )}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Settings className="h-4 w-4 mr-1" />
               Settings
-            </a>
+            </Link>
           </nav>
         </div>
       )}
