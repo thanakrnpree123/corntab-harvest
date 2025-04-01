@@ -1,3 +1,4 @@
+
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -13,7 +14,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "@radix-ui/react-icons"
+import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -139,9 +140,9 @@ export default function LogsPage() {
       }
       
       // Date range filter
-      if (logsFilter.dateRange) {
-        const startDate = new Date(logsFilter.dateRange[0] as Date);
-        const endDate = new Date(logsFilter.dateRange[1] as Date);
+      if (logsFilter.dateRange && logsFilter.dateRange[0] && logsFilter.dateRange[1]) {
+        const startDate = new Date(logsFilter.dateRange[0]);
+        const endDate = new Date(logsFilter.dateRange[1]);
         const logDate = new Date(log.startTime);
         
         if (logDate < startDate || logDate > endDate) {
@@ -243,11 +244,11 @@ export default function LogsPage() {
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {logsFilter.dateRange ? (
+                {logsFilter.dateRange && logsFilter.dateRange[0] && logsFilter.dateRange[1] ? (
                   logsFilter.dateRange[0]?.toLocaleDateString() === logsFilter.dateRange[1]?.toLocaleDateString() ? (
-                    format(logsFilter.dateRange[0] as Date, "PPP")
+                    format(logsFilter.dateRange[0], "PPP")
                   ) : (
-                    `${format(logsFilter.dateRange[0] as Date, "PPP")} - ${format(logsFilter.dateRange[1] as Date, "PPP")}`
+                    `${format(logsFilter.dateRange[0], "PPP")} - ${format(logsFilter.dateRange[1], "PPP")}`
                   )
                 ) : (
                   <span>Pick a date range</span>
@@ -257,9 +258,15 @@ export default function LogsPage() {
             <PopoverContent className="w-auto p-0" align="center" side="bottom">
               <Calendar
                 mode="range"
-                defaultMonth={logsFilter.dateRange ? logsFilter.dateRange[0] : new Date()}
-                selected={logsFilter.dateRange}
-                onSelect={(date) => setLogsFilter(prev => ({ ...prev, dateRange: date as [Date, Date] }))}
+                defaultMonth={logsFilter.dateRange && logsFilter.dateRange[0] ? logsFilter.dateRange[0] : new Date()}
+                selected={{
+                  from: logsFilter.dateRange ? logsFilter.dateRange[0] : undefined,
+                  to: logsFilter.dateRange ? logsFilter.dateRange[1] : undefined
+                }}
+                onSelect={(date) => setLogsFilter(prev => ({ 
+                  ...prev, 
+                  dateRange: date ? [date.from, date.to] as [Date, Date] : null 
+                }))}
                 numberOfMonths={2}
                 pagedNavigation
               />
