@@ -1,6 +1,11 @@
+export type Permission = "view" | "create" | "update" | "delete";
 
-// Frontend types
-export type JobStatus = 'idle' | 'running' | 'success' | 'failed' | 'paused';
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
 
 export interface Project {
   id: string;
@@ -13,46 +18,31 @@ export interface Project {
 export interface CronJob {
   id: string;
   name: string;
-  endpoint: string;
-  httpMethod: string;
-  requestBody?: string;
   schedule: string;
-  status: JobStatus;
+  endpoint: string; // Changed from command to endpoint
+  httpMethod: string; // Added HTTP method
+  requestBody?: string; // Added request body
+  description?: string;
+  projectId: string;
+  status: string;
+  useLocalTime: boolean;
+  timezone: string;
   lastRun: string | null;
   nextRun: string | null;
   createdAt: string;
   updatedAt: string;
-  description?: string;
-  tags?: string[];
-  failCount?: number;
-  successCount?: number;
-  averageRuntime?: number; // in seconds
-  projectId: string; // Added project reference
-  timezone?: string; // Added timezone support
-  useLocalTime?: boolean; // Whether to use local time or UTC
 }
 
 export interface JobLog {
   id: string;
   jobId: string;
-  status: JobStatus;
+  status: string;
   startTime: string;
   endTime: string | null;
-  duration: number | null; // in seconds
+  duration: number | null;
   output: string;
   error: string | null;
-}
-
-export type Permission = 'view' | 'create' | 'update' | 'delete';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
   createdAt: string;
-  updatedAt: string;
-  avatar?: string;
 }
 
 export interface Role {
@@ -63,10 +53,13 @@ export interface Role {
   updatedAt: string;
 }
 
-// API interfaces for backend communication
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role?: Role;
+  roleId?: string;
+  avatar?: string;
+  createdAt: string;
+  updatedAt: string;
 }

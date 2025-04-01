@@ -3,7 +3,7 @@ import { useState } from "react";
 import { CronJob } from "@/lib/types";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pause, Play } from "lucide-react";
+import { Eye } from "lucide-react";
 import {
   Table,
   TableBody,

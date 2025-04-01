@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -116,7 +115,7 @@ export default function UserManagementPage() {
 
       // Update the user's role
       const updateResponse = await apiService.updateUser(selectedUser.id, {
-        roleId: role.id
+        role: role.id
       });
 
       if (updateResponse.success) {

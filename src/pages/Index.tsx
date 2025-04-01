@@ -1,375 +1,247 @@
 
-import { useState, useEffect } from "react";
-import { Navbar } from "@/components/Navbar";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { PageLayout } from "@/components/PageLayout";
 import { JobsTable } from "@/components/JobsTable";
-import { CreateJobModal } from "@/components/CreateJobModal";
-import { JobDetails } from "@/components/JobDetails";
-import { ProjectSelector } from "@/components/ProjectSelector";
 import { CronJob, Project } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Play, Pause, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { apiService } from "@/lib/api-service";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-// Mock data for projects
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "Website Maintenance",
-    description: "Jobs for website maintenance and monitoring",
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z",
-  },
-  {
-    id: "2",
-    name: "Database Management",
-    description: "Jobs for database backups and maintenance",
-    createdAt: "2023-01-15T00:00:00Z",
-    updatedAt: "2023-01-15T00:00:00Z",
-  }
-];
-
-// Mock data for initial display
-const mockJobs: CronJob[] = [
-  {
-    id: "1",
-    name: "Database Backup",
-    command: "pg_dump -U postgres database > /backups/db_$(date +%Y%m%d).sql",
-    schedule: "0 0 * * *",
-    status: "success",
-    lastRun: "2023-04-01T00:00:00Z",
-    nextRun: "2023-04-02T00:00:00Z",
-    createdAt: "2023-01-15T10:30:00Z",
-    updatedAt: "2023-01-15T10:30:00Z",
-    description: "Daily backup of the main PostgreSQL database",
-    tags: ["database", "backup"],
-    successCount: 86,
-    failCount: 2,
-    averageRuntime: 45,
-    projectId: "2"
-  },
-  {
-    id: "2",
-    name: "Log Rotation",
-    command: "find /var/log -name \"*.log\" -mtime +7 -exec gzip {} \\;",
-    schedule: "0 1 * * *",
-    status: "idle",
-    lastRun: "2023-04-01T01:00:00Z",
-    nextRun: "2023-04-02T01:00:00Z",
-    createdAt: "2023-01-20T14:45:00Z",
-    updatedAt: "2023-01-20T14:45:00Z",
-    description: "Weekly log rotation to compress older log files",
-    tags: ["logs", "maintenance"],
-    successCount: 12,
-    failCount: 0,
-    averageRuntime: 15,
-    projectId: "1"
-  },
-  {
-    id: "3",
-    name: "Data Processing",
-    command: "python3 /scripts/process_data.py --all",
-    schedule: "*/30 * * * *",
-    status: "running",
-    lastRun: "2023-04-01T12:30:00Z",
-    nextRun: "2023-04-01T13:00:00Z",
-    createdAt: "2023-02-05T09:15:00Z",
-    updatedAt: "2023-02-05T09:15:00Z",
-    description: "Process new data files every 30 minutes",
-    tags: ["processing", "python"],
-    successCount: 48,
-    failCount: 3,
-    averageRuntime: 120,
-    projectId: "2"
-  },
-  {
-    id: "4",
-    name: "System Updates",
-    command: "apt-get update && apt-get upgrade -y",
-    schedule: "0 3 * * 0",
-    status: "paused",
-    lastRun: "2023-03-26T03:00:00Z",
-    nextRun: null,
-    createdAt: "2023-02-10T11:20:00Z",
-    updatedAt: "2023-03-27T08:45:00Z",
-    description: "Weekly system updates every Sunday at 3am",
-    tags: ["system", "maintenance"],
-    successCount: 8,
-    failCount: 1,
-    averageRuntime: 300,
-    projectId: "1"
-  },
-  {
-    id: "5",
-    name: "Website Monitoring",
-    command: "curl -s https://example.com | grep -q 'Welcome' || mail -s 'Website Down' admin@example.com",
-    schedule: "*/5 * * * *",
-    status: "failed",
-    lastRun: "2023-04-01T12:55:00Z",
-    nextRun: "2023-04-01T13:00:00Z",
-    createdAt: "2023-03-01T16:30:00Z",
-    updatedAt: "2023-03-01T16:30:00Z",
-    description: "Check website availability every 5 minutes",
-    tags: ["monitoring", "website"],
-    successCount: 287,
-    failCount: 3,
-    averageRuntime: 2,
-    projectId: "1"
-  }
-];
-
-const Index = () => {
-  const [projects, setProjects] = useState<Project[]>(mockProjects);
-  const [jobs, setJobs] = useState<CronJob[]>(mockJobs);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || "");
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
-  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
-  const { toast } = useToast();
-
-  // Filter jobs by selected project
-  const filteredJobs = selectedProjectId 
-    ? jobs.filter(job => job.projectId === selectedProjectId)
-    : jobs;
-
-  useEffect(() => {
-    // Select the first project if none is selected and there are projects
-    if (!selectedProjectId && projects.length > 0) {
-      setSelectedProjectId(projects[0].id);
-    }
-  }, [projects, selectedProjectId]);
-
-  const handleCreateProject = (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => {
-    const newProject: Project = {
-      id: String(projects.length + 1),
-      name: projectData.name,
-      description: projectData.description,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setProjects([...projects, newProject]);
-    setSelectedProjectId(newProject.id);
-    toast.success(`Project "${projectData.name}" was created successfully`);
-  };
-
-  const handleCreateJob = (jobData: any) => {
-    const newJob: CronJob = {
-      id: String(jobs.length + 1),
-      name: jobData.name,
-      command: jobData.command,
-      schedule: jobData.schedule,
-      status: "idle",
-      lastRun: null,
-      nextRun: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      description: jobData.description,
-      tags: [],
-      successCount: 0,
-      failCount: 0,
-      averageRuntime: 0,
-      projectId: jobData.projectId || selectedProjectId
-    };
-
-    setJobs([...jobs, newJob]);
-    toast.success(`Job "${jobData.name}" was created successfully`);
-  };
-
-  const handleViewJobDetails = (job: CronJob) => {
-    setSelectedJob(job);
-    setIsDetailSheetOpen(true);
-  };
-
-  const countJobsByStatus = (status: string, jobList: CronJob[]) => {
-    return jobList.filter(job => job.status === status).length;
-  };
-
-  const toggleJobStatus = (jobId: string) => {
-    setJobs(currentJobs => 
-      currentJobs.map(job => {
-        if (job.id === jobId) {
-          const newStatus = job.status === "paused" ? "idle" : "paused";
-          
-          // Show notification based on status change
-          if (newStatus === "paused") {
-            toast({
-              title: "Job Paused",
-              description: `${job.name} has been paused`,
-              variant: "default",
-            });
-          } else {
-            toast({
-              title: "Job Activated",
-              description: `${job.name} is now active`,
-              variant: "default",
-            });
-          }
-          
-          return { ...job, status: newStatus };
+export default function Index() {
+  // Fetch jobs
+  const { data: jobs = [], isLoading: isLoadingJobs } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
+      try {
+        const response = await apiService.getJobs();
+        if (response.success && response.data) {
+          return response.data;
         }
-        return job;
+        return [];
+      } catch (error) {
+        toast.error("Error loading recent jobs. Please try again.");
+        return [];
+      }
+    }
+  });
+
+  // Prepare sample jobs data for demonstration if no jobs are returned from the API
+  const recentJobs = jobs.slice(0, 5);
+  
+  const sampleJobs: CronJob[] = [{
+    id: "1",
+    name: "Daily Database Backup",
+    endpoint: "https://api.example.com/backup",
+    httpMethod: "POST",
+    schedule: "0 0 * * *",
+    description: "Creates a full database backup every day at midnight",
+    status: "success",
+    projectId: "1",
+    useLocalTime: true,
+    timezone: "UTC",
+    lastRun: "2023-05-15T00:00:00Z",
+    nextRun: "2023-05-16T00:00:00Z",
+    createdAt: "2023-01-01T00:00:00Z",
+    updatedAt: "2023-05-15T00:00:01Z"
+  }, {
+    id: "2",
+    name: "Hourly Log Cleanup",
+    endpoint: "https://api.example.com/logs/cleanup",
+    httpMethod: "GET",
+    schedule: "0 * * * *",
+    description: "Cleans up old log files every hour",
+    status: "idle",
+    projectId: "1",
+    useLocalTime: true,
+    timezone: "UTC",
+    lastRun: "2023-05-15T14:00:00Z",
+    nextRun: "2023-05-15T15:00:00Z",
+    createdAt: "2023-01-02T00:00:00Z",
+    updatedAt: "2023-05-15T14:00:01Z"
+  }, {
+    id: "3",
+    name: "Weekly Analytics Report",
+    endpoint: "https://api.example.com/analytics/report",
+    httpMethod: "GET",
+    schedule: "0 9 * * 1",
+    description: "Generates and emails weekly analytics report every Monday at 9 AM",
+    status: "failed",
+    projectId: "2",
+    useLocalTime: true,
+    timezone: "Europe/London",
+    lastRun: "2023-05-08T09:00:00Z",
+    nextRun: "2023-05-15T09:00:00Z",
+    createdAt: "2023-01-03T00:00:00Z",
+    updatedAt: "2023-05-08T09:00:30Z"
+  }, {
+    id: "4",
+    name: "Customer Email Newsletter",
+    endpoint: "https://api.example.com/email/newsletter",
+    httpMethod: "POST",
+    schedule: "0 10 * * 4",
+    description: "Sends weekly newsletter to customers every Thursday at 10 AM",
+    status: "paused",
+    projectId: "2",
+    useLocalTime: true,
+    timezone: "America/New_York",
+    lastRun: "2023-05-11T10:00:00Z",
+    nextRun: null,
+    createdAt: "2023-01-04T00:00:00Z",
+    updatedAt: "2023-05-11T12:00:00Z"
+  }, {
+    id: "5",
+    name: "Monthly Invoice Generation",
+    endpoint: "https://api.example.com/billing/invoices",
+    httpMethod: "POST",
+    schedule: "0 0 1 * *",
+    description: "Generates monthly invoices on the 1st of each month",
+    status: "running",
+    projectId: "3",
+    useLocalTime: false,
+    timezone: "UTC",
+    lastRun: "2023-05-01T00:00:00Z",
+    nextRun: "2023-06-01T00:00:00Z",
+    createdAt: "2023-01-05T00:00:00Z",
+    updatedAt: "2023-05-15T16:30:00Z"
+  }];
+
+  // Use sample data if no real jobs exist
+  const displayJobs = recentJobs.length > 0 ? recentJobs : sampleJobs;
+
+  // Add job-related functions for the display jobs
+  const handleToggleStatus = (jobId: string) => {
+    // Get the job to show proper confirm message
+    const job = displayJobs.find(j => j.id === jobId);
+    if (!job) return;
+
+    // Determine the action based on current status
+    const newStatus = job.status === "paused" ? "idle" : "paused";
+    
+    apiService.updateJob(jobId, { status: newStatus })
+      .then(response => {
+        if (response.success) {
+          toast.success(`Job ${newStatus === "paused" ? "paused" : "activated"} successfully`);
+        } else {
+          toast.error(`Failed to update job status: ${response.error}`);
+        }
       })
-    );
+      .catch(error => {
+        toast.error(`Error updating job status: ${error.message}`);
+      });
   };
 
+  const handleDeleteJob = (jobId: string) => {
+    apiService.deleteJob(jobId)
+      .then(response => {
+        if (response.success) {
+          toast.success("Job deleted successfully");
+        } else {
+          toast.error(`Failed to delete job: ${response.error}`);
+        }
+      })
+      .catch(error => {
+        toast.error(`Error deleting job: ${error.message}`);
+      });
+  };
+  
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
-      <Navbar />
-      
-      <main className="flex-1 container py-8 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <div className="flex items-center gap-2">
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                Add New Job
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <ProjectSelector
-              projects={projects}
-              selectedProjectId={selectedProjectId}
-              onSelectProject={setSelectedProjectId}
-              onCreateProject={handleCreateProject}
-            />
-            
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Last Refresh:</span>
-              <span>{new Date().toLocaleTimeString()}</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => toast.info("Dashboard refreshed")}
-              >
-                <Clock className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Jobs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{filteredJobs.length}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
-                <CheckCircle2 className="h-4 w-4 text-success" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{countJobsByStatus("running", filteredJobs) + countJobsByStatus("idle", filteredJobs)}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Paused</CardTitle>
-                <Pause className="h-4 w-4 text-warning" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{countJobsByStatus("paused", filteredJobs)}</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Failed</CardTitle>
-                <AlertTriangle className="h-4 w-4 text-error" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">{countJobsByStatus("failed", filteredJobs)}</div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <Tabs defaultValue="all" className="w-full">
-            <div className="flex items-center justify-between">
-              <TabsList>
-                <TabsTrigger value="all">All Jobs</TabsTrigger>
-                <TabsTrigger value="active">Active</TabsTrigger>
-                <TabsTrigger value="paused">Paused</TabsTrigger>
-                <TabsTrigger value="failed">Failed</TabsTrigger>
-              </TabsList>
-              
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const failedCount = countJobsByStatus("failed", filteredJobs);
-                  if (failedCount > 0) {
-                    toast.error(`You have ${failedCount} failed jobs that need attention`);
-                  } else {
-                    toast.success("All jobs are operating normally");
-                  }
-                }}
-              >
-                Check Status
-              </Button>
-            </div>
-            
-            <TabsContent value="all" className="mt-4">
-              <JobsTable 
-                jobs={filteredJobs} 
-                onViewDetails={handleViewJobDetails} 
-                onToggleStatus={toggleJobStatus}
-              />
-            </TabsContent>
-            
-            <TabsContent value="active" className="mt-4">
-              <JobsTable 
-                jobs={filteredJobs.filter(job => job.status === "running" || job.status === "idle")} 
-                onViewDetails={handleViewJobDetails} 
-                onToggleStatus={toggleJobStatus}
-              />
-            </TabsContent>
-            
-            <TabsContent value="paused" className="mt-4">
-              <JobsTable 
-                jobs={filteredJobs.filter(job => job.status === "paused")} 
-                onViewDetails={handleViewJobDetails} 
-                onToggleStatus={toggleJobStatus}
-              />
-            </TabsContent>
-            
-            <TabsContent value="failed" className="mt-4">
-              <JobsTable 
-                jobs={filteredJobs.filter(job => job.status === "failed")} 
-                onViewDetails={handleViewJobDetails} 
-                onToggleStatus={toggleJobStatus}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-        
-        <CreateJobModal 
-          isOpen={isCreateModalOpen} 
-          onClose={() => setIsCreateModalOpen(false)} 
-          onCreateJob={handleCreateJob}
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-        />
-        
-        <JobDetails 
-          job={selectedJob} 
-          isOpen={isDetailSheetOpen} 
-          onClose={() => setIsDetailSheetOpen(false)} 
-        />
-      </main>
-    </div>
+    <PageLayout title="Dashboard">
+      <div className="flex flex-col gap-6">
+        <Card>
+          <CardContent className="p-0">
+            {isLoadingJobs ? (
+              <div className="flex items-center justify-center p-8">
+                <span className="text-muted-foreground">Loading jobs...</span>
+              </div>
+            ) : displayJobs.length > 0 ? (
+              <div className="p-4">
+                <h3 className="text-lg font-medium mb-4">Recent Jobs</h3>
+                <JobsTable 
+                  jobs={displayJobs}
+                  onViewDetails={(job) => {
+                    // View job details would typically navigate to job details page
+                    toast.info(`Viewing details for job: ${job.name}`);
+                  }}
+                  onToggleStatus={(jobId) => {
+                    const job = displayJobs.find(j => j.id === jobId);
+                    if (!job) return null;
+                    
+                    // Determine the action based on current status
+                    const action = job.status === "paused" ? "activate" : "pause";
+                    
+                    return (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className={`px-3 py-1 text-xs font-medium rounded ${
+                            action === "pause" ? "bg-gray-200 text-gray-800" : "bg-blue-100 text-blue-800"
+                          }`}>
+                            {action === "pause" ? "Pause" : "Activate"}
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {action === "pause" ? "Pause Job" : "Activate Job"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {action === "pause" 
+                                ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.` 
+                                : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleToggleStatus(jobId)}>
+                              {action === "pause" ? "Pause Job" : "Activate Job"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    );
+                  }}
+                  onDeleteJob={(jobId) => {
+                    const job = displayJobs.find(j => j.id === jobId);
+                    if (!job) return null;
+                    
+                    return (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
+                            Delete
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{job.name}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteJob(jobId)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete Job
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    );
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <p className="text-muted-foreground mb-4">No recent jobs found</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </PageLayout>
   );
-};
-
-export default Index;
+}
