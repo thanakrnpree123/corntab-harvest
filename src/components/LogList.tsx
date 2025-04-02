@@ -110,7 +110,7 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
               open={expandedLogs[log.id]}
               onOpenChange={() => toggleLogExpansion(log.id)}
             >
-              <Card className="overflow-hidden">
+              <Card className="overflow-y-auto h-[50vh]">
                 <CollapsibleTrigger asChild>
                   <div className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
