@@ -79,93 +79,94 @@ export default function Index() {
 
         {/* Recent jobs */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="md:col-span-1 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>งานล่าสุด</CardTitle>
-                <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Tabs defaultValue="recent">
-                  <TabsList className="w-full bg-transparent border-b rounded-none">
-                    <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
-                    <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
-                    <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="recent" className="m-0">
-                    <div className="divide-y">
-                      {recentJobs.length > 0 ? (
-                        recentJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          ยังไม่มีงานที่เคยรัน
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="failed" className="m-0">
-                    <div className="divide-y">
-                      {failedJobs.length > 0 ? (
-                        failedJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          ไม่มีงานที่ล้มเหลว
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="paused" className="m-0">
-                    <div className="divide-y">
-                      {pausedJobs.length > 0 ? (
-                        pausedJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          ไม่มีงานที่ถูกหยุดชั่วคราว
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="md:col-span-2">
-            {selectedJob ? (
-              <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
-            ) : (
-              <Card className="h-full flex items-center justify-center p-6">
-                <div className="text-center text-muted-foreground">
-                  เลือกงานจากรายการเพื่อดูรายละเอียด
+  <div className="md:col-span-1 space-y-6">
+    <Card>
+      <CardHeader>
+        <CardTitle>งานล่าสุด</CardTitle>
+        <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <Tabs defaultValue="recent">
+          <TabsList className="w-full bg-transparent border-b rounded-none">
+            <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
+            <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
+            <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recent" className="m-0">
+            <div className="divide-y">
+              {recentJobs.length > 0 ? (
+                recentJobs.map((job) => (
+                  <JobListItem 
+                    key={job.id} 
+                    job={job} 
+                    isSelected={job.id === selectedJobId}
+                    onSelect={() => setSelectedJobId(job.id)} 
+                  />
+                ))
+              ) : (
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  ยังไม่มีงานที่เคยรัน
                 </div>
-              </Card>
-            )}
-          </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="failed" className="m-0">
+            <div className="divide-y">
+              {failedJobs.length > 0 ? (
+                failedJobs.map((job) => (
+                  <JobListItem 
+                    key={job.id} 
+                    job={job} 
+                    isSelected={job.id === selectedJobId}
+                    onSelect={() => setSelectedJobId(job.id)} 
+                  />
+                ))
+              ) : (
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  ไม่มีงานที่ล้มเหลว
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="paused" className="m-0">
+            <div className="divide-y">
+              {pausedJobs.length > 0 ? (
+                pausedJobs.map((job) => (
+                  <JobListItem 
+                    key={job.id} 
+                    job={job} 
+                    isSelected={job.id === selectedJobId}
+                    onSelect={() => setSelectedJobId(job.id)} 
+                  />
+                ))
+              ) : (
+                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                  ไม่มีงานที่ถูกหยุดชั่วคราว
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  </div>
+
+  <div className="md:col-span-2">
+    {selectedJob ? (
+      <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
+    ) : (
+      <Card className="h-full flex items-center justify-center p-6">
+        <div className="text-center text-muted-foreground">
+          เลือกงานจากรายการเพื่อดูรายละเอียด
         </div>
+      </Card>
+    )}
+  </div>
+</div>
+
       </div>
     </PageLayout>
   );
