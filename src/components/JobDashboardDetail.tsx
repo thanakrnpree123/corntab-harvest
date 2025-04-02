@@ -232,7 +232,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
       <CardHeader className="pb-2">
         <CardTitle>ประวัติการทำงานล่าสุด</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto">
+      <CardContent className="flex-1">
         <LogsDetail jobId={job.id} />
       </CardContent>
     </Card>
