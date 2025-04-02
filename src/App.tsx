@@ -36,7 +36,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="cron-hub-theme">
+      <ThemeProvider defaultTheme="light" storageKey="cron-hub-theme">
         <BrowserRouter>
           <Routes>
             <Route 
