@@ -7,7 +7,7 @@ import { Moon, Sun, Laptop } from "lucide-react";
 type Theme = "light" | "dark" | "system";
 
 export function ThemeSwitcher() {
-  const [theme, setTheme] = useState<Theme>("system");
+  const [theme, setTheme] = useState<Theme>("light");
 
   // On mount, read the theme preference from localStorage
   useEffect(() => {
