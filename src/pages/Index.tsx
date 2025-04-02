@@ -78,30 +78,29 @@ export default function Index() {
         </div>
 
         {/* Recent jobs */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-  <div className="md:col-span-1 space-y-6">
-    <Card>
-      <CardHeader>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 h-screen p-4 overflow-hidden">
+  <div className="md:col-span-1 space-y-6 h-full flex flex-col">
+    <Card className="flex-1 flex flex-col overflow-hidden">
+      <CardHeader className="flex-none">
         <CardTitle>งานล่าสุด</CardTitle>
         <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
       </CardHeader>
-      <CardContent className="p-0 max-h-[calc(100vh-200px)] overflow-y-auto">
-        <Tabs defaultValue="recent">
-          <TabsList className="w-full bg-transparent border-b rounded-none">
+      <CardContent className="p-0 flex-1 overflow-hidden">
+        <Tabs defaultValue="recent" className="h-full flex flex-col">
+          <TabsList className="w-full bg-transparent border-b rounded-none flex-none">
             <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
             <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
             <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="recent" className="m-0">
+          <TabsContent value="recent" className="m-0 flex-1 overflow-auto">
             <div className="divide-y">
               {recentJobs.length > 0 ? (
                 recentJobs.map((job) => (
-                  <JobListItem 
-                    key={job.id} 
-                    job={job} 
+                  <JobListItem
+                    key={job.id}
+                    job={job}
                     isSelected={job.id === selectedJobId}
-                    onSelect={() => setSelectedJobId(job.id)} 
+                    onSelect={() => setSelectedJobId(job.id)}
                   />
                 ))
               ) : (
@@ -111,16 +110,15 @@ export default function Index() {
               )}
             </div>
           </TabsContent>
-
-          <TabsContent value="failed" className="m-0">
+          <TabsContent value="failed" className="m-0 flex-1 overflow-auto">
             <div className="divide-y">
               {failedJobs.length > 0 ? (
                 failedJobs.map((job) => (
-                  <JobListItem 
-                    key={job.id} 
-                    job={job} 
+                  <JobListItem
+                    key={job.id}
+                    job={job}
                     isSelected={job.id === selectedJobId}
-                    onSelect={() => setSelectedJobId(job.id)} 
+                    onSelect={() => setSelectedJobId(job.id)}
                   />
                 ))
               ) : (
@@ -130,16 +128,15 @@ export default function Index() {
               )}
             </div>
           </TabsContent>
-
-          <TabsContent value="paused" className="m-0">
+          <TabsContent value="paused" className="m-0 flex-1 overflow-auto">
             <div className="divide-y">
               {pausedJobs.length > 0 ? (
                 pausedJobs.map((job) => (
-                  <JobListItem 
-                    key={job.id} 
-                    job={job} 
+                  <JobListItem
+                    key={job.id}
+                    job={job}
                     isSelected={job.id === selectedJobId}
-                    onSelect={() => setSelectedJobId(job.id)} 
+                    onSelect={() => setSelectedJobId(job.id)}
                   />
                 ))
               ) : (
@@ -153,10 +150,13 @@ export default function Index() {
       </CardContent>
     </Card>
   </div>
-
-  <div className="md:col-span-2">
+  <div className="md:col-span-2 h-full">
     {selectedJob ? (
-      <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
+      <Card className="h-full flex flex-col overflow-hidden">
+        <CardContent className="flex-1 p-4 overflow-auto">
+          <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
+        </CardContent>
+      </Card>
     ) : (
       <Card className="h-full flex items-center justify-center p-6">
         <div className="text-center text-muted-foreground">
@@ -166,7 +166,6 @@ export default function Index() {
     )}
   </div>
 </div>
-
       </div>
     </PageLayout>
   );
