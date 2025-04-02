@@ -25,7 +25,9 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const isLoggedIn = !!localStorage.getItem("user");
+  // const isLoggedIn = !!localStorage.getItem("user");
+
+  const isLoggedIn = true
 
   // Setup mock data when running in development
   useEffect(() => {
