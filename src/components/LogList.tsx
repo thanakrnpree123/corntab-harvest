@@ -13,11 +13,7 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
