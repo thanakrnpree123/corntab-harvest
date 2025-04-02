@@ -79,13 +79,13 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-2 justify-between">
-        <div className="relative">
+        <div className="relative w-full max-w-md">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="ค้นหาในล็อก..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 w-full sm:w-72"
+            className="pl-8 w-full min-w-[150px] max-w-full sm:max-w-72"
           />
         </div>
         
