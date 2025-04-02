@@ -44,7 +44,11 @@ export default function Index() {
     lastRun: "2023-05-15T00:00:00Z",
     nextRun: "2023-05-16T00:00:00Z",
     createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-05-15T00:00:01Z"
+    updatedAt: "2023-05-15T00:00:01Z",
+    tags: ["backup", "database"],
+    successCount: 145,
+    failCount: 2,
+    averageRuntime: 345.7
   }, {
     id: "2",
     name: "Hourly Log Cleanup",
@@ -59,7 +63,11 @@ export default function Index() {
     lastRun: "2023-05-15T14:00:00Z",
     nextRun: "2023-05-15T15:00:00Z",
     createdAt: "2023-01-02T00:00:00Z",
-    updatedAt: "2023-05-15T14:00:01Z"
+    updatedAt: "2023-05-15T14:00:01Z",
+    tags: ["cleanup", "logs"],
+    successCount: 3456,
+    failCount: 17,
+    averageRuntime: 124.3
   }, {
     id: "3",
     name: "Weekly Analytics Report",
@@ -74,7 +82,11 @@ export default function Index() {
     lastRun: "2023-05-08T09:00:00Z",
     nextRun: "2023-05-15T09:00:00Z",
     createdAt: "2023-01-03T00:00:00Z",
-    updatedAt: "2023-05-08T09:00:30Z"
+    updatedAt: "2023-05-08T09:00:30Z",
+    tags: ["report", "analytics", "email"],
+    successCount: 18,
+    failCount: 2,
+    averageRuntime: 3567.8
   }, {
     id: "4",
     name: "Customer Email Newsletter",
@@ -89,7 +101,11 @@ export default function Index() {
     lastRun: "2023-05-11T10:00:00Z",
     nextRun: null,
     createdAt: "2023-01-04T00:00:00Z",
-    updatedAt: "2023-05-11T12:00:00Z"
+    updatedAt: "2023-05-11T12:00:00Z",
+    tags: ["email", "newsletter", "marketing"],
+    successCount: 54,
+    failCount: 3,
+    averageRuntime: 4532.9
   }, {
     id: "5",
     name: "Monthly Invoice Generation",
@@ -104,7 +120,11 @@ export default function Index() {
     lastRun: "2023-05-01T00:00:00Z",
     nextRun: "2023-06-01T00:00:00Z",
     createdAt: "2023-01-05T00:00:00Z",
-    updatedAt: "2023-05-15T16:30:00Z"
+    updatedAt: "2023-05-15T16:30:00Z",
+    tags: ["billing", "invoices", "monthly"],
+    successCount: 5,
+    failCount: 0,
+    averageRuntime: 14576.3
   }];
 
   // Use sample data if no real jobs exist

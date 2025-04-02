@@ -1,93 +1,108 @@
 
-import { useState } from "react";
 import { CronJob } from "@/lib/types";
-import { StatusBadge } from "@/components/StatusBadge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { formatDistance, format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ChevronRight } from "lucide-react";
 
-interface JobsTableProps {
+export interface JobsTableProps {
   jobs: CronJob[];
   onViewDetails: (job: CronJob) => void;
   onToggleStatus: (jobId: string) => React.ReactNode;
   onDeleteJob: (jobId: string) => React.ReactNode;
+  onDuplicateJob?: (jobId: string) => React.ReactNode;
+  showLastRun?: boolean;
+  showNextRun?: boolean;
 }
 
-export function JobsTable({ jobs, onViewDetails, onToggleStatus, onDeleteJob }: JobsTableProps) {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
-
+export function JobsTable({
+  jobs,
+  onViewDetails,
+  onToggleStatus,
+  onDeleteJob,
+  onDuplicateJob,
+  showLastRun = true,
+  showNextRun = true,
+}: JobsTableProps) {
   return (
-    <div className="w-full overflow-auto">
-      <Table>
+    <div className="overflow-x-auto">
+      <Table className="min-w-[600px]">
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Endpoint</TableHead>
             <TableHead>Schedule</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Last Run</TableHead>
-            <TableHead>Next Run</TableHead>
+            {showLastRun && <TableHead>Last Run</TableHead>}
+            {showNextRun && <TableHead>Next Run</TableHead>}
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {jobs.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
-                No jobs found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            jobs.map((job) => (
+          {jobs.map((job) => {
+            return (
               <TableRow key={job.id}>
                 <TableCell className="font-medium">{job.name}</TableCell>
                 <TableCell>
-                  <div className="flex items-center">
-                    <span className="mr-2 px-2 py-1 text-xs font-medium bg-slate-100 rounded">
-                      {job.httpMethod}
-                    </span>
-                    <span className="text-sm truncate max-w-xs">{job.endpoint}</span>
-                  </div>
+                  <code className="bg-muted text-xs px-1 py-0.5 rounded">
+                    {job.schedule}
+                  </code>
                 </TableCell>
-                <TableCell className="font-mono text-xs">{job.schedule}</TableCell>
                 <TableCell>
                   <StatusBadge status={job.status} />
                 </TableCell>
-                <TableCell>
-                  {job.lastRun ? formatDate(job.lastRun) : "-"}
-                </TableCell>
-                <TableCell>
-                  {job.nextRun ? formatDate(job.nextRun) : "-"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onViewDetails(job)}
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span className="sr-only">View details</span>
-                    </Button>
-                    {onToggleStatus(job.id)}
-                    {onDeleteJob(job.id)}
-                  </div>
+                {showLastRun && (
+                  <TableCell>
+                    {job.lastRun ? (
+                      <div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(job.lastRun), "MMM dd, yyyy - HH:mm")}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDistance(new Date(job.lastRun), new Date(), { addSuffix: true })}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Never</span>
+                    )}
+                  </TableCell>
+                )}
+                {showNextRun && (
+                  <TableCell>
+                    {job.nextRun ? (
+                      <div>
+                        <div className="text-xs text-muted-foreground">
+                          {format(new Date(job.nextRun), "MMM dd, yyyy - HH:mm")}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDistance(new Date(job.nextRun), new Date(), { addSuffix: true })}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Not scheduled</span>
+                    )}
+                  </TableCell>
+                )}
+                <TableCell className="text-right flex justify-end items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onViewDetails(job)}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  {onToggleStatus(job.id)}
+                  {onDuplicateJob && onDuplicateJob(job.id)}
+                  {onDeleteJob(job.id)}
                 </TableCell>
               </TableRow>
-            ))
-          )}
+            );
+          })}
         </TableBody>
       </Table>
+      {jobs.length === 0 && (
+        <div className="text-center py-4 text-muted-foreground">No jobs found</div>
+      )}
     </div>
   );
 }

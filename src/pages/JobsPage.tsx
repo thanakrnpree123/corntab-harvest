@@ -6,6 +6,7 @@ import { JobsTable } from "@/components/JobsTable";
 import { CreateJobModal } from "@/components/CreateJobModal";
 import { JobDetails } from "@/components/JobDetails";
 import { ProjectSelector } from "@/components/ProjectSelector";
+import { JobExportImport } from "@/components/JobExportImport";
 import { CronJob, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { 
@@ -26,11 +27,13 @@ export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isJobActionInProgress, setIsJobActionInProgress] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
+  const [isProjectLoading, setIsProjectLoading] = useState(false);
 
   // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
+      setIsProjectLoading(true);
       try {
         const response = await apiService.getProjects();
         if (response.success && response.data) {
@@ -44,6 +47,8 @@ export default function JobsPage() {
           variant: "destructive",
         });
         return [];
+      } finally {
+        setIsProjectLoading(false);
       }
     }
   });
@@ -118,7 +123,11 @@ export default function JobsPage() {
   const handleCreateJob = (jobData: Partial<CronJob>) => {
     const newJobData = {
       ...jobData,
-      projectId: selectedProjectId
+      projectId: selectedProjectId,
+      name: jobData.name || "",
+      schedule: jobData.schedule || "",
+      endpoint: jobData.endpoint || "",
+      httpMethod: jobData.httpMethod || "GET",
     };
 
     apiService.createJob(newJobData)
@@ -260,6 +269,43 @@ export default function JobsPage() {
       });
   };
 
+  const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
+    // Add the current projectId to all imported jobs
+    const jobsWithProject = importedJobs.map(job => ({
+      ...job,
+      projectId: selectedProjectId
+    }));
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    // Create each job one by one
+    const createPromises = jobsWithProject.map(job => 
+      apiService.createJob(job)
+        .then(response => {
+          if (response.success) successCount++;
+          else failCount++;
+          return response;
+        })
+    );
+    
+    Promise.all(createPromises)
+      .then(() => {
+        toast({
+          title: "Import completed",
+          description: `Successfully imported ${successCount} jobs${failCount > 0 ? `, failed to import ${failCount} jobs` : ''}`,
+        });
+        if (successCount > 0) refetchJobs();
+      })
+      .catch(error => {
+        toast({
+          title: "Error during import",
+          description: error.message,
+          variant: "destructive",
+        });
+      });
+  };
+
   return (
     <PageLayout title="Jobs">
       <div className="flex flex-col gap-6">
@@ -269,10 +315,12 @@ export default function JobsPage() {
             selectedProjectId={selectedProjectId}
             onSelectProject={setSelectedProjectId}
             onCreateProject={handleCreateProject}
+            compact={true}
+            isLoading={isProjectLoading}
           />
           
           {selectedProjectId && (
-            <div className="flex flex-col md:flex-row w-full md:w-auto gap-2">
+            <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
               <Input
                 className="md:w-[200px]"
                 placeholder="Search jobs..."
@@ -287,6 +335,12 @@ export default function JobsPage() {
           )}
         </div>
         
+        {selectedProjectId && jobs.length > 0 && (
+          <div className="flex justify-end">
+            <JobExportImport jobs={jobs} onImport={handleImportJobs} />
+          </div>
+        )}
+
         <Card>
           <CardContent className="p-0">
             {isLoadingJobs ? (
@@ -301,7 +355,7 @@ export default function JobsPage() {
                   onViewDetails={handleViewJobDetails} 
                   onToggleStatus={(jobId) => {
                     const job = jobs.find(j => j.id === jobId);
-                    if (!job) return;
+                    if (!job) return null;
                     
                     if (isJobActionInProgress[jobId]) {
                       return <Button variant="outline" size="sm" disabled>
@@ -351,7 +405,7 @@ export default function JobsPage() {
                   }}
                   onDuplicateJob={(jobId) => {
                     const job = jobs.find(j => j.id === jobId);
-                    if (!job) return;
+                    if (!job) return null;
                     
                     if (isJobActionInProgress[jobId]) {
                       return <Button variant="outline" size="sm" disabled>
@@ -388,7 +442,7 @@ export default function JobsPage() {
                   }}
                   onDeleteJob={(jobId) => {
                     const job = jobs.find(j => j.id === jobId);
-                    if (!job) return;
+                    if (!job) return null;
                     
                     if (isJobActionInProgress[jobId]) {
                       return <Button variant="destructive" size="sm" disabled>

@@ -1,4 +1,4 @@
-import { ApiResponse, Project, CronJob, User, Role, JobLog } from '@/lib/types';
+import { ApiResponse, Project, CronJob, User, Role, JobLog, JobStatus } from '@/lib/types';
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -13,7 +13,6 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   return await response.json();
 }
 
-// Mock data helper for local development
 const createMockResponse = <T>(data: T): Promise<ApiResponse<T>> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -22,17 +21,14 @@ const createMockResponse = <T>(data: T): Promise<ApiResponse<T>> => {
   });
 };
 
-// Project API methods
 export const projectApi = {
   getAll: async (): Promise<ApiResponse<Project[]>> => {
     try {
-      // First try the real API
       try {
         const response = await fetch(`${API_BASE_URL}/projects`);
         return handleResponse<Project[]>(response);
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
-        // Fall back to mock data
         const mockProjects: Project[] = [
           {
             id: "1",
@@ -63,7 +59,6 @@ export const projectApi = {
         return handleResponse<Project>(response);
       } catch (error) {
         console.warn("Using mock project due to API error:", error);
-        // Fall back to mock data
         const mockProject: Project = {
           id,
           name: id === "1" ? "API Services" : "Data Processing",
@@ -89,7 +84,6 @@ export const projectApi = {
         return handleResponse<Project>(response);
       } catch (error) {
         console.warn("Using mock create project due to API error:", error);
-        // Create mock response
         const newProject: Project = {
           ...project,
           id: Math.random().toString(36).substr(2, 9),
@@ -114,7 +108,6 @@ export const projectApi = {
         return handleResponse<Project>(response);
       } catch (error) {
         console.warn("Using mock update project due to API error:", error);
-        // Mock update
         const mockProject: Project = {
           id,
           name: project.name || "Updated Project",
@@ -138,7 +131,6 @@ export const projectApi = {
         return handleResponse<void>(response);
       } catch (error) {
         console.warn("Using mock delete project due to API error:", error);
-        // Mock successful delete
         return createMockResponse<void>(undefined);
       }
     } catch (error) {
@@ -147,7 +139,6 @@ export const projectApi = {
   }
 };
 
-// CronJob API methods
 export const jobApi = {
   getAll: async (projectId?: string): Promise<ApiResponse<CronJob[]>> => {
     try {
@@ -160,7 +151,6 @@ export const jobApi = {
         return handleResponse<CronJob[]>(response);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
-        // Generate mock jobs
         const mockJobs: CronJob[] = [];
         const statuses: JobStatus[] = ["idle", "running", "success", "failed", "paused"];
         const methods = ["GET", "POST", "PUT", "DELETE"];
@@ -208,7 +198,6 @@ export const jobApi = {
         return handleResponse<CronJob>(response);
       } catch (error) {
         console.warn("Using mock job details due to API error:", error);
-        // Create a mock job
         const mockJob: CronJob = {
           id,
           name: `Job ${id}`,
@@ -248,7 +237,6 @@ export const jobApi = {
         return handleResponse<CronJob>(response);
       } catch (error) {
         console.warn("Using mock create job due to API error:", error);
-        // Create mock new job
         const newJob: CronJob = {
           ...job,
           id: `job-${Math.random().toString(36).substr(2, 9)}`,
@@ -280,7 +268,6 @@ export const jobApi = {
         return handleResponse<CronJob>(response);
       } catch (error) {
         console.warn("Using mock update job due to API error:", error);
-        // Mock updated job
         const mockJob: CronJob = {
           id,
           name: job.name || `Job ${id}`,
@@ -319,7 +306,6 @@ export const jobApi = {
         return handleResponse<void>(response);
       } catch (error) {
         console.warn("Using mock delete job due to API error:", error);
-        // Mock successful delete
         return createMockResponse<void>(undefined);
       }
     } catch (error) {
@@ -336,13 +322,11 @@ export const jobApi = {
         return handleResponse<CronJob>(response);
       } catch (error) {
         console.warn("Using mock duplicate job due to API error:", error);
-        // First get the job to duplicate
         const getJobResult = await jobApi.getById(id);
         if (!getJobResult.success || !getJobResult.data) {
           throw new Error("Failed to get job to duplicate");
         }
         
-        // Create a copy with a new ID
         const originalJob = getJobResult.data;
         const duplicatedJob: CronJob = {
           ...originalJob,
@@ -369,11 +353,9 @@ export const jobApi = {
         return handleResponse<JobLog[]>(response);
       } catch (error) {
         console.warn("Using mock job logs due to API error:", error);
-        // Generate mock logs
         const mockLogs: JobLog[] = [];
         const statuses = ["success", "failed", "running"];
         
-        // Generate random logs with different dates
         for (let i = 1; i <= 15; i++) {
           const status = statuses[Math.floor(Math.random() * statuses.length)];
           const startTime = new Date(Date.now() - (i * 3600000));
@@ -411,7 +393,6 @@ export const jobApi = {
         return handleResponse<JobLog>(response);
       } catch (error) {
         console.warn("Using mock create job log due to API error:", error);
-        // Create mock log
         const newLog: JobLog = {
           id: `log-${Math.random().toString(36).substr(2, 9)}`,
           jobId,
@@ -431,7 +412,6 @@ export const jobApi = {
   }
 };
 
-// User API methods
 export const userApi = {
   getAll: async (): Promise<ApiResponse<User[]>> => {
     try {
@@ -440,7 +420,6 @@ export const userApi = {
         return handleResponse<User[]>(response);
       } catch (error) {
         console.warn("Using mock users due to API error:", error);
-        // Create mock users
         const mockUsers: User[] = [
           {
             id: "1",
@@ -473,7 +452,6 @@ export const userApi = {
         return handleResponse<User>(response);
       } catch (error) {
         console.warn("Using mock user details due to API error:", error);
-        // Create a mock user
         const mockUser: User = {
           id,
           name: `User ${id}`,
@@ -500,7 +478,6 @@ export const userApi = {
         return handleResponse<User>(response);
       } catch (error) {
         console.warn("Using mock create user due to API error:", error);
-        // Create mock new user
         const newUser: User = {
           ...user,
           id: Math.random().toString(36).substr(2, 9),
@@ -525,7 +502,6 @@ export const userApi = {
         return handleResponse<User>(response);
       } catch (error) {
         console.warn("Using mock update user due to API error:", error);
-        // Mock updated user
         const mockUser: User = {
           id,
           name: user.name || `User ${id}`,
@@ -550,7 +526,6 @@ export const userApi = {
         return handleResponse<void>(response);
       } catch (error) {
         console.warn("Using mock delete user due to API error:", error);
-        // Mock successful delete
         return createMockResponse<void>(undefined);
       }
     } catch (error) {
@@ -559,7 +534,6 @@ export const userApi = {
   }
 };
 
-// Role API methods
 export const roleApi = {
   getAll: async (): Promise<ApiResponse<Role[]>> => {
     try {
@@ -568,19 +542,18 @@ export const roleApi = {
         return handleResponse<Role[]>(response);
       } catch (error) {
         console.warn("Using mock roles due to API error:", error);
-        // Create mock roles
         const mockRoles: Role[] = [
           {
             id: "1",
             name: "Admin",
-            description: "Full access to all features",
+            permissions: ["view", "create", "update", "delete"],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           },
           {
             id: "2",
             name: "User",
-            description: "Basic access to some features",
+            permissions: ["view"],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
@@ -599,11 +572,10 @@ export const roleApi = {
         return handleResponse<Role>(response);
       } catch (error) {
         console.warn("Using mock role details due to API error:", error);
-        // Create a mock role
         const mockRole: Role = {
           id,
           name: `Role ${id}`,
-          description: `Description for role ${id}`,
+          permissions: ["view", "create", "update", "delete"],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -625,7 +597,6 @@ export const roleApi = {
         return handleResponse<Role>(response);
       } catch (error) {
         console.warn("Using mock create role due to API error:", error);
-        // Create mock new role
         const newRole: Role = {
           ...role,
           id: Math.random().toString(36).substr(2, 9),
@@ -650,11 +621,10 @@ export const roleApi = {
         return handleResponse<Role>(response);
       } catch (error) {
         console.warn("Using mock update role due to API error:", error);
-        // Mock updated role
         const mockRole: Role = {
           id,
           name: role.name || `Role ${id}`,
-          description: role.description || `Description for role ${id}`,
+          permissions: role.permissions || ["view"],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -674,7 +644,6 @@ export const roleApi = {
         return handleResponse<void>(response);
       } catch (error) {
         console.warn("Using mock delete role due to API error:", error);
-        // Mock successful delete
         return createMockResponse<void>(undefined);
       }
     } catch (error) {
