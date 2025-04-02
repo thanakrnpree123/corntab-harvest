@@ -260,7 +260,7 @@ export default function LogsPage() {
               </SelectTrigger>
               <SelectContent>
                 {jobs.length > 0 ? jobs.map((job) => (
-                  <SelectItem key={job.id} value={job.id}>
+                  <SelectItem key={job.id} value={job.id || ""}>
                     {job.name}
                   </SelectItem>
                 )) : (
