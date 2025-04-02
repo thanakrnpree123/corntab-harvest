@@ -111,7 +111,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
     <div className="space-y-6 h-full">
   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
     {/* Job Details Card */}
-    <Card className="bg-card h-full flex flex-col">
+    <Card className="bg-card h-[50vh] flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div>
