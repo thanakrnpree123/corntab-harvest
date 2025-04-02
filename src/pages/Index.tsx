@@ -93,7 +93,7 @@ export default function Index() {
           <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="recent" className="max-h-[25vh] overflow-y-auto">
+        <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
           <div className="divide-y">
             {recentJobs.length > 0 ? (
               recentJobs.map((job) => (
