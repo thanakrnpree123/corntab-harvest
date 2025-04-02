@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { CronJob } from "@/lib/types";
-import { Download, Upload, AlertCircle, FileJson, FileCsv, Loader2 } from "lucide-react";
+import { Download, Upload, AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface JobExportImportProps {
@@ -99,7 +99,7 @@ export function JobExportImport({ jobs, onImport }: JobExportImportProps) {
   };
 
   // Process import data
-  const processImportData = () => {
+  const processImportData = async () => {
     setIsProcessing(true);
     setImportError(null);
     
