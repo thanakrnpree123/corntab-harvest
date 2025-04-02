@@ -94,7 +94,7 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
             <SelectValue placeholder="กรองตามสถานะ" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">ทั้งหมด</SelectItem>
+            <SelectItem value="all">ทั้งหมด</SelectItem>
             <SelectItem value="success">Success</SelectItem>
             <SelectItem value="failed">Failed</SelectItem>
             <SelectItem value="running">Running</SelectItem>
