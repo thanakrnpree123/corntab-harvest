@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { ProjectSelector } from "@/components/ProjectSelector";
@@ -13,25 +13,22 @@ import {
   SelectTrigger,
   SelectValue 
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Input } from "@/components/ui/input";
 import {
   Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
   CardContent,
-  CardFooter,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
+import { LogsDetail } from "@/components/LogsDetail";
 
 interface LogsFilter {
   status: string;
@@ -50,22 +47,26 @@ export default function LogsPage() {
   const { toast } = useToast();
 
   // Fetch projects
-  const { data: projects = [] } = useQuery({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
       try {
         const response = await apiService.getProjects();
         if (response.success && response.data) {
-          if (response.data.length > 0 && !selectedProjectId) {
-            setSelectedProjectId(response.data[0].id);
-          }
           return response.data;
+        }
+        if (!response.success) {
+          toast({
+            title: "ไม่สามารถโหลดรายการโปรเจคได้",
+            description: response.error || "เกิดข้อผิดพลาดในการโหลดข้อมูล",
+            variant: "destructive",
+          });
         }
         return [];
       } catch (error) {
         toast({
-          title: "Error fetching projects",
-          description: "There was an error loading your projects. Please try again.",
+          title: "เกิดข้อผิดพลาด",
+          description: "ไม่สามารถโหลดรายการโปรเจคได้",
           variant: "destructive",
         });
         return [];
@@ -73,8 +74,15 @@ export default function LogsPage() {
     }
   });
 
+  // Set default selected project when data is loaded
+  useEffect(() => {
+    if (projects && projects.length > 0 && !selectedProjectId) {
+      setSelectedProjectId(projects[0].id);
+    }
+  }, [projects, selectedProjectId]);
+
   // Fetch jobs for selected project
-  const { data: jobs = [] } = useQuery({
+  const { data: jobs = [], isLoading: isLoadingJobs } = useQuery({
     queryKey: ['jobs', selectedProjectId],
     queryFn: async () => {
       if (!selectedProjectId) return [];
@@ -82,17 +90,20 @@ export default function LogsPage() {
       try {
         const response = await apiService.getJobsByProject(selectedProjectId);
         if (response.success && response.data) {
-          // Set first job as selected if none is selected yet
-          if (response.data.length > 0 && !selectedJobId) {
-            setSelectedJobId(response.data[0].id);
-          }
           return response.data;
+        }
+        if (!response.success) {
+          toast({
+            title: "ไม่สามารถโหลดรายการงานได้",
+            description: response.error || "เกิดข้อผิดพลาดในการโหลดข้อมูล",
+            variant: "destructive",
+          });
         }
         return [];
       } catch (error) {
         toast({
-          title: "Error fetching jobs",
-          description: "There was an error loading the jobs. Please try again.",
+          title: "เกิดข้อผิดพลาด",
+          description: "ไม่สามารถโหลดรายการงานได้",
           variant: "destructive",
         });
         return [];
@@ -101,67 +112,14 @@ export default function LogsPage() {
     enabled: !!selectedProjectId
   });
 
-  // Fetch logs for selected job
-  const { 
-    data: logs = [],
-    isLoading: isLoadingLogs,
-    refetch: refetchLogs
-  } = useQuery({
-    queryKey: ['logs', selectedJobId],
-    queryFn: async () => {
-      if (!selectedJobId) return [];
-      
-      try {
-        const response = await apiService.getJobLogs(selectedJobId);
-        if (response.success && response.data) {
-          return response.data;
-        }
-        return [];
-      } catch (error) {
-        toast({
-          title: "Error fetching logs",
-          description: "There was an error loading the logs. Please try again.",
-          variant: "destructive",
-        });
-        return [];
-      }
-    },
-    enabled: !!selectedJobId
-  });
-
-  // Filter logs based on criteria
-  const filteredLogs = useMemo(() => {
-    if (!logs.length) return [];
-    
-    return logs.filter(log => {
-      // Status filter
-      if (logsFilter.status && log.status !== logsFilter.status) {
-        return false;
-      }
-      
-      // Date range filter
-      if (logsFilter.dateRange && logsFilter.dateRange[0] && logsFilter.dateRange[1]) {
-        const startDate = new Date(logsFilter.dateRange[0]);
-        const endDate = new Date(logsFilter.dateRange[1]);
-        const logDate = new Date(log.startTime);
-        
-        if (logDate < startDate || logDate > endDate) {
-          return false;
-        }
-      }
-      
-      // Search filter
-      if (logsFilter.search) {
-        const searchLower = logsFilter.search.toLowerCase();
-        return (
-          log.output.toLowerCase().includes(searchLower) ||
-          (log.error && log.error.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      return true;
-    });
-  }, [logs, logsFilter]);
+  // Set default selected job when data is loaded
+  useEffect(() => {
+    if (jobs && jobs.length > 0 && !selectedJobId) {
+      setSelectedJobId(jobs[0].id);
+    } else if (jobs && jobs.length === 0) {
+      setSelectedJobId("");
+    }
+  }, [jobs, selectedJobId]);
 
   const handleCreateProject = (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => {
     apiService.createProject(projectData)
@@ -169,28 +127,28 @@ export default function LogsPage() {
         if (response.success && response.data) {
           setSelectedProjectId(response.data.id);
           toast({
-            title: "Project Created",
-            description: `Project "${projectData.name}" was created successfully`,
+            title: "สร้างโปรเจคสำเร็จ",
+            description: `โปรเจค "${projectData.name}" ถูกสร้างเรียบร้อยแล้ว`,
           });
         } else {
           toast({
-            title: "Error",
-            description: `Failed to create project: ${response.error}`,
+            title: "เกิดข้อผิดพลาด",
+            description: `ไม่สามารถสร้างโปรเจคได้: ${response.error}`,
             variant: "destructive",
           });
         }
       })
       .catch(error => {
         toast({
-          title: "Error",
-          description: `Error creating project: ${error.message}`,
+          title: "เกิดข้อผิดพลาด",
+          description: `ไม่สามารถสร้างโปรเจคได้: ${error.message}`,
           variant: "destructive",
         });
       });
   };
 
   return (
-    <PageLayout title="Logs">
+    <PageLayout title="ประวัติการทำงาน">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <ProjectSelector
@@ -199,19 +157,38 @@ export default function LogsPage() {
             onSelectProject={setSelectedProjectId}
             onCreateProject={handleCreateProject}
             compact={true}
+            isLoading={isLoadingProjects}
           />
           
           {/* Job selector */}
-          <Select value={selectedJobId} onValueChange={setSelectedJobId} disabled={!jobs.length}>
-            <SelectTrigger className="w-full md:w-[200px]">
-              <SelectValue placeholder="Select a job" />
+          <Select 
+            value={selectedJobId} 
+            onValueChange={setSelectedJobId} 
+            disabled={!jobs.length || isLoadingJobs}
+          >
+            <SelectTrigger className="w-full md:w-[250px]">
+              {isLoadingJobs ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>กำลังโหลด...</span>
+                </div>
+              ) : (
+                <SelectValue placeholder="เลือกงาน" />
+              )}
             </SelectTrigger>
             <SelectContent>
-              {jobs.map((job) => (
+              {jobs.length > 0 ? jobs.map((job) => (
                 <SelectItem key={job.id} value={job.id}>
                   {job.name}
                 </SelectItem>
-              ))}
+              )) : (
+                <div className="p-2 text-center text-muted-foreground">
+                  ไม่พบงานในโปรเจคนี้
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -221,10 +198,10 @@ export default function LogsPage() {
           {/* Status Filter */}
           <Select onValueChange={(value) => setLogsFilter(prev => ({ ...prev, status: value }))}>
             <SelectTrigger className="w-full md:w-[150px]">
-              <SelectValue placeholder="Filter by Status" />
+              <SelectValue placeholder="กรองตามสถานะ" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="">ทั้งหมด</SelectItem>
               <SelectItem value="idle">Idle</SelectItem>
               <SelectItem value="running">Running</SelectItem>
               <SelectItem value="success">Success</SelectItem>
@@ -239,7 +216,7 @@ export default function LogsPage() {
               <Button
                 variant={"outline"}
                 className={cn(
-                  "w-[240px] justify-start text-left font-normal",
+                  "w-full md:w-[240px] justify-start text-left font-normal",
                   !logsFilter.dateRange ? "text-muted-foreground" : undefined
                 )}
               >
@@ -251,7 +228,7 @@ export default function LogsPage() {
                     `${format(logsFilter.dateRange[0], "PPP")} - ${format(logsFilter.dateRange[1], "PPP")}`
                   )
                 ) : (
-                  <span>Pick a date range</span>
+                  <span>เลือกช่วงวันที่</span>
                 )}
               </Button>
             </PopoverTrigger>
@@ -265,7 +242,7 @@ export default function LogsPage() {
                 }}
                 onSelect={(date) => setLogsFilter(prev => ({ 
                   ...prev, 
-                  dateRange: date ? [date.from, date.to] as [Date, Date] : null 
+                  dateRange: date ? [date.from, date.to] as [Date | null, Date | null] : null 
                 }))}
                 numberOfMonths={2}
                 pagedNavigation
@@ -276,7 +253,7 @@ export default function LogsPage() {
           {/* Search Filter */}
           <Input
             type="search"
-            placeholder="Search logs..."
+            placeholder="ค้นหาในล็อก..."
             className="w-full md:w-[200px]"
             value={logsFilter.search}
             onChange={(e) => setLogsFilter(prev => ({ ...prev, search: e.target.value }))}
@@ -286,64 +263,14 @@ export default function LogsPage() {
         {/* Log display */}
         <Card>
           <CardContent className="p-4">
-            {isLoadingLogs ? (
-              <div className="flex items-center justify-center p-8">
-                <span className="text-muted-foreground">Loading logs...</span>
-              </div>
-            ) : filteredLogs.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Start Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        End Time
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Duration (seconds)
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Output
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Error
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredLogs.map((log) => (
-                      <tr key={log.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {log.status}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {log.startTime}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {log.endTime || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {log.duration || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          <pre>{log.output}</pre>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          {log.error ? <pre>{log.error}</pre> : 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {selectedJobId ? (
+              <LogsDetail 
+                jobId={selectedJobId} 
+                jobName={jobs.find(job => job.id === selectedJobId)?.name}
+              />
             ) : (
               <div className="flex items-center justify-center p-8">
-                <span className="text-muted-foreground">No logs found for the selected job and filters.</span>
+                <span className="text-muted-foreground">เลือกงานเพื่อดูประวัติการทำงาน</span>
               </div>
             )}
           </CardContent>

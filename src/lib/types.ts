@@ -38,6 +38,7 @@ export interface CronJob {
   successCount: number;
   failCount: number;
   averageRuntime: number | null;
+  emailNotifications?: string | null;
 }
 
 export interface JobLog {
