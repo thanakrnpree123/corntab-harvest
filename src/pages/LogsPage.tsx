@@ -260,7 +260,7 @@ export default function LogsPage() {
               </SelectTrigger>
               <SelectContent>
                 {jobs.length > 0 ? jobs.map((job) => (
-                  <SelectItem key={job.id} value={job.id || ""}>
+                  <SelectItem key={job.id} value={job.id}>
                     {job.name}
                   </SelectItem>
                 )) : (
@@ -294,7 +294,7 @@ export default function LogsPage() {
                 <SelectValue placeholder="กรองตามสถานะ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">ทั้งหมด</SelectItem>
+                <SelectItem value="all">ทั้งหมด</SelectItem>
                 <SelectItem value="success">Success</SelectItem>
                 <SelectItem value="failed">Failed</SelectItem>
                 <SelectItem value="running">Running</SelectItem>
