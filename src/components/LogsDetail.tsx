@@ -68,7 +68,7 @@ export function LogsDetail({ jobId, jobName }: LogsDetailProps) {
   }, [jobId]);
 
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm h-[50vh]">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">
           {jobName ? `ประวัติการทำงาน: ${jobName}` : "ประวัติการทำงาน"}
