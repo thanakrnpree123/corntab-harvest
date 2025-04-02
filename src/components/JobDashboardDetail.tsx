@@ -228,7 +228,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
     </Card>
 
     {/* Job Logs Card */}
-    <Card className="bg-card h-full flex flex-col">
+    <Card className="bg-card h-[50vh] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle>ประวัติการทำงานล่าสุด</CardTitle>
       </CardHeader>

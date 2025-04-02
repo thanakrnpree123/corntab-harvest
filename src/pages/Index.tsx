@@ -80,7 +80,7 @@ export default function Index() {
         {/* Recent jobs */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="md:col-span-1 space-y-6">
-  <Card>
+         <Card>
     <CardHeader>
       <CardTitle>งานล่าสุด</CardTitle>
       <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
