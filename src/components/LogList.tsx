@@ -102,7 +102,7 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
         </Select>
       </div>
 
-      <div className="space-y-3 max-h-[25vh] overflow-y-auto">
+      <div className="space-y-3 max-h-[35vh] overflow-y-auto">
         {filteredLogs.length > 0 ? (
           filteredLogs.map((log) => (
             <Collapsible
