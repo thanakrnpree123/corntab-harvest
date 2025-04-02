@@ -5,8 +5,9 @@ import { JobStatus } from "@/lib/types";
 
 interface StatusBadgeProps {
   status: JobStatus |string;
-  className?: string;
+  className?: React.HTMLAttributes<HTMLDivElement> | string;
   pulsing?: boolean;
+  size?: "sm" | "md" | "lg"; 
 }
 
 export function StatusBadge({ status, className, pulsing = false }: StatusBadgeProps) {
