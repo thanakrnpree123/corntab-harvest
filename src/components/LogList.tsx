@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { JobLog } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -106,67 +105,70 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
       <div className="space-y-3">
         {filteredLogs.length > 0 ? (
           filteredLogs.map((log) => (
-            <Card key={log.id} className="overflow-hidden">
-              <CollapsibleTrigger
-                asChild
-                onClick={() => toggleLogExpansion(log.id)}
-              >
-                <div className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <StatusBadge status={log.status as any} />
-                    <span className="text-sm text-muted-foreground">
-                      {formatDate(log.startTime)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {log.duration && (
-                      <Badge variant="outline" className="ml-2">
-                        {log.duration.toFixed(2)}s
-                      </Badge>
-                    )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      {expandedLogs[log.id] ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="p-4 pt-0 border-t">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">เริ่ม</h4>
-                      <p className="text-sm text-muted-foreground">
+            <Collapsible
+              key={log.id}
+              open={expandedLogs[log.id]}
+              onOpenChange={() => toggleLogExpansion(log.id)}
+            >
+              <Card className="overflow-hidden">
+                <CollapsibleTrigger asChild>
+                  <div className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <StatusBadge status={log.status as any} />
+                      <span className="text-sm text-muted-foreground">
                         {formatDate(log.startTime)}
-                      </p>
+                      </span>
                     </div>
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">สิ้นสุด</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(log.endTime)}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      {log.duration && (
+                        <Badge variant="outline" className="ml-2">
+                          {log.duration.toFixed(2)}s
+                        </Badge>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        {expandedLogs[log.id] ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
-                    <div className="md:col-span-2">
-                      <h4 className="text-sm font-medium mb-1">ผลลัพธ์</h4>
-                      <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto max-h-[200px]">
-                        {log.output || "ไม่มีข้อมูล"}
-                      </pre>
-                    </div>
-                    {log.error && (
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="p-4 pt-0 border-t">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">เริ่ม</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(log.startTime)}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">สิ้นสุด</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(log.endTime)}
+                        </p>
+                      </div>
                       <div className="md:col-span-2">
-                        <h4 className="text-sm font-medium text-red-600 mb-1">ข้อผิดพลาด</h4>
-                        <pre className="text-sm bg-red-50 text-red-700 p-3 rounded overflow-auto max-h-[200px]">
-                          {log.error}
+                        <h4 className="text-sm font-medium mb-1">ผลลัพธ์</h4>
+                        <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto max-h-[200px]">
+                          {log.output || "ไม่มีข้อมูล"}
                         </pre>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
+                      {log.error && (
+                        <div className="md:col-span-2">
+                          <h4 className="text-sm font-medium text-red-600 mb-1">ข้อผิดพลาด</h4>
+                          <pre className="text-sm bg-red-50 text-red-700 p-3 rounded overflow-auto max-h-[200px]">
+                            {log.error}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           ))
         ) : (
           <div className="text-center p-4 text-gray-500">
