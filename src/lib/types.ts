@@ -86,3 +86,12 @@ export interface WebhookSettings {
   onSuccess?: boolean;
   onFailure?: boolean;
 }
+
+export interface KeyValuePair {
+  key: string;
+  value: string;
+}
+
+export interface FormDataBody {
+  pairs: KeyValuePair[];
+}

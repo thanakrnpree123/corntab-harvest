@@ -12,34 +12,36 @@ export function TimezonePicker({ value, onChange }: TimezonePickerProps) {
   const [timezones, setTimezones] = useState<string[]>([]);
   
   useEffect(() => {
-    // Get a list of all supported timezones
-    try {
-      const zones = Intl.supportedValuesOf('timeZone');
-      setTimezones(zones);
-    } catch (e) {
-      // Fallback for browsers that don't support Intl.supportedValuesOf
-      setTimezones([
-        "UTC",
-        "America/New_York",
-        "America/Chicago",
-        "America/Denver",
-        "America/Los_Angeles",
-        "Europe/London",
-        "Europe/Paris",
-        "Europe/Berlin",
-        "Asia/Tokyo",
-        "Asia/Shanghai",
-        "Asia/Kolkata",
-        "Australia/Sydney",
-        "Pacific/Auckland"
-      ]);
-    }
+    // ใช้รายการ timezone แบบ static เพื่อความเข้ากันได้กับทุกเบราว์เซอร์
+    const commonTimezones = [
+      "UTC",
+      "Asia/Bangkok",
+      "Asia/Tokyo",
+      "Asia/Singapore",
+      "Asia/Shanghai",
+      "Asia/Kolkata",
+      "Asia/Dubai",
+      "Asia/Tehran",
+      "Europe/Moscow",
+      "Europe/London",
+      "Europe/Paris",
+      "Europe/Berlin",
+      "Africa/Cairo",
+      "America/New_York",
+      "America/Chicago",
+      "America/Denver",
+      "America/Los_Angeles",
+      "America/Sao_Paulo",
+      "Australia/Sydney",
+      "Pacific/Auckland"
+    ];
+    setTimezones(commonTimezones);
   }, []);
 
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select Timezone" />
+        <SelectValue placeholder="เลือก Timezone" />
       </SelectTrigger>
       <SelectContent>
         <ScrollArea className="h-[200px]">

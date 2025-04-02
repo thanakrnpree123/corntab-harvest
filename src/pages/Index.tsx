@@ -1,17 +1,28 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
-import { JobsTable } from "@/components/JobsTable";
-import { CronJob, Project } from "@/lib/types";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { CronJob } from "@/lib/types";
+import { StatusBadge } from "@/components/StatusBadge";
+import { format } from "date-fns";
+import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { JobDashboardDetail } from "@/components/JobDashboardDetail";
 
 export default function Index() {
-  // Fetch jobs
-  const { data: jobs = [], isLoading: isLoadingJobs } = useQuery({
+  const { toast } = useToast();
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  
+  // Fetch all jobs
+  const {
+    data: jobs = [],
+    isLoading,
+    refetch
+  } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
       try {
@@ -19,249 +30,334 @@ export default function Index() {
         if (response.success && response.data) {
           return response.data;
         }
-        return [];
+        console.warn("Using mock jobs due to API error:", response.error);
+        return getMockJobs();
       } catch (error) {
-        toast.error("Error loading recent jobs. Please try again.");
-        return [];
+        console.warn("Using mock jobs due to API error:", error);
+        return getMockJobs();
       }
-    }
+    },
   });
-
-  // Prepare sample jobs data for demonstration if no jobs are returned from the API
-  const recentJobs = jobs.slice(0, 5);
   
-  const sampleJobs: CronJob[] = [{
-    id: "1",
-    name: "Daily Database Backup",
-    endpoint: "https://api.example.com/backup",
-    httpMethod: "POST",
-    schedule: "0 0 * * *",
-    description: "Creates a full database backup every day at midnight",
-    status: "success",
-    projectId: "1",
-    useLocalTime: true,
-    timezone: "UTC",
-    lastRun: "2023-05-15T00:00:00Z",
-    nextRun: "2023-05-16T00:00:00Z",
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-05-15T00:00:01Z",
-    tags: ["backup", "database"],
-    successCount: 145,
-    failCount: 2,
-    averageRuntime: 345.7
-  }, {
-    id: "2",
-    name: "Hourly Log Cleanup",
-    endpoint: "https://api.example.com/logs/cleanup",
-    httpMethod: "GET",
-    schedule: "0 * * * *",
-    description: "Cleans up old log files every hour",
-    status: "idle",
-    projectId: "1",
-    useLocalTime: true,
-    timezone: "UTC",
-    lastRun: "2023-05-15T14:00:00Z",
-    nextRun: "2023-05-15T15:00:00Z",
-    createdAt: "2023-01-02T00:00:00Z",
-    updatedAt: "2023-05-15T14:00:01Z",
-    tags: ["cleanup", "logs"],
-    successCount: 3456,
-    failCount: 17,
-    averageRuntime: 124.3
-  }, {
-    id: "3",
-    name: "Weekly Analytics Report",
-    endpoint: "https://api.example.com/analytics/report",
-    httpMethod: "GET",
-    schedule: "0 9 * * 1",
-    description: "Generates and emails weekly analytics report every Monday at 9 AM",
-    status: "failed",
-    projectId: "2",
-    useLocalTime: true,
-    timezone: "Europe/London",
-    lastRun: "2023-05-08T09:00:00Z",
-    nextRun: "2023-05-15T09:00:00Z",
-    createdAt: "2023-01-03T00:00:00Z",
-    updatedAt: "2023-05-08T09:00:30Z",
-    tags: ["report", "analytics", "email"],
-    successCount: 18,
-    failCount: 2,
-    averageRuntime: 3567.8
-  }, {
-    id: "4",
-    name: "Customer Email Newsletter",
-    endpoint: "https://api.example.com/email/newsletter",
-    httpMethod: "POST",
-    schedule: "0 10 * * 4",
-    description: "Sends weekly newsletter to customers every Thursday at 10 AM",
-    status: "paused",
-    projectId: "2",
-    useLocalTime: true,
-    timezone: "America/New_York",
-    lastRun: "2023-05-11T10:00:00Z",
-    nextRun: null,
-    createdAt: "2023-01-04T00:00:00Z",
-    updatedAt: "2023-05-11T12:00:00Z",
-    tags: ["email", "newsletter", "marketing"],
-    successCount: 54,
-    failCount: 3,
-    averageRuntime: 4532.9
-  }, {
-    id: "5",
-    name: "Monthly Invoice Generation",
-    endpoint: "https://api.example.com/billing/invoices",
-    httpMethod: "POST",
-    schedule: "0 0 1 * *",
-    description: "Generates monthly invoices on the 1st of each month",
-    status: "running",
-    projectId: "3",
-    useLocalTime: false,
-    timezone: "UTC",
-    lastRun: "2023-05-01T00:00:00Z",
-    nextRun: "2023-06-01T00:00:00Z",
-    createdAt: "2023-01-05T00:00:00Z",
-    updatedAt: "2023-05-15T16:30:00Z",
-    tags: ["billing", "invoices", "monthly"],
-    successCount: 5,
-    failCount: 0,
-    averageRuntime: 14576.3
-  }];
+  // Set first job as selected when data loads
+  useEffect(() => {
+    if (jobs.length > 0 && !selectedJobId) {
+      setSelectedJobId(jobs[0].id);
+    }
+  }, [jobs, selectedJobId]);
 
-  // Use sample data if no real jobs exist
-  const displayJobs = recentJobs.length > 0 ? recentJobs : sampleJobs;
+  const selectedJob = jobs.find(job => job.id === selectedJobId);
 
-  // Add job-related functions for the display jobs
-  const handleToggleStatus = (jobId: string) => {
-    // Get the job to show proper confirm message
-    const job = displayJobs.find(j => j.id === jobId);
-    if (!job) return;
-
-    // Determine the action based on current status
-    const newStatus = job.status === "paused" ? "idle" : "paused";
-    
-    apiService.updateJob(jobId, { status: newStatus })
-      .then(response => {
-        if (response.success) {
-          toast.success(`Job ${newStatus === "paused" ? "paused" : "activated"} successfully`);
-        } else {
-          toast.error(`Failed to update job status: ${response.error}`);
-        }
-      })
-      .catch(error => {
-        toast.error(`Error updating job status: ${error.message}`);
-      });
+  // Group jobs by status
+  const recentJobs = [...jobs].sort((a, b) => 
+    new Date(b.lastRun || 0).getTime() - new Date(a.lastRun || 0).getTime()
+  ).slice(0, 5);
+  
+  const failedJobs = jobs.filter(job => job.status === "failed");
+  const pausedJobs = jobs.filter(job => job.status === "paused");
+  
+  // Calculate statistics
+  const jobStats = {
+    total: jobs.length,
+    active: jobs.filter(job => job.status !== "paused").length,
+    paused: pausedJobs.length,
+    failed: failedJobs.length,
+    success: jobs.filter(job => job.status === "success").length,
   };
 
-  const handleDeleteJob = (jobId: string) => {
-    apiService.deleteJob(jobId)
-      .then(response => {
-        if (response.success) {
-          toast.success("Job deleted successfully");
-        } else {
-          toast.error(`Failed to delete job: ${response.error}`);
-        }
-      })
-      .catch(error => {
-        toast.error(`Error deleting job: ${error.message}`);
-      });
-  };
-  
   return (
     <PageLayout title="Dashboard">
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardContent className="p-0">
-            {isLoadingJobs ? (
-              <div className="flex items-center justify-center p-8">
-                <span className="text-muted-foreground">Loading jobs...</span>
-              </div>
-            ) : displayJobs.length > 0 ? (
-              <div className="p-4">
-                <h3 className="text-lg font-medium mb-4">Recent Jobs</h3>
-                <JobsTable 
-                  jobs={displayJobs}
-                  onViewDetails={(job) => {
-                    // View job details would typically navigate to job details page
-                    toast.info(`Viewing details for job: ${job.name}`);
-                  }}
-                  onToggleStatus={(jobId) => {
-                    const job = displayJobs.find(j => j.id === jobId);
-                    if (!job) return null;
-                    
-                    // Determine the action based on current status
-                    const action = job.status === "paused" ? "activate" : "pause";
-                    
-                    return (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button className={`px-3 py-1 text-xs font-medium rounded ${
-                            action === "pause" ? "bg-gray-200 text-gray-800" : "bg-blue-100 text-blue-800"
-                          }`}>
-                            {action === "pause" ? "Pause" : "Activate"}
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              {action === "pause" ? "Pause Job" : "Activate Job"}
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              {action === "pause" 
-                                ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.` 
-                                : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleToggleStatus(jobId)}>
-                              {action === "pause" ? "Pause Job" : "Activate Job"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    );
-                  }}
-                  onDeleteJob={(jobId) => {
-                    const job = displayJobs.find(j => j.id === jobId);
-                    if (!job) return null;
-                    
-                    return (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
-                            Delete
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Job</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{job.name}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => handleDeleteJob(jobId)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete Job
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    );
-                  }}
-                />
-              </div>
+      <div className="grid gap-6">
+        {/* Stats cards */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <StatsCard title="งานทั้งหมด" value={jobStats.total} />
+          <StatsCard title="กำลังทำงาน" value={jobStats.active} />
+          <StatsCard title="สำเร็จ" value={jobStats.success} color="green" icon={CheckCircle} />
+          <StatsCard title="ล้มเหลว" value={jobStats.failed} color="red" icon={AlertTriangle} />
+          <StatsCard title="หยุดชั่วคราว" value={jobStats.paused} color="gray" />
+        </div>
+
+        {/* Recent jobs */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="md:col-span-1 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>งานล่าสุด</CardTitle>
+                <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Tabs defaultValue="recent">
+                  <TabsList className="w-full bg-transparent border-b rounded-none">
+                    <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
+                    <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
+                    <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="recent" className="m-0">
+                    <div className="divide-y">
+                      {recentJobs.length > 0 ? (
+                        recentJobs.map((job) => (
+                          <JobListItem 
+                            key={job.id} 
+                            job={job} 
+                            isSelected={job.id === selectedJobId}
+                            onSelect={() => setSelectedJobId(job.id)} 
+                          />
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          ยังไม่มีงานที่เคยรัน
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="failed" className="m-0">
+                    <div className="divide-y">
+                      {failedJobs.length > 0 ? (
+                        failedJobs.map((job) => (
+                          <JobListItem 
+                            key={job.id} 
+                            job={job} 
+                            isSelected={job.id === selectedJobId}
+                            onSelect={() => setSelectedJobId(job.id)} 
+                          />
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          ไม่มีงานที่ล้มเหลว
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="paused" className="m-0">
+                    <div className="divide-y">
+                      {pausedJobs.length > 0 ? (
+                        pausedJobs.map((job) => (
+                          <JobListItem 
+                            key={job.id} 
+                            job={job} 
+                            isSelected={job.id === selectedJobId}
+                            onSelect={() => setSelectedJobId(job.id)} 
+                          />
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          ไม่มีงานที่ถูกหยุดชั่วคราว
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="md:col-span-2">
+            {selectedJob ? (
+              <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
             ) : (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <p className="text-muted-foreground mb-4">No recent jobs found</p>
-              </div>
+              <Card className="h-full flex items-center justify-center p-6">
+                <div className="text-center text-muted-foreground">
+                  เลือกงานจากรายการเพื่อดูรายละเอียด
+                </div>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </PageLayout>
   );
+}
+
+// Job list item component
+function JobListItem({ job, isSelected, onSelect }: { 
+  job: CronJob; 
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors ${
+        isSelected ? "bg-muted" : ""
+      }`}
+      onClick={onSelect}
+    >
+      <div className="flex items-start justify-between mb-1">
+        <div className="font-medium truncate mr-2">{job.name}</div>
+        <StatusBadge status={job.status} />
+      </div>
+      <div className="flex items-center text-xs text-muted-foreground gap-2">
+        <div className="flex items-center gap-1">
+          <Server className="h-3 w-3" />
+          <span>{job.httpMethod}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Calendar className="h-3 w-3" />
+          <span>{job.schedule}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          <span>
+            {job.lastRun 
+              ? format(new Date(job.lastRun), 'dd/MM HH:mm') 
+              : "ยังไม่เคยรัน"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// Stats card component
+function StatsCard({ 
+  title,
+  value,
+  color = "blue",
+  icon: Icon = Activity
+}: {
+  title: string;
+  value: number;
+  color?: "blue" | "green" | "red" | "gray";
+  icon?: React.ComponentType<{ className?: string }>;
+}) {
+  const colorClasses = {
+    blue: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
+    green: "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400",
+    red: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400",
+    gray: "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
+  };
+  
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
+            <p className="text-3xl font-bold">{value}</p>
+          </div>
+          <div className={`p-2 rounded-full ${colorClasses[color]}`}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Mock functions for UI testing
+function getMockJobs(): CronJob[] {
+  return [
+    {
+      id: "job-1",
+      name: "Send Weekly Newsletter",
+      schedule: "0 9 * * 1",
+      endpoint: "https://api.example.com/send-newsletter",
+      httpMethod: "POST",
+      description: "Sends weekly newsletter to subscribers every Monday",
+      status: "idle",
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date(Date.now() - 86400000).toISOString(),
+      nextRun: new Date(Date.now() + 518400000).toISOString(),
+      createdAt: new Date(Date.now() - 2592000000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      tags: ["marketing", "email"],
+      successCount: 12,
+      failCount: 1,
+      averageRuntime: 45.2,
+      projectId: "project-1",
+      emailNotifications: "admin@example.com,notify@example.com",
+      webhookUrl: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+    },
+    {
+      id: "job-2",
+      name: "Database Backup",
+      schedule: "0 0 * * *",
+      endpoint: "https://api.example.com/backup",
+      httpMethod: "GET",
+      description: "Daily database backup at midnight",
+      status: "success",
+      useLocalTime: true,
+      timezone: "Asia/Bangkok",
+      lastRun: new Date(Date.now() - 3600000).toISOString(),
+      nextRun: new Date(Date.now() + 82800000).toISOString(),
+      createdAt: new Date(Date.now() - 7776000000).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+      tags: ["database", "backup"],
+      successCount: 89,
+      failCount: 3,
+      averageRuntime: 134.7,
+      projectId: "project-2",
+      emailNotifications: null,
+      webhookUrl: null
+    },
+    {
+      id: "job-3",
+      name: "Process Customer Orders",
+      schedule: "*/15 * * * *",
+      endpoint: "https://api.example.com/process-orders",
+      httpMethod: "POST",
+      description: "Process new customer orders every 15 minutes",
+      status: "failed",
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date(Date.now() - 900000).toISOString(),
+      nextRun: new Date(Date.now() + 900000).toISOString(),
+      createdAt: new Date(Date.now() - 1209600000).toISOString(),
+      updatedAt: new Date(Date.now() - 900000).toISOString(),
+      tags: ["orders", "customers", "processing"],
+      successCount: 1240,
+      failCount: 17,
+      averageRuntime: 28.3,
+      projectId: "project-1",
+      emailNotifications: "tech-alerts@example.com",
+      webhookUrl: "https://api.example.com/webhook/orders"
+    },
+    {
+      id: "job-4",
+      name: "Generate Monthly Report",
+      schedule: "0 9 1 * *",
+      endpoint: "https://api.example.com/generate-report",
+      httpMethod: "POST",
+      description: "Generate monthly performance report on the 1st day of each month",
+      status: "paused",
+      useLocalTime: true,
+      timezone: "America/New_York",
+      lastRun: new Date(Date.now() - 2592000000).toISOString(),
+      nextRun: null,
+      createdAt: new Date(Date.now() - 5184000000).toISOString(),
+      updatedAt: new Date(Date.now() - 1209600000).toISOString(),
+      tags: ["reporting", "monthly"],
+      successCount: 6,
+      failCount: 0,
+      averageRuntime: 326.5,
+      projectId: "project-3",
+      emailNotifications: "management@example.com,reports@example.com",
+      webhookUrl: null
+    },
+    {
+      id: "job-5",
+      name: "Clean Temporary Files",
+      schedule: "0 2 * * *",
+      endpoint: "https://api.example.com/clean-temp",
+      httpMethod: "GET",
+      description: "Clean temporary files every day at 2 AM",
+      status: "running",
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date().toISOString(),
+      nextRun: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 864000000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: ["maintenance", "cleanup"],
+      successCount: 29,
+      failCount: 1,
+      averageRuntime: 45.8,
+      projectId: "project-2",
+      emailNotifications: null,
+      webhookUrl: "https://hooks.slack.com/services/AAA/BBB/CCC"
+    }
+  ];
 }
