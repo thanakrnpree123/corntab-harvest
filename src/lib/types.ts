@@ -39,6 +39,7 @@ export interface CronJob {
   failCount: number;
   averageRuntime: number | null;
   emailNotifications?: string | null;
+  webhookUrl?: string | null;
 }
 
 export interface JobLog {
@@ -70,4 +71,18 @@ export interface User {
   avatar?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EmailNotificationSettings {
+  recipients: string[];
+  onSuccess?: boolean;
+  onFailure?: boolean;
+}
+
+export interface WebhookSettings {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  onSuccess?: boolean;
+  onFailure?: boolean;
 }

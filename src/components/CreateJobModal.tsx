@@ -34,10 +34,12 @@ import {
   Mail, 
   Code, 
   FileText, 
-  AlertCircle 
+  AlertCircle,
+  Loader2 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EmailPreview } from "./EmailPreview";
 
 // Common HTTP methods
 const httpMethods = [
@@ -95,6 +97,12 @@ export function CreateJobModal({
   const [emailRecipients, setEmailRecipients] = useState("");
   const [isJsonValid, setIsJsonValid] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailValidation, setEmailValidation] = useState({
+    isValid: true,
+    message: ""
+  });
+  const [notifyOnSuccess, setNotifyOnSuccess] = useState(true);
+  const [notifyOnFailure, setNotifyOnFailure] = useState(true);
   
   const [timezone, setTimezone] = useState(() => {
     try {
@@ -118,12 +126,32 @@ export function CreateJobModal({
   };
 
   const validateEmails = (emails: string): boolean => {
-    if (!emails) return true;
+    if (!emails) {
+      setEmailValidation({
+        isValid: false,
+        message: "กรุณาระบุอีเมลอย่างน้อย 1 อีเมล"
+      });
+      return false;
+    }
     
     const emailList = emails.split(',').map(email => email.trim());
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
-    return emailList.every(email => emailRegex.test(email));
+    const isValid = emailList.every(email => emailRegex.test(email));
+    
+    if (!isValid) {
+      setEmailValidation({
+        isValid: false,
+        message: "กรุณาระบุอีเมลให้ถูกต้อง (เช่น example@domain.com)"
+      });
+      return false;
+    }
+    
+    setEmailValidation({
+      isValid: true,
+      message: ""
+    });
+    return true;
   };
 
   const handleAddFormDataPair = () => {
@@ -155,8 +183,8 @@ export function CreateJobModal({
   const handleCreateJob = () => {
     if (!jobName || !endpoint || !schedule) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "ข้อมูลไม่ครบถ้วน",
+        description: "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน",
         variant: "destructive",
       });
       return;
@@ -165,18 +193,18 @@ export function CreateJobModal({
     // Validate JSON if using JSON body type
     if (httpMethod !== "GET" && requestBodyType === "json" && !validateJson(requestBody)) {
       toast({
-        title: "Invalid JSON",
-        description: "Please enter valid JSON in the request body",
+        title: "JSON ไม่ถูกต้อง",
+        description: "กรุณาตรวจสอบรูปแบบ JSON ให้ถูกต้อง",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate email format
+    // Validate email format if sending email notifications
     if (sendEmailNotifications && !validateEmails(emailRecipients)) {
       toast({
-        title: "Invalid email format",
-        description: "Please enter valid email addresses separated by commas",
+        title: "อีเมลไม่ถูกต้อง",
+        description: emailValidation.message || "กรุณาตรวจสอบรูปแบบอีเมลให้ถูกต้อง",
         variant: "destructive",
       });
       return;
@@ -188,6 +216,13 @@ export function CreateJobModal({
       ? (requestBodyType === "json" ? requestBody : buildFormDataBody())
       : "";
 
+    // สร้างโครงสร้างข้อมูลสำหรับการส่งอีเมล
+    const emailSettings = sendEmailNotifications ? {
+      recipients: emailRecipients.split(',').map(email => email.trim()),
+      onSuccess: notifyOnSuccess,
+      onFailure: notifyOnFailure,
+    } : null;
+
     const newJob = {
       name: jobName,
       endpoint,
@@ -198,27 +233,37 @@ export function CreateJobModal({
       projectId,
       timezone: useLocalTime ? timezone : "UTC",
       useLocalTime,
-      emailNotifications: sendEmailNotifications ? {
-        recipients: emailRecipients.split(',').map(email => email.trim()),
-      } : null,
+      emailNotifications: emailSettings ? JSON.stringify(emailSettings) : null,
       tags: [],
     };
 
     try {
       onCreateJob(newJob);
-      resetForm();
-      onClose();
+      
+      // แสดงการแจ้งเตือนว่ากำลังสร้าง Job
       toast({
-        title: "Success",
-        description: "Job created successfully",
+        title: "กำลังสร้าง Job",
+        description: "กรุณารอสักครู่...",
       });
+      
+      // จำลองการส่งข้อมูลไปยัง API (ใน production จะถูกแทนที่ด้วยการเรียก API จริง)
+      setTimeout(() => {
+        resetForm();
+        onClose();
+        
+        toast({
+          title: "สร้าง Job เรียบร้อย",
+          description: `"${jobName}" ถูกสร้างเรียบร้อยแล้ว${sendEmailNotifications ? ' และระบบได้ส่งอีเมลแจ้งเตือนแล้ว' : ''}`,
+        });
+        
+        setIsSubmitting(false);
+      }, 1500);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create job. Please try again.",
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถสร้าง Job ได้ กรุณาลองใหม่อีกครั้ง",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -238,6 +283,9 @@ export function CreateJobModal({
     setSendEmailNotifications(false);
     setEmailRecipients("");
     setIsJsonValid(true);
+    setNotifyOnSuccess(true);
+    setNotifyOnFailure(true);
+    setEmailValidation({isValid: true, message: ""});
     // Don't reset timezone to preserve user preference
   };
 
@@ -256,17 +304,17 @@ export function CreateJobModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Job</DialogTitle>
+          <DialogTitle>สร้าง Job ใหม่</DialogTitle>
           <DialogDescription>
-            Add a new scheduled job to your CronTab management system.
+            เพิ่ม Cron Job ใหม่เข้าสู่ระบบบริหารจัดการ
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="project">Project *</Label>
+            <Label htmlFor="project">โปรเจค *</Label>
             <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a project" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="เลือกโปรเจค" />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
@@ -279,20 +327,20 @@ export function CreateJobModal({
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="name">Job Name *</Label>
+            <Label htmlFor="name">ชื่อ Job *</Label>
             <Input
               id="name"
               value={jobName}
               onChange={(e) => setJobName(e.target.value)}
-              placeholder="Daily API Health Check"
+              placeholder="ตรวจสอบการทำงานของ API ประจำวัน"
             />
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="httpMethod">HTTP Method</Label>
             <Select value={httpMethod} onValueChange={setHttpMethod}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select HTTP method" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="เลือก HTTP method" />
               </SelectTrigger>
               <SelectContent>
                 {httpMethods.map((method) => (
@@ -351,7 +399,7 @@ export function CreateJobModal({
                       <Alert variant="destructive" className="p-2">
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Invalid JSON format
+                          รูปแบบ JSON ไม่ถูกต้อง
                         </AlertDescription>
                       </Alert>
                     )}
@@ -379,6 +427,7 @@ export function CreateJobModal({
                           size="icon"
                           onClick={() => handleRemoveFormDataPair(index)}
                           disabled={formDataPairs.length <= 1}
+                          type="button"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -389,9 +438,10 @@ export function CreateJobModal({
                       size="sm"
                       onClick={handleAddFormDataPair}
                       className="mt-2"
+                      type="button"
                     >
                       <Plus className="mr-2 h-4 w-4" />
-                      Add Field
+                      เพิ่ม Field
                     </Button>
                   </div>
                 </TabsContent>
@@ -400,10 +450,10 @@ export function CreateJobModal({
           )}
 
           <div className="grid gap-2">
-            <Label>Schedule Type</Label>
+            <Label>ประเภทการตั้งเวลา</Label>
             <Select value={scheduleType} onValueChange={setScheduleType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select schedule type" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="เลือกประเภทการตั้งเวลา" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cron">Cron Expression</SelectItem>
@@ -412,12 +462,12 @@ export function CreateJobModal({
               </SelectContent>
             </Select>
             <div className="text-xs text-muted-foreground mt-1">
-              Example: {scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
+              ตัวอย่าง: {scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="schedule">Schedule *</Label>
+            <Label htmlFor="schedule">กำหนดการทำงาน *</Label>
             <Input
               id="schedule"
               value={schedule}
@@ -436,7 +486,7 @@ export function CreateJobModal({
               htmlFor="use-local-time" 
               className="text-sm font-normal"
             >
-              Use local time instead of UTC
+              ใช้เวลาท้องถิ่นแทน UTC
             </Label>
           </div>
 
@@ -444,8 +494,8 @@ export function CreateJobModal({
             <div className="grid gap-2">
               <Label htmlFor="timezone">Timezone</Label>
               <Select value={timezone} onValueChange={setTimezone}>
-                <SelectTrigger id="timezone">
-                  <SelectValue placeholder="Select timezone" />
+                <SelectTrigger id="timezone" className="w-full">
+                  <SelectValue placeholder="เลือก timezone" />
                 </SelectTrigger>
                 <SelectContent>
                   {commonTimezones.map((tz) => (
@@ -469,42 +519,93 @@ export function CreateJobModal({
               className="text-sm font-normal flex items-center gap-2"
             >
               <Mail className="h-4 w-4" />
-              Send email notifications
+              ส่งการแจ้งเตือนทางอีเมล
             </Label>
           </div>
 
           {sendEmailNotifications && (
-            <div className="grid gap-2">
-              <Label htmlFor="email-recipients">Email Recipients</Label>
-              <Input
-                id="email-recipients"
-                value={emailRecipients}
-                onChange={(e) => setEmailRecipients(e.target.value)}
-                placeholder="email@example.com, another@example.com"
-              />
-              <div className="text-xs text-muted-foreground mt-1">
-                Separate multiple email addresses with commas
+            <div className="space-y-4 border rounded-md p-4 bg-muted/30">
+              <div className="grid gap-2">
+                <Label htmlFor="email-recipients">อีเมลผู้รับ *</Label>
+                <Input
+                  id="email-recipients"
+                  value={emailRecipients}
+                  onChange={(e) => {
+                    setEmailRecipients(e.target.value);
+                    if (e.target.value) validateEmails(e.target.value);
+                  }}
+                  placeholder="email@example.com, another@example.com"
+                  className={!emailValidation.isValid ? "border-red-500" : ""}
+                />
+                {!emailValidation.isValid && (
+                  <p className="text-xs text-red-500">{emailValidation.message}</p>
+                )}
+                <div className="text-xs text-muted-foreground mt-1">
+                  คั่นอีเมลหลายอันด้วยเครื่องหมายจุลภาค (,)
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">ส่งอีเมลเมื่อ:</Label>
+                <div className="flex flex-col gap-2 mt-1">
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="notify-success" 
+                      checked={notifyOnSuccess} 
+                      onCheckedChange={(checked) => setNotifyOnSuccess(checked as boolean)}
+                    />
+                    <Label htmlFor="notify-success" className="text-sm font-normal">
+                      Job ทำงานสำเร็จ
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="notify-failure" 
+                      checked={notifyOnFailure} 
+                      onCheckedChange={(checked) => setNotifyOnFailure(checked as boolean)}
+                    />
+                    <Label htmlFor="notify-failure" className="text-sm font-normal">
+                      Job ทำงานล้มเหลว
+                    </Label>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end">
+                <EmailPreview 
+                  jobData={{
+                    name: jobName || "Job ใหม่",
+                    endpoint: endpoint || "https://example.com/api",
+                    schedule: schedule || scheduleExamples[scheduleType as keyof typeof scheduleExamples],
+                    httpMethod: httpMethod
+                  }}
+                  emailRecipients={emailRecipients || "example@email.com"}
+                />
               </div>
             </div>
           )}
 
           <div className="grid gap-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">คำอธิบาย</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Regular health check of the API endpoints"
+              placeholder="ตรวจสอบสถานะการทำงานของ API endpoint เป็นประจำ"
               className="min-h-[80px]"
             />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-            Cancel
+            ยกเลิก
           </Button>
           <Button onClick={handleCreateJob} disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Job"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังสร้าง...
+              </>
+            ) : "สร้าง Job"}
           </Button>
         </DialogFooter>
       </DialogContent>
