@@ -154,7 +154,7 @@ export default function Index() {
             </Card>
           </div>
           
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 space-y-6">
             {selectedJob ? (
               <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
             ) : (
