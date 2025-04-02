@@ -40,8 +40,9 @@ export default function LoginPage() {
         title: "เข้าสู่ระบบสำเร็จ",
         description: "ยินดีต้อนรับกลับ",
       });
-      
-      navigate('/'); // Redirect to dashboard after login
+
+      window.location.href="/"     
+      // navigate('/'); // Redirect to dashboard after login
     } catch (error) {
       toast({
         title: "เข้าสู่ระบบไม่สำเร็จ",
