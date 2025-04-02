@@ -155,20 +155,17 @@ export default function Index() {
 </div>
 
           
-<div className="md:col-span-2 h-full">
-  {selectedJob ? (
-    <div className="h-full overflow-y-auto">
-      <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
-    </div>
-  ) : (
-    <Card className="h-full flex items-center justify-center p-6">
-      <div className="text-center text-muted-foreground">
-        เลือกงานจากรายการเพื่อดูรายละเอียด
-      </div>
-    </Card>
-  )}
-</div>
-
+          <div className="md:col-span-2">
+            {selectedJob ? (
+              <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
+            ) : (
+              <Card className="h-full flex items-center justify-center p-6">
+                <div className="text-center text-muted-foreground">
+                  เลือกงานจากรายการเพื่อดูรายละเอียด
+                </div>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </PageLayout>

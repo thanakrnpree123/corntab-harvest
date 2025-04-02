@@ -108,214 +108,136 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-card">
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle>{job.name}</CardTitle>
-                <CardDescription>{job.description || "ไม่มีคำอธิบาย"}</CardDescription>
+    <div className="space-y-6 h-full">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+    {/* Job Details Card */}
+    <Card className="bg-card h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>{job.name}</CardTitle>
+            <CardDescription>{job.description || "ไม่มีคำอธิบาย"}</CardDescription>
+          </div>
+          <StatusBadge status={isRunningNow ? "running" : job.status} size="lg" />
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 overflow-y-auto">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                <span>ตารางเวลา</span>
               </div>
-              <StatusBadge status={isRunningNow ? "running" : job.status} size="lg" />
-            </div>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    <span>ตารางเวลา</span>
-                  </div>
-                  <div className="font-mono text-sm bg-muted px-2 py-1 rounded">
-                    {job.schedule}
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Globe className="w-4 h-4" />
-                    <span>Timezone</span>
-                  </div>
-                  <div>{job.timezone} {job.useLocalTime ? "(Local Time)" : ""}</div>
-                </div>
-              </div>
-                
-              <div className="space-y-1">
-                <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                  <Server className="w-4 h-4" />
-                  <span>Endpoint</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Badge variant="outline" className="font-mono">{job.httpMethod}</Badge>
-                  <span className="text-sm truncate">{job.endpoint}</span>
-                </div>
-              </div>
-              
-              {job.requestBody && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Code className="w-4 h-4" />
-                    <span>Request Body</span>
-                  </div>
-                  <div className="max-h-20 overflow-y-auto text-xs bg-muted px-2 py-1 rounded">
-                    <pre>{job.requestBody}</pre>
-                  </div>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>สำเร็จ</span>
-                  </div>
-                  <div>{job.successCount || 0} ครั้ง</div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    <span>ล้มเหลว</span>
-                  </div>
-                  <div>{job.failCount || 0} ครั้ง</div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>รันล่าสุด</span>
-                  </div>
-                  <div>{job.lastRun ? format(new Date(job.lastRun), 'dd/MM/yyyy HH:mm:ss') : "ไม่มีข้อมูล"}</div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Activity className="w-4 h-4" />
-                    <span>เวลาเฉลี่ย</span>
-                  </div>
-                  <div>{job.averageRuntime ? `${job.averageRuntime.toFixed(1)} วินาที` : "ไม่มีข้อมูล"}</div>
-                </div>
-              </div>
-              
-              {job.emailNotifications && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Mail className="w-4 h-4" />
-                    <span>การแจ้งเตือนทางอีเมล</span>
-                  </div>
-                  <div>{job.emailNotifications.split(',').map((email, i) => 
-                    <Badge key={i} variant="secondary" className="mr-1 mb-1">{email.trim()}</Badge>
-                  )}</div>
-                </div>
-              )}
-              
-              {job.webhookUrl && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                    <Webhook className="w-4 h-4" />
-                    <span>Webhook URL</span>
-                  </div>
-                  <div className="truncate text-sm">
-                    <a 
-                      href={job.webhookUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center hover:underline text-blue-500"
-                    >
-                      {job.webhookUrl}
-                      <ExternalLink className="w-3 h-3 ml-1" />
-                    </a>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex flex-wrap gap-2 pt-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="default" 
-                      className="flex-1"
-                      disabled={isLoading || job.status === "running" || isRunningNow}
-                    >
-                      <Play className="mr-2 h-4 w-4" />
-                      รันตอนนี้
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>รันงานตอนนี้</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        คุณแน่ใจหรือไม่ที่จะรันงาน "{job.name}" ตอนนี้?
-                        งานจะถูกรันทันทีโดยไม่คำนึงถึงตารางเวลา
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleRunJob}>
-                        รันตอนนี้
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant={job.status === "paused" ? "default" : "outline"}
-                      className="flex-1"
-                      disabled={isLoading || job.status === "running" || isRunningNow}
-                    >
-                      {job.status === "paused" ? (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          เปิดใช้งาน
-                        </>
-                      ) : (
-                        <>
-                          <Pause className="mr-2 h-4 w-4" />
-                          หยุดชั่วคราว
-                        </>
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        {job.status === "paused" ? "เปิดใช้งาน" : "หยุดงานชั่วคราว"}
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {job.status === "paused" 
-                          ? `คุณแน่ใจหรือไม่ที่จะเปิดใช้งาน "${job.name}"? งานจะกลับมาทำงานตามตารางเวลาที่กำหนด` 
-                          : `คุณแน่ใจหรือไม่ที่จะหยุด "${job.name}" ชั่วคราว? งานจะไม่รันจนกว่าคุณจะเปิดใช้งานอีกครั้ง`}
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleToggleStatus}>
-                        {job.status === "paused" ? "เปิดใช้งาน" : "หยุดชั่วคราว"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              <div className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                {job.schedule}
               </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Globe className="w-4 h-4" />
+                <span>Timezone</span>
+              </div>
+              <div>{job.timezone} {job.useLocalTime ? "(Local Time)" : ""}</div>
+            </div>
+          </div>
 
-        <Card className="bg-card">
-          <CardHeader className="pb-2">
-            <CardTitle>ประวัติการทำงานล่าสุด</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LogsDetail jobId={job.id} />
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Server className="w-4 h-4" />
+              <span>Endpoint</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Badge variant="outline" className="font-mono">{job.httpMethod}</Badge>
+              <span className="text-sm truncate">{job.endpoint}</span>
+            </div>
+          </div>
+
+          {job.requestBody && (
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Code className="w-4 h-4" />
+                <span>Request Body</span>
+              </div>
+              <div className="max-h-20 overflow-y-auto text-xs bg-muted px-2 py-1 rounded">
+                <pre>{job.requestBody}</pre>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <CheckCircle className="w-4 h-4" />
+                <span>สำเร็จ</span>
+              </div>
+              <div>{job.successCount || 0} ครั้ง</div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                <span>ล้มเหลว</span>
+              </div>
+              <div>{job.failCount || 0} ครั้ง</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>รันล่าสุด</span>
+              </div>
+              <div>{job.lastRun ? format(new Date(job.lastRun), 'dd/MM/yyyy HH:mm:ss') : "ไม่มีข้อมูล"}</div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <Activity className="w-4 h-4" />
+                <span>เวลาเฉลี่ย</span>
+              </div>
+              <div>{job.averageRuntime ? `${job.averageRuntime.toFixed(1)} วินาที` : "ไม่มีข้อมูล"}</div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pt-2">
+            <Button variant="default" className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
+              <Play className="mr-2 h-4 w-4" />
+              รันตอนนี้
+            </Button>
+
+            <Button variant={job.status === "paused" ? "default" : "outline"} className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
+              {job.status === "paused" ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  เปิดใช้งาน
+                </>
+              ) : (
+                <>
+                  <Pause className="mr-2 h-4 w-4" />
+                  หยุดชั่วคราว
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Job Logs Card */}
+    <Card className="bg-card h-full flex flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle>ประวัติการทำงานล่าสุด</CardTitle>
+      </CardHeader>
+      <CardContent className="flex-1 overflow-y-auto">
+        <LogsDetail jobId={job.id} />
+      </CardContent>
+    </Card>
+  </div>
+</div>
+
   );
 }
