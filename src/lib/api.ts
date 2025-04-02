@@ -96,7 +96,7 @@ export const jobApi = {
     }
   },
 
-  create: async (job: Omit<CronJob, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'lastRun' | 'nextRun'>): Promise<ApiResponse<CronJob>> => {
+  create: async (job: Omit<CronJob, 'id' | 'createdAt' | 'updatedAt' | 'status' | 'lastRun' | 'nextRun' | 'successCount' | 'failCount' | 'averageRuntime'>): Promise<ApiResponse<CronJob>> => {
     try {
       const response = await fetch(`${API_BASE_URL}/jobs`, {
         method: 'POST',
@@ -128,6 +128,17 @@ export const jobApi = {
         method: 'DELETE'
       });
       return handleResponse<void>(response);
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+
+  duplicate: async (id: string): Promise<ApiResponse<CronJob>> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/jobs/${id}/duplicate`, {
+        method: 'POST'
+      });
+      return handleResponse<CronJob>(response);
     } catch (error) {
       return { success: false, error: error.message };
     }

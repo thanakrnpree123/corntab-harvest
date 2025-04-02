@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -38,6 +39,7 @@ export default function UserManagementPage() {
   const [isPermissionDialogOpen, setIsPermissionDialogOpen] = useState(false);
   const [selectedPermissions, setSelectedPermissions] = useState<Permission[]>([]);
   const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch users
   const { data: users = [], refetch: refetchUsers } = useQuery({
@@ -89,6 +91,8 @@ export default function UserManagementPage() {
 
   const handleSavePermissions = async () => {
     if (!selectedUser) return;
+    
+    setIsLoading(true);
 
     try {
       // Find or create a role with the selected permissions
@@ -106,7 +110,11 @@ export default function UserManagementPage() {
         });
 
         if (!response.success || !response.data) {
-          toast.error("Failed to create role. Please try again.");
+          toast({
+            title: "Error",
+            description: "Failed to create role. Please try again.",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -119,14 +127,26 @@ export default function UserManagementPage() {
       });
 
       if (updateResponse.success) {
-        toast.success("User permissions updated successfully");
+        toast({
+          title: "Success",
+          description: "User permissions updated successfully",
+        });
         refetchUsers();
       } else {
-        toast.error("Failed to update user permissions");
+        toast({
+          title: "Error",
+          description: "Failed to update user permissions",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast.error("An error occurred while updating permissions");
+      toast({
+        title: "Error",
+        description: "An error occurred while updating permissions",
+        variant: "destructive",
+      });
     } finally {
+      setIsLoading(false);
       setIsPermissionDialogOpen(false);
       setSelectedUser(null);
     }
@@ -214,20 +234,7 @@ export default function UserManagementPage() {
                                     <Checkbox
                                       id={`permission-${permission}`}
                                       checked={user.role?.permissions.includes(permission)}
-                                      onCheckedChange={(checked) => {
-                                        const newPermissions = [...(user.role?.permissions || [])];
-                                        if (checked) {
-                                          if (!newPermissions.includes(permission)) {
-                                            newPermissions.push(permission);
-                                          }
-                                        } else {
-                                          const index = newPermissions.indexOf(permission);
-                                          if (index !== -1) {
-                                            newPermissions.splice(index, 1);
-                                          }
-                                        }
-                                        // In a real implementation, update this directly
-                                      }}
+                                      disabled
                                     />
                                     <Label htmlFor={`permission-${permission}`} className="capitalize">
                                       {permission}
@@ -285,10 +292,12 @@ export default function UserManagementPage() {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPermissionDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsPermissionDialogOpen(false)} disabled={isLoading}>
               Cancel
             </Button>
-            <Button onClick={handleSavePermissions}>Save Permissions</Button>
+            <Button onClick={handleSavePermissions} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save Permissions"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

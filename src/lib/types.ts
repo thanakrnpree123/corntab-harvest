@@ -1,3 +1,4 @@
+
 export type Permission = "view" | "create" | "update" | "delete";
 
 export interface ApiResponse<T> {
@@ -15,16 +16,18 @@ export interface Project {
   updatedAt: string;
 }
 
+export type JobStatus = "idle" | "running" | "success" | "failed" | "paused";
+
 export interface CronJob {
   id: string;
   name: string;
   schedule: string;
-  endpoint: string; // Changed from command to endpoint
-  httpMethod: string; // Added HTTP method
-  requestBody?: string; // Added request body
+  endpoint: string;
+  httpMethod: string;
+  requestBody?: string;
   description?: string;
   projectId: string;
-  status: string;
+  status: JobStatus;
   useLocalTime: boolean;
   timezone: string;
   lastRun: string | null;
@@ -32,9 +35,9 @@ export interface CronJob {
   createdAt: string;
   updatedAt: string;
   tags: string[];
-  successCount:number;
-  failCount:number;
-  averageRuntime:any;
+  successCount: number;
+  failCount: number;
+  averageRuntime: number | null;
 }
 
 export interface JobLog {
@@ -67,6 +70,3 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
-
-export type JobStatus = "idle" | "running" | "success" | "failed" | "paused";
-

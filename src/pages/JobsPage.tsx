@@ -15,13 +15,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { PlusCircle } from "lucide-react";
+import { Copy, PlusCircle, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isJobActionInProgress, setIsJobActionInProgress] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
 
   // Fetch projects
@@ -73,19 +76,42 @@ export default function JobsPage() {
     enabled: !!selectedProjectId
   });
 
+  // Filter jobs based on search query
+  const filteredJobs = jobs.filter(job => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      job.name.toLowerCase().includes(query) ||
+      job.description?.toLowerCase().includes(query) ||
+      job.status.toLowerCase().includes(query) ||
+      job.endpoint.toLowerCase().includes(query)
+    );
+  });
+
   const handleCreateProject = (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => {
     apiService.createProject(projectData)
       .then(response => {
         if (response.success && response.data) {
           setSelectedProjectId(response.data.id);
-          toast.success(`Project "${projectData.name}" was created successfully`);
+          toast({
+            title: "Success",
+            description: `Project "${projectData.name}" was created successfully`,
+          });
           refetchProjects();
         } else {
-          toast.error(`Failed to create project: ${response.error}`);
+          toast({
+            title: "Error",
+            description: `Failed to create project: ${response.error}`,
+            variant: "destructive",
+          });
         }
       })
       .catch(error => {
-        toast.error(`Error creating project: ${error.message}`);
+        toast({
+          title: "Error",
+          description: `Error creating project: ${error.message}`,
+          variant: "destructive",
+        });
       });
   };
 
@@ -98,14 +124,25 @@ export default function JobsPage() {
     apiService.createJob(newJobData)
       .then(response => {
         if (response.success && response.data) {
-          toast.success(`Job "${jobData.name}" was created successfully`);
+          toast({
+            title: "Success",
+            description: `Job "${jobData.name}" was created successfully`,
+          });
           refetchJobs();
         } else {
-          toast.error(`Failed to create job: ${response.error}`);
+          toast({
+            title: "Error",
+            description: `Failed to create job: ${response.error}`,
+            variant: "destructive",
+          });
         }
       })
       .catch(error => {
-        toast.error(`Error creating job: ${error.message}`);
+        toast({
+          title: "Error",
+          description: `Error creating job: ${error.message}`,
+          variant: "destructive",
+        });
       });
   };
 
@@ -118,6 +155,7 @@ export default function JobsPage() {
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
 
+    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
     const newStatus = job.status === "paused" ? "idle" : "paused";
     
     apiService.updateJob(jobId, { status: newStatus })
@@ -138,26 +176,87 @@ export default function JobsPage() {
           }
           refetchJobs();
         } else {
-          toast.error(`Failed to update job status: ${response.error}`);
+          toast({
+            title: "Error",
+            description: `Failed to update job status: ${response.error}`,
+            variant: "destructive",
+          });
         }
       })
       .catch(error => {
-        toast.error(`Error updating job status: ${error.message}`);
+        toast({
+          title: "Error",
+          description: `Error updating job status: ${error.message}`,
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
       });
   };
 
   const handleDeleteJob = (jobId: string) => {
+    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
+
     apiService.deleteJob(jobId)
       .then(response => {
         if (response.success) {
-          toast.success("Job deleted successfully");
+          toast({
+            title: "Success",
+            description: "Job deleted successfully",
+          });
           refetchJobs();
         } else {
-          toast.error(`Failed to delete job: ${response.error}`);
+          toast({
+            title: "Error",
+            description: `Failed to delete job: ${response.error}`,
+            variant: "destructive",
+          });
         }
       })
       .catch(error => {
-        toast.error(`Error deleting job: ${error.message}`);
+        toast({
+          title: "Error",
+          description: `Error deleting job: ${error.message}`,
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
+      });
+  };
+
+  const handleDuplicateJob = (jobId: string) => {
+    const job = jobs.find(j => j.id === jobId);
+    if (!job) return;
+
+    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
+    
+    apiService.duplicateJob(jobId)
+      .then(response => {
+        if (response.success && response.data) {
+          toast({
+            title: "Success",
+            description: `Job "${job.name}" was duplicated successfully`,
+          });
+          refetchJobs();
+        } else {
+          toast({
+            title: "Error",
+            description: `Failed to duplicate job: ${response.error}`,
+            variant: "destructive",
+          });
+        }
+      })
+      .catch(error => {
+        toast({
+          title: "Error",
+          description: `Error duplicating job: ${error.message}`,
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
       });
   };
 
@@ -173,10 +272,18 @@ export default function JobsPage() {
           />
           
           {selectedProjectId && (
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add New Job
-            </Button>
+            <div className="flex flex-col md:flex-row w-full md:w-auto gap-2">
+              <Input
+                className="md:w-[200px]"
+                placeholder="Search jobs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Job
+              </Button>
+            </div>
           )}
         </div>
         
@@ -184,16 +291,24 @@ export default function JobsPage() {
           <CardContent className="p-0">
             {isLoadingJobs ? (
               <div className="flex items-center justify-center p-8">
-                <span className="text-muted-foreground">Loading jobs...</span>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2 text-muted-foreground">Loading jobs...</span>
               </div>
             ) : selectedProjectId ? (
-              jobs.length > 0 ? (
+              filteredJobs.length > 0 ? (
                 <JobsTable 
-                  jobs={jobs} 
+                  jobs={filteredJobs} 
                   onViewDetails={handleViewJobDetails} 
                   onToggleStatus={(jobId) => {
                     const job = jobs.find(j => j.id === jobId);
                     if (!job) return;
+                    
+                    if (isJobActionInProgress[jobId]) {
+                      return <Button variant="outline" size="sm" disabled>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Please wait
+                      </Button>;
+                    }
                     
                     // Determine the action based on current status
                     const action = job.status === "paused" ? "activate" : "pause";
@@ -234,9 +349,53 @@ export default function JobsPage() {
                       />
                     );
                   }}
+                  onDuplicateJob={(jobId) => {
+                    const job = jobs.find(j => j.id === jobId);
+                    if (!job) return;
+                    
+                    if (isJobActionInProgress[jobId]) {
+                      return <Button variant="outline" size="sm" disabled>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Please wait
+                      </Button>;
+                    }
+                    
+                    return (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Duplicate Job</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to create a copy of "{job.name}"?
+                              A new job will be created with the same settings.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDuplicateJob(jobId)}>
+                              Duplicate Job
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    );
+                  }}
                   onDeleteJob={(jobId) => {
                     const job = jobs.find(j => j.id === jobId);
                     if (!job) return;
+                    
+                    if (isJobActionInProgress[jobId]) {
+                      return <Button variant="destructive" size="sm" disabled>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Please wait
+                      </Button>;
+                    }
                     
                     return (
                       <AlertDialog>
@@ -266,7 +425,11 @@ export default function JobsPage() {
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <p className="text-muted-foreground mb-4">No jobs found for this project</p>
+                  <p className="text-muted-foreground mb-4">
+                    {searchQuery 
+                      ? "No jobs found matching your search query" 
+                      : "No jobs found for this project"}
+                  </p>
                   <Button onClick={() => setIsCreateModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add First Job

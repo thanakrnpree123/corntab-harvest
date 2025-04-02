@@ -14,7 +14,13 @@ export class CronJob {
   name: string;
 
   @Column()
-  command: string;
+  endpoint: string;
+
+  @Column({ default: "GET" })
+  httpMethod: string;
+
+  @Column({ nullable: true, type: "text" })
+  requestBody: string;
 
   @Column()
   schedule: string;
@@ -52,6 +58,9 @@ export class CronJob {
 
   @Column({ default: false })
   useLocalTime: boolean;
+
+  @Column({ nullable: true, type: "text" })
+  emailNotifications: string;
 
   @Column()
   projectId: string;

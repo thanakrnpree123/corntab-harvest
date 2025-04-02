@@ -32,6 +32,11 @@ export const jobRoutes = new Elysia({ prefix: '/jobs' })
   .delete('/:id', async ({ params: { id } }) => {
     return await JobController.deleteJob(id);
   })
+  
+  // ทำสำเนางาน
+  .post('/:id/duplicate', async ({ params: { id } }) => {
+    return await JobController.duplicateJob(id);
+  })
 
   // ดึงข้อมูล logs ของงาน
   .get('/:id/logs', async ({ params: { id } }) => {
