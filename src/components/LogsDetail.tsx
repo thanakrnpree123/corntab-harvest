@@ -44,19 +44,19 @@ export function LogsDetail({ jobId, jobName }: LogsDetailProps) {
     }
   };
 
-  // Fetch logs when job ID changes
-  useEffect(() => {
-    fetchLogs();
+  // // Fetch logs when job ID changes
+  // useEffect(() => {
+  //   fetchLogs();
     
-    // Clean up any existing interval
-    if (refreshInterval) {
-      clearInterval(refreshInterval);
-    }
+  //   // Clean up any existing interval
+  //   if (refreshInterval) {
+  //     clearInterval(refreshInterval);
+  //   }
     
-    // Set up auto-refresh every 30 seconds
-    const interval = window.setInterval(() => {
-      fetchLogs();
-    }, 30000);
+  //   // Set up auto-refresh every 30 seconds
+  //   const interval = window.setInterval(() => {
+  //     fetchLogs();
+  //   }, 30000);
     
     setRefreshInterval(interval);
     
