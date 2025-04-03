@@ -196,19 +196,19 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
               <Collapse in={expandedLogs[log.id]}>
                 <Box sx={{ p: 2, pt: 0, borderTop: 1, borderColor: "divider" }}>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>
+                    <Grid xs={12} md={6}>
                       <Typography variant="subtitle2" gutterBottom>เริ่ม</Typography>
                       <Typography variant="body2" color="text.secondary">
                         {formatDate(log.startTime)}
                       </Typography>
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid xs={12} md={6}>
                       <Typography variant="subtitle2" gutterBottom>สิ้นสุด</Typography>
                       <Typography variant="body2" color="text.secondary">
                         {formatDate(log.endTime)}
                       </Typography>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid xs={12}>
                       <Typography variant="subtitle2" gutterBottom>ผลลัพธ์</Typography>
                       <Paper 
                         elevation={0} 
@@ -225,7 +225,7 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
                       </Paper>
                     </Grid>
                     {log.error && (
-                      <Grid item xs={12}>
+                      <Grid xs={12}>
                         <Typography variant="subtitle2" color="error" gutterBottom>ข้อผิดพลาด</Typography>
                         <Paper 
                           elevation={0}

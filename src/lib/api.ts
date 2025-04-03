@@ -425,7 +425,7 @@ export const userApi = {
             id: "1",
             name: "Admin User",
             email: "admin@example.com",
-            roleId: "1",
+            role: "admin",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           },
@@ -433,7 +433,7 @@ export const userApi = {
             id: "2",
             name: "Regular User",
             email: "user@example.com",
-            roleId: "2",
+            role: "user",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
@@ -456,7 +456,7 @@ export const userApi = {
           id,
           name: `User ${id}`,
           email: `user${id}@example.com`,
-          roleId: "1",
+          role: "user",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -506,7 +506,7 @@ export const userApi = {
           id,
           name: user.name || `User ${id}`,
           email: user.email || `user${id}@example.com`,
-          roleId: user.roleId || "1",
+          role: user.role || "user",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
