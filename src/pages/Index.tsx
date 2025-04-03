@@ -1,8 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Typography, Box, Paper, Card, CardContent, CircularProgress } from "@mui/material";
-import Grid from '@mui/material/Grid';  // Import Grid directly
 import { apiService } from "@/lib/api-service";
 import MainLayout from "@/components/layout/MainLayout";
 import { ChevronRight, Layers, Activity, Timer, Settings } from "lucide-react";
@@ -22,22 +20,22 @@ export default function Index() {
     {
       title: 'Job Scheduling',
       description: 'Schedule jobs with cron expressions or fixed intervals',
-      icon: <Timer size={24} />
+      icon: <Timer className="h-6 w-6" />
     },
     {
       title: 'HTTP Webhooks',
       description: 'Make HTTP requests to any endpoint with custom data',
-      icon: <Activity size={24} />
+      icon: <Activity className="h-6 w-6" />
     },
     {
       title: 'Project Organization',
       description: 'Organize jobs into projects for better management',
-      icon: <Layers size={24} />
+      icon: <Layers className="h-6 w-6" />
     },
     {
       title: 'Advanced Settings',
       description: 'Configure timeouts, retries, and notifications',
-      icon: <Settings size={24} />
+      icon: <Settings className="h-6 w-6" />
     }
   ];
   
@@ -73,104 +71,92 @@ export default function Index() {
 
   return (
     <MainLayout>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>Dashboard</Typography>
-        <Typography variant="body1" color="text.secondary">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+        <p className="text-gray-500">
           Overview of your scheduled jobs and system status
-        </Typography>
-      </Box>
+        </p>
+      </div>
       
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, mb: 4 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {features.map((feature, index) => (
-          <Box key={index} sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 3' } }}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <CardContent>
-                <Box sx={{ mb: 2, color: 'primary.main' }}>{feature.icon}</Box>
-                <Typography variant="h6" gutterBottom>{feature.title}</Typography>
-                <Typography variant="body2" color="text.secondary">{feature.description}</Typography>
-              </CardContent>
-            </Card>
-          </Box>
+          <div key={index} className="h-full">
+            <div className="bg-white rounded-lg shadow h-full p-6 flex flex-col">
+              <div className="mb-4 text-blue-600">{feature.icon}</div>
+              <h3 className="font-semibold mb-2">{feature.title}</h3>
+              <p className="text-sm text-gray-500">{feature.description}</p>
+            </div>
+          </div>
         ))}
-      </Box>
+      </div>
       
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3 }}>
-        <Box sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
-          <Paper sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Recent Jobs</Typography>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div className="bg-white rounded-lg shadow p-6 h-full">
+            <h3 className="text-lg font-semibold mb-4">Recent Jobs</h3>
             {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                <CircularProgress size={30} />
-              </Box>
+              <div className="flex justify-center p-6">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
             ) : recentJobs.length > 0 ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="flex flex-col">
                 {recentJobs.map((job) => (
-                  <Box 
+                  <div 
                     key={job.id} 
-                    sx={{ 
-                      py: 1.5, 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      '&:last-child': {
-                        borderBottom: 'none'
-                      }
-                    }}
+                    className="py-3 flex justify-between items-center border-b border-gray-200 last:border-b-0"
                   >
-                    <Box>
-                      <Typography variant="body1">{job.name}</Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="caption" color="text.secondary">
+                    <div>
+                      <p className="font-medium">{job.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-500">
                           {job.lastRun ? `Last run: ${format(new Date(job.lastRun), 'MMM dd, HH:mm')}` : 'Never run'}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <ChevronRight size={18} />
-                  </Box>
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-gray-400" />
+                  </div>
                 ))}
-              </Box>
+              </div>
             ) : (
-              <Box sx={{ textAlign: 'center', p: 2, color: 'text.secondary' }}>
-                <Typography>No recent jobs found</Typography>
-              </Box>
+              <div className="text-center p-4 text-gray-500">
+                <p>No recent jobs found</p>
+              </div>
             )}
-          </Paper>
-        </Box>
+          </div>
+        </div>
         
-        <Box sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
-          <Paper sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>System Status</Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 2, mt: 1 }}>
-              <Box sx={{ gridColumn: { xs: 'span 6' } }}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
-                  <Typography variant="h4">{stats.totalJobs}</Typography>
-                  <Typography variant="body2" color="text.secondary">Total Jobs</Typography>
-                </Paper>
-              </Box>
-              <Box sx={{ gridColumn: { xs: 'span 6' } }}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
-                  <Typography variant="h4" color="info.main">{stats.activeJobs}</Typography>
-                  <Typography variant="body2" color="text.secondary">Active Jobs</Typography>
-                </Paper>
-              </Box>
-              <Box sx={{ gridColumn: { xs: 'span 6' } }}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main">{stats.completedJobs}</Typography>
-                  <Typography variant="body2" color="text.secondary">Completed Jobs</Typography>
-                </Paper>
-              </Box>
-              <Box sx={{ gridColumn: { xs: 'span 6' } }}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
-                  <Typography variant="h4" color="error.main">{stats.failedJobs}</Typography>
-                  <Typography variant="body2" color="text.secondary">Failed Jobs</Typography>
-                </Paper>
-              </Box>
-            </Box>
-          </Paper>
-        </Box>
-      </Box>
+        <div>
+          <div className="bg-white rounded-lg shadow p-6 h-full">
+            <h3 className="text-lg font-semibold mb-4">System Status</h3>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div>
+                <div className="bg-gray-100 rounded p-4 text-center">
+                  <h4 className="text-2xl font-bold">{stats.totalJobs}</h4>
+                  <p className="text-sm text-gray-500">Total Jobs</p>
+                </div>
+              </div>
+              <div>
+                <div className="bg-gray-100 rounded p-4 text-center">
+                  <h4 className="text-2xl font-bold text-blue-600">{stats.activeJobs}</h4>
+                  <p className="text-sm text-gray-500">Active Jobs</p>
+                </div>
+              </div>
+              <div>
+                <div className="bg-gray-100 rounded p-4 text-center">
+                  <h4 className="text-2xl font-bold text-green-600">{stats.completedJobs}</h4>
+                  <p className="text-sm text-gray-500">Completed Jobs</p>
+                </div>
+              </div>
+              <div>
+                <div className="bg-gray-100 rounded p-4 text-center">
+                  <h4 className="text-2xl font-bold text-red-600">{stats.failedJobs}</h4>
+                  <p className="text-sm text-gray-500">Failed Jobs</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </MainLayout>
   );
 }

@@ -1,187 +1,105 @@
 
 import { ReactNode, useState } from 'react';
-import { 
-  Box, 
-  Drawer, 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Divider, 
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  useTheme,
-} from '@mui/material';
-import { 
-  Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon,
-  Dashboard as DashboardIcon, 
-  Work as WorkIcon,
-  ListAlt as ListAltIcon,
-  People as PeopleIcon,
-  Settings as SettingsIcon,
-  Brightness4 as DarkModeIcon,
-  Brightness7 as LightModeIcon,
-} from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  Menu,
+  X,
+  ChevronLeft,
+  LayoutDashboard,
+  Clock,
+  ListChecks,
+  Users,
+  Settings,
+  Moon,
+  Sun
+} from 'lucide-react';
 import { useThemeContext } from '../MuiThemeProvider';
-
-const drawerWidth = 240;
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export default function MainLayout({ children }: MainLayoutProps) {
-  const [open, setOpen] = useState(true);
-  const theme = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const { mode, toggleTheme } = useThemeContext();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
-
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Jobs', icon: <WorkIcon />, path: '/jobs' },
-    { text: 'Logs', icon: <ListAltIcon />, path: '/logs' },
-    { text: 'Users', icon: <PeopleIcon />, path: '/users' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
+    { text: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/' },
+    { text: 'Jobs', icon: <Clock size={20} />, path: '/jobs' },
+    { text: 'Logs', icon: <ListChecks size={20} />, path: '/logs' },
+    { text: 'Users', icon: <Users size={20} />, path: '/users' },
+    { text: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <Box sx={{ display: 'flex' }}>
-      <AppBar 
-        position="fixed" 
-        sx={{ 
-          zIndex: theme.zIndex.drawer + 1,
-          transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          ...(open && {
-            marginLeft: drawerWidth,
-            width: `calc(100% - ${drawerWidth}px)`,
-            transition: theme.transitions.create(['width', 'margin'], {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-          }),
-        }}
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div 
+        className={`bg-white fixed inset-y-0 left-0 z-30 w-64 transform transition-transform duration-300 ease-in-out shadow-lg 
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:static md:w-64`}
       >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpen}
-            edge="start"
-            sx={{
-              marginRight: 5,
-              ...(open && { display: 'none' }),
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            CronHub
-          </Typography>
-          <IconButton sx={{ ml: 1 }} onClick={toggleTheme} color="inherit">
-            {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <Drawer
-        variant="permanent"
-        open={open}
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            whiteSpace: 'nowrap',
-            ...(open ? {
-              overflowX: 'hidden',
-              transition: theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
-            } : {
-              overflowX: 'hidden',
-              transition: theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-              }),
-              width: theme.spacing(7),
-              [theme.breakpoints.up('sm')]: {
-                width: theme.spacing(9),
-              },
-            }),
-          },
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', padding: theme.spacing(0, 1), ...theme.mixins.toolbar, justifyContent: 'flex-end' }}>
-          <IconButton onClick={handleDrawerClose}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </Box>
-        <Divider />
-        <List>
-          {menuItems.map((item) => (
-            <ListItem key={item.text} disablePadding sx={{ display: 'block' }}>
-              <ListItemButton
-                sx={{
-                  minHeight: 48,
-                  justifyContent: open ? 'initial' : 'center',
-                  px: 2.5,
-                  bgcolor: location.pathname === item.path ? 'action.selected' : 'inherit',
-                }}
-                onClick={() => navigate(item.path)}
+        <div className="flex items-center justify-between h-16 px-4 border-b">
+          <h1 className="text-xl font-bold">CronHub</h1>
+          <button onClick={toggleSidebar} className="md:hidden">
+            <ChevronLeft size={20} />
+          </button>
+        </div>
+        <div className="overflow-y-auto h-full">
+          <nav className="px-2 py-4">
+            <ul className="space-y-1">
+              {menuItems.map((item) => (
+                <li key={item.text}>
+                  <button
+                    onClick={() => navigate(item.path)}
+                    className={`w-full flex items-center px-4 py-2 rounded-md text-sm hover:bg-gray-100 ${
+                      location.pathname === item.path 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-600'
+                    }`}
+                  >
+                    <span className="mr-3">
+                      {item.icon}
+                    </span>
+                    {item.text}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-white h-16 border-b flex items-center shadow-sm">
+          <div className="px-4 flex justify-between items-center w-full">
+            <button onClick={toggleSidebar} className="md:hidden">
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <div className="ml-auto">
+              <button 
+                onClick={toggleTheme}
+                className="p-2 rounded-full hover:bg-gray-100"
+                aria-label="Toggle theme"
               >
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
-                    color: location.pathname === item.path ? 'primary.main' : 'inherit',
-                  }}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  sx={{ 
-                    opacity: open ? 1 : 0,
-                    color: location.pathname === item.path ? 'primary.main' : 'inherit',
-                  }} 
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Drawer>
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1, 
-          p: 3,
-          pt: 10,
-          bgcolor: 'background.default',
-          minHeight: '100vh',
-          color: 'text.primary'
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
+                {mode === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }

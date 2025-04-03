@@ -2,32 +2,15 @@
 import { useState } from "react";
 import { JobLog } from "@/lib/types";
 import { 
-  Box, 
-  Card, 
-  TextField, 
-  FormControl, 
-  InputLabel, 
-  Select, 
-  MenuItem, 
-  Typography, 
-  Chip,
-  Collapse, 
-  IconButton, 
-  Paper,
-} from "@mui/material";
-import Grid from '@mui/material/Grid';  // Import Grid directly
-
-import { 
   Search as SearchIcon, 
-  ExpandMore as ExpandMoreIcon, 
-  ExpandLess as ExpandLessIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  PlayArrow as PlayArrowIcon,
-  Pause as PauseIcon,
-  AccessTime as ClockIcon
-} from "@mui/icons-material";
-import { InputAdornment } from "@mui/material";
+  ChevronUp, 
+  ChevronDown, 
+  CheckCircle, 
+  XCircle,
+  Play,
+  Pause,
+  Clock
+} from "lucide-react";
 import { format } from "date-fns";
 
 interface LogListProps {
@@ -73,184 +56,145 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "success":
-        return <CheckCircleIcon fontSize="small" />;
+        return <CheckCircle className="w-4 h-4" />;
       case "failed":
-        return <ErrorIcon fontSize="small" />;
+        return <XCircle className="w-4 h-4" />;
       case "running":
-        return <PlayArrowIcon fontSize="small" />;
+        return <Play className="w-4 h-4" />;
       case "paused":
-        return <PauseIcon fontSize="small" />;
+        return <Pause className="w-4 h-4" />;
       default:
-        return <ClockIcon fontSize="small" />;
+        return <Clock className="w-4 h-4" />;
     }
   };
 
-  const getStatusColor = (status: string): "success" | "error" | "warning" | "info" | "default" => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "success":
-        return "success";
+        return "bg-green-100 text-green-800";
       case "failed":
-        return "error";
+        return "bg-red-100 text-red-800";
       case "running":
-        return "info";
+        return "bg-blue-100 text-blue-800";
       case "paused":
-        return "warning";
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "default";
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 200 }}>
-        <Typography>Loading...</Typography>
-      </Box>
+      <div className="flex justify-center items-center h-48">
+        <p>Loading...</p>
+      </div>
     );
   }
 
   if (!logs || logs.length === 0) {
     return (
-      <Box sx={{ textAlign: "center", p: 4, color: "text.secondary" }}>
-        <Typography>ไม่พบข้อมูลล็อก</Typography>
-      </Box>
+      <div className="text-center p-4 text-gray-500">
+        <p>ไม่พบข้อมูลล็อก</p>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ width: "100%" }}>
-      <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2, mb: 3, justifyContent: "space-between" }}>
-        <TextField
-          placeholder="ค้นหาในล็อก..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ width: { xs: "100%", sm: "auto" }, maxWidth: { sm: 300 } }}
-        />
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <SearchIcon className="h-4 w-4 text-gray-500" />
+          </div>
+          <input
+            placeholder="ค้นหาในล็อก..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-md w-full sm:w-64"
+          />
+        </div>
         
-        <FormControl sx={{ width: { xs: "100%", sm: 200 } }}>
-          <InputLabel id="status-filter-label">กรองตามสถานะ</InputLabel>
-          <Select
-            labelId="status-filter-label"
-            id="status-filter"
-            value={filterStatus}
-            label="กรองตามสถานะ"
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <MenuItem value="">ทั้งหมด</MenuItem>
-            <MenuItem value="success">Success</MenuItem>
-            <MenuItem value="failed">Failed</MenuItem>
-            <MenuItem value="running">Running</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border border-gray-300 rounded-md p-2 w-full sm:w-48"
+        >
+          <option value="">ทั้งหมด</option>
+          <option value="success">Success</option>
+          <option value="failed">Failed</option>
+          <option value="running">Running</option>
+        </select>
+      </div>
 
-      <Box sx={{ maxHeight: "35vh", overflow: "auto" }}>
+      <div className="max-h-[35vh] overflow-auto">
         {filteredLogs.length > 0 ? (
           filteredLogs.map((log) => (
-            <Card key={log.id} sx={{ mb: 2, overflow: "hidden" }}>
-              <Box 
-                sx={{ 
-                  p: 2, 
-                  display: "flex", 
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  '&:hover': { bgcolor: 'action.hover' }
-                }}
+            <div key={log.id} className="mb-4 border rounded-lg shadow-sm overflow-hidden">
+              <div 
+                className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
                 onClick={() => toggleLogExpansion(log.id)}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Chip
-                    label={log.status.charAt(0).toUpperCase() + log.status.slice(1)}
-                    color={getStatusColor(log.status)}
-                    size="small"
-                    icon={getStatusIcon(log.status)}
-                  />
-                  <Typography variant="body2" color="text.secondary">
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
+                    {getStatusIcon(log.status)}
+                    {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
+                  </span>
+                  <span className="text-sm text-gray-500">
                     {formatDate(log.startTime)}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
                   {log.duration && (
-                    <Chip 
-                      label={`${log.duration.toFixed(2)}s`} 
-                      variant="outlined" 
-                      size="small"
-                    />
+                    <span className="text-xs border rounded-full px-2 py-0.5">
+                      {`${log.duration.toFixed(2)}s`}
+                    </span>
                   )}
-                  <IconButton size="small">
-                    {expandedLogs[log.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </IconButton>
-                </Box>
-              </Box>
+                  <button className="p-1">
+                    {expandedLogs[log.id] ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
               
-              <Collapse in={expandedLogs[log.id]}>
-                <Box sx={{ p: 2, pt: 0, borderTop: 1, borderColor: "divider" }}>
-                  <Grid container spacing={2}>
-                    <Grid sx={{ gridColumn: { xs: '1 / span 12', md: '1 / span 6' } }}>
-                      <Typography variant="subtitle2" gutterBottom>เริ่ม</Typography>
-                      <Typography variant="body2" color="text.secondary">
+              {expandedLogs[log.id] && (
+                <div className="p-4 border-t">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-sm mb-1">เริ่ม</h4>
+                      <p className="text-sm text-gray-600">
                         {formatDate(log.startTime)}
-                      </Typography>
-                    </Grid>
-                    <Grid sx={{ gridColumn: { xs: '1 / span 12', md: '7 / span 6' } }}>
-                      <Typography variant="subtitle2" gutterBottom>สิ้นสุด</Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-sm mb-1">สิ้นสุด</h4>
+                      <p className="text-sm text-gray-600">
                         {formatDate(log.endTime)}
-                      </Typography>
-                    </Grid>
-                    <Grid sx={{ gridColumn: '1 / span 12' }}>
-                      <Typography variant="subtitle2" gutterBottom>ผลลัพธ์</Typography>
-                      <Paper 
-                        elevation={0} 
-                        sx={{ 
-                          p: 2, 
-                          bgcolor: "action.hover", 
-                          maxHeight: 200, 
-                          overflow: "auto",
-                          fontFamily: "monospace",
-                          fontSize: "0.875rem"
-                        }}
-                      >
+                      </p>
+                    </div>
+                    <div className="col-span-1 md:col-span-2">
+                      <h4 className="font-semibold text-sm mb-1">ผลลัพธ์</h4>
+                      <pre className="p-3 bg-gray-100 rounded-md max-h-48 overflow-auto text-sm font-mono">
                         {log.output || "ไม่มีข้อมูล"}
-                      </Paper>
-                    </Grid>
+                      </pre>
+                    </div>
                     {log.error && (
-                      <Grid sx={{ gridColumn: '1 / span 12' }}>
-                        <Typography variant="subtitle2" color="error" gutterBottom>ข้อผิดพลาด</Typography>
-                        <Paper 
-                          elevation={0}
-                          sx={{ 
-                            p: 2, 
-                            bgcolor: "error.light", 
-                            color: "error.dark",
-                            maxHeight: 200, 
-                            overflow: "auto",
-                            fontFamily: "monospace",
-                            fontSize: "0.875rem"
-                          }}
-                        >
+                      <div className="col-span-1 md:col-span-2">
+                        <h4 className="font-semibold text-sm text-red-600 mb-1">ข้อผิดพลาด</h4>
+                        <pre className="p-3 bg-red-100 text-red-800 rounded-md max-h-48 overflow-auto text-sm font-mono">
                           {log.error}
-                        </Paper>
-                      </Grid>
+                        </pre>
+                      </div>
                     )}
-                  </Grid>
-                </Box>
-              </Collapse>
-            </Card>
+                  </div>
+                </div>
+              )}
+            </div>
           ))
         ) : (
-          <Box sx={{ textAlign: "center", p: 4, color: "text.secondary" }}>
-            <Typography>ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</Typography>
-          </Box>
+          <div className="text-center p-4 text-gray-500">
+            <p>ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</p>
+          </div>
         )}
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

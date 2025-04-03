@@ -1,7 +1,6 @@
 
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { TableCell, TableContainer, Table, TableHead, TableRow, TableBody, Typography, Paper } from "@mui/material";
 import { User } from "@/lib/types";
 
 // This component needs to be exported as default for App.tsx to import it
@@ -24,25 +23,25 @@ export default function UserManagementPage() {
 
   return (
     <MainLayout>
-      <Typography variant="h4" gutterBottom>User Management</Typography>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Role</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <TableRow>
-              <TableCell>{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role.name}</TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <h1 className="text-2xl font-bold mb-6">User Management</h1>
+      <div className="bg-white shadow overflow-hidden rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            <tr>
+              <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{user.role.name}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </MainLayout>
   );
 }

@@ -1,5 +1,4 @@
 
-import { Box, Typography } from "@mui/material";
 import { LogList } from "@/components/LogList";
 import MainLayout from "@/components/layout/MainLayout";
 
@@ -59,14 +58,14 @@ const sampleLogs: any[] = [
 export default function LogsPage() {
   return (
     <MainLayout>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold mb-2">
           Logs
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
+        </h1>
+        <p className="text-gray-500">
           View and monitor all job execution logs
-        </Typography>
-      </Box>
+        </p>
+      </div>
       
       <LogList logs={sampleLogs} />
     </MainLayout>
