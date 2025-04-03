@@ -60,7 +60,7 @@ export function Navbar() {
           </Link>
 
         {/* Desktop menu */}
-        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mr-auto">
+        <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
