@@ -1,20 +1,33 @@
+
 import { useState } from "react";
 import { JobLog } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { 
+  Box, 
+  Card, 
+  TextField, 
+  FormControl, 
+  InputLabel, 
+  Select, 
+  MenuItem, 
+  Typography, 
+  Chip,
+  Collapse, 
+  IconButton, 
+  Grid, 
+  Paper
+} from "@mui/material";
+import { 
+  Search as SearchIcon, 
+  ExpandMore as ExpandMoreIcon, 
+  ExpandLess as ExpandLessIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  PlayArrow as PlayArrowIcon,
+  Pause as PauseIcon,
+  AccessTime as ClockIcon
+} from "@mui/icons-material";
+import { InputAdornment } from "@mui/material";
 import { format } from "date-fns";
-import { Card, CardContent } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface LogListProps {
   logs: JobLog[];
@@ -60,122 +73,187 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "success":
+        return <CheckCircleIcon fontSize="small" />;
+      case "failed":
+        return <ErrorIcon fontSize="small" />;
+      case "running":
+        return <PlayArrowIcon fontSize="small" />;
+      case "paused":
+        return <PauseIcon fontSize="small" />;
+      default:
+        return <ClockIcon fontSize="small" />;
+    }
+  };
+
+  const getStatusColor = (status: string): "success" | "error" | "warning" | "info" | "default" => {
+    switch (status) {
+      case "success":
+        return "success";
+      case "failed":
+        return "error";
+      case "running":
+        return "info";
+      case "paused":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8 min-h-[200px]">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 200 }}>
+        <Typography>Loading...</Typography>
+      </Box>
     );
   }
 
   if (!logs || logs.length === 0) {
     return (
-      <div className="text-center p-8 text-gray-500">
-        ไม่พบข้อมูลล็อก
-      </div>
+      <Box sx={{ textAlign: "center", p: 4, color: "text.secondary" }}>
+        <Typography>ไม่พบข้อมูลล็อก</Typography>
+      </Box>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-2 justify-between">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="ค้นหาในล็อก..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 w-full min-w-[150px] max-w-full sm:max-w-72"
-          />
-        </div>
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2, mb: 3, justifyContent: "space-between" }}>
+        <TextField
+          placeholder="ค้นหาในล็อก..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ width: { xs: "100%", sm: "auto" }, maxWidth: { sm: 300 } }}
+        />
         
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="กรองตามสถานะ" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ทั้งหมด</SelectItem>
-            <SelectItem value="success">Success</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-            <SelectItem value="running">Running</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <FormControl sx={{ width: { xs: "100%", sm: 200 } }}>
+          <InputLabel id="status-filter-label">กรองตามสถานะ</InputLabel>
+          <Select
+            labelId="status-filter-label"
+            id="status-filter"
+            value={filterStatus}
+            label="กรองตามสถานะ"
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <MenuItem value="">ทั้งหมด</MenuItem>
+            <MenuItem value="success">Success</MenuItem>
+            <MenuItem value="failed">Failed</MenuItem>
+            <MenuItem value="running">Running</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
 
-      <div className="space-y-3 max-h-[35vh] overflow-y-auto">
+      <Box sx={{ maxHeight: "35vh", overflow: "auto" }}>
         {filteredLogs.length > 0 ? (
           filteredLogs.map((log) => (
-            <Collapsible
-              key={log.id}
-              open={expandedLogs[log.id]}
-              onOpenChange={() => toggleLogExpansion(log.id)}
-            >
-              <Card className="overflow-hidden">
-                <CollapsibleTrigger asChild>
-                  <div className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <StatusBadge status={log.status as any} />
-                      <span className="text-sm text-muted-foreground">
+            <Card key={log.id} sx={{ mb: 2, overflow: "hidden" }}>
+              <Box 
+                sx={{ 
+                  p: 2, 
+                  display: "flex", 
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+                onClick={() => toggleLogExpansion(log.id)}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Chip
+                    label={log.status.charAt(0).toUpperCase() + log.status.slice(1)}
+                    color={getStatusColor(log.status)}
+                    size="small"
+                    icon={getStatusIcon(log.status)}
+                  />
+                  <Typography variant="body2" color="text.secondary">
+                    {formatDate(log.startTime)}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  {log.duration && (
+                    <Chip 
+                      label={`${log.duration.toFixed(2)}s`} 
+                      variant="outlined" 
+                      size="small"
+                    />
+                  )}
+                  <IconButton size="small">
+                    {expandedLogs[log.id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </IconButton>
+                </Box>
+              </Box>
+              
+              <Collapse in={expandedLogs[log.id]}>
+                <Box sx={{ p: 2, pt: 0, borderTop: 1, borderColor: "divider" }}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" gutterBottom>เริ่ม</Typography>
+                      <Typography variant="body2" color="text.secondary">
                         {formatDate(log.startTime)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {log.duration && (
-                        <Badge variant="outline" className="ml-2">
-                          {log.duration.toFixed(2)}s
-                        </Badge>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        {expandedLogs[log.id] ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="p-4 pt-0 border-t">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">เริ่ม</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(log.startTime)}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium mb-1">สิ้นสุด</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(log.endTime)}
-                        </p>
-                      </div>
-                      <div className="md:col-span-2">
-                        <h4 className="text-sm font-medium mb-1">ผลลัพธ์</h4>
-                        <pre className="text-sm bg-gray-50 p-3 rounded overflow-auto max-h-[200px]">
-                          {log.output || "ไม่มีข้อมูล"}
-                        </pre>
-                      </div>
-                      {log.error && (
-                        <div className="md:col-span-2">
-                          <h4 className="text-sm font-medium text-red-600 mb-1">ข้อผิดพลาด</h4>
-                          <pre className="text-sm bg-red-50 text-red-700 p-3 rounded overflow-auto max-h-[200px]">
-                            {log.error}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="subtitle2" gutterBottom>สิ้นสุด</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatDate(log.endTime)}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" gutterBottom>ผลลัพธ์</Typography>
+                      <Paper 
+                        elevation={0} 
+                        sx={{ 
+                          p: 2, 
+                          bgcolor: "action.hover", 
+                          maxHeight: 200, 
+                          overflow: "auto",
+                          fontFamily: "monospace",
+                          fontSize: "0.875rem"
+                        }}
+                      >
+                        {log.output || "ไม่มีข้อมูล"}
+                      </Paper>
+                    </Grid>
+                    {log.error && (
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" color="error" gutterBottom>ข้อผิดพลาด</Typography>
+                        <Paper 
+                          elevation={0}
+                          sx={{ 
+                            p: 2, 
+                            bgcolor: "error.light", 
+                            color: "error.dark",
+                            maxHeight: 200, 
+                            overflow: "auto",
+                            fontFamily: "monospace",
+                            fontSize: "0.875rem"
+                          }}
+                        >
+                          {log.error}
+                        </Paper>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              </Collapse>
+            </Card>
           ))
         ) : (
-          <div className="text-center p-4 text-gray-500">
-            ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา
-          </div>
+          <Box sx={{ textAlign: "center", p: 4, color: "text.secondary" }}>
+            <Typography>ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</Typography>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

@@ -1,19 +1,34 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  TextField, 
+  Button, 
+  Typography, 
+  CircularProgress,
+  Link as MuiLink,
+  Container
+} from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({
+    open: false,
+    message: "",
+    severity: 'success'
+  });
   const navigate = useNavigate();
-  const { toast } = useToast();
+
+  const handleCloseToast = () => {
+    setToast({...toast, open: false});
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,18 +51,19 @@ export default function LoginPage() {
         isLoggedIn: true
       }));
 
-      toast({
-        title: "เข้าสู่ระบบสำเร็จ",
-        description: "ยินดีต้อนรับกลับ",
+      setToast({
+        open: true,
+        message: "เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ",
+        severity: 'success'
       });
 
-      window.location.href="/"     
+      window.location.href="/";
       // navigate('/'); // Redirect to dashboard after login
     } catch (error) {
-      toast({
-        title: "เข้าสู่ระบบไม่สำเร็จ",
-        description: error instanceof Error ? error.message : "กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง",
-        variant: "destructive",
+      setToast({
+        open: true,
+        message: error instanceof Error ? error.message : "กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง",
+        severity: 'error'
       });
     } finally {
       setIsLoading(false);
@@ -55,67 +71,110 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-muted/30">
-      <div className="w-full max-w-md p-4">
-        <Card>
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold">CronHub</CardTitle>
-            <CardDescription>เข้าสู่ระบบเพื่อจัดการ Cron Jobs ของคุณ</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleLogin}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">อีเมล</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">รหัสผ่าน</Label>
-                  <Button type="button" variant="link" className="px-0 text-xs text-blue-500 hover:text-blue-600">
-                    ลืมรหัสผ่าน?
-                  </Button>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="รหัสผ่านของคุณ"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </CardContent>
-            <CardFooter className="flex flex-col">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+    <Box 
+      sx={{ 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center", 
+        minHeight: "100vh",
+        bgcolor: "background.default"
+      }}
+    >
+      <Container maxWidth="sm">
+        <Card elevation={3}>
+          <CardHeader 
+            title="CronHub" 
+            subheader="เข้าสู่ระบบเพื่อจัดการ Cron Jobs ของคุณ"
+            sx={{ textAlign: 'center', pb: 1 }}
+          />
+          <CardContent>
+            <Box component="form" onSubmit={handleLogin} sx={{ mt: 1, mb: 2 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="อีเมล"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle2">รหัสผ่าน</Typography>
+                <MuiLink 
+                  component="button"
+                  variant="body2"
+                  onClick={() => setToast({open: true, message: "ฟีเจอร์นี้ยังไม่เปิดให้ใช้งาน", severity: 'info'})}
+                  type="button"
+                >
+                  ลืมรหัสผ่าน?
+                </MuiLink>
+              </Box>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="รหัสผ่าน"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{ mb: 3 }}
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                sx={{ mb: 2 }}
+              >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
                     กำลังเข้าสู่ระบบ...
                   </>
                 ) : (
                   "เข้าสู่ระบบ"
                 )}
               </Button>
-              <p className="mt-3 text-center text-sm text-muted-foreground">
-                ยังไม่มีบัญชี?{' '}
-                <Button type="button" variant="link" className="p-0" onClick={() => toast({
-                  title: "ยังไม่เปิดให้ลงทะเบียน",
-                  description: "ฟีเจอร์นี้จะเปิดให้ใช้งานเร็วๆ นี้"
-                })}>
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" display="inline">
+                  ยังไม่มีบัญชี?{' '}
+                </Typography>
+                <MuiLink 
+                  component="button" 
+                  variant="body2"
+                  onClick={() => setToast({open: true, message: "ฟีเจอร์นี้จะเปิดให้ใช้งานเร็วๆ นี้", severity: 'info'})}
+                  type="button"
+                >
                   ลงทะเบียน
-                </Button>
-              </p>
-            </CardFooter>
-          </form>
+                </MuiLink>
+              </Box>
+            </Box>
+          </CardContent>
         </Card>
-      </div>
-    </div>
+      </Container>
+      
+      <Snackbar 
+        open={toast.open} 
+        autoHideDuration={6000} 
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={handleCloseToast} 
+          severity={toast.severity} 
+          sx={{ width: '100%' }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }
