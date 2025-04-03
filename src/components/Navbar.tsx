@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-import { MenuIcon, User, Settings, LogOut } from "lucide-react";
+import { MenuIcon, User, Settings, LogOut, Icon, AlarmClock } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -54,12 +54,13 @@ export function Navbar() {
   return (
     <header className="border-b">
       <div className="container flex h-14 items-center">
-        <Link to="/" className="font-bold mr-8">
-          CronHub
-        </Link>
+      <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+            <AlarmClock className="h-6 w-6" />
+            <span>CornTab</span>
+          </Link>
 
         {/* Desktop menu */}
-        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mr-auto">
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mt-[0.45%] ml-[1%]">
           {navLinks.map((link) => (
             <Link
               key={link.name}
