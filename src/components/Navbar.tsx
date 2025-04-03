@@ -60,7 +60,7 @@ export function Navbar() {
           </Link>
 
         {/* Desktop menu */}
-        <nav className="hidden md:flex items-center mt-[0.45%] ml-[1%]">
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mt-[0.45%] ml-[1%]">
           {navLinks.map((link) => (
             <Link
               key={link.name}
