@@ -17,7 +17,6 @@ export default function JobsPage() {
 
   return (
     <MainLayout>
-      {/* Fix the onImportJobs prop name to match the component interface */}
       <JobExportImport 
         jobs={filteredJobs}
         onImportJobs={handleImportJobs}

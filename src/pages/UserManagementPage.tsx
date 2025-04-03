@@ -1,7 +1,7 @@
 
 import React from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { TableCell } from "@mui/material";
+import { TableCell, TableContainer, Table, TableHead, TableRow, TableBody, Typography, Paper } from "@mui/material";
 import { User } from "@/lib/types";
 
 // This component needs to be exported as default for App.tsx to import it
@@ -24,10 +24,27 @@ export default function UserManagementPage() {
 
   return (
     <MainLayout>
-      {/* Fix the line causing the ReactNode type error */}
-      <TableCell>
-        {typeof user.role === 'object' && user.role ? user.role.name : String(user.role)}
-      </TableCell>
+      <Typography variant="h4" gutterBottom>User Management</Typography>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Role</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                {typeof user.role === 'object' && user.role ? user.role.name : String(user.role)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
     </MainLayout>
   );
 }

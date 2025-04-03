@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { 
@@ -32,6 +33,7 @@ import { toast } from "sonner";
 import { User, Role, Permission } from "@/lib/types";
 import { User as UserIcon, UserPlus, Edit, Trash, Shield, Key } from "lucide-react";
 
+// Modified to ensure all user roles are of type Role (object)
 const mockUsers: User[] = [
   {
     id: "1",
@@ -168,7 +170,7 @@ const UserManagement = () => {
     );
 
     const updatedUsers = users.map(user => {
-      if (user.role.id === selectedRole.id) {
+      if (typeof user.role === 'object' && user.role && user.role.id === selectedRole.id) {
         return {
           ...user,
           role: {
@@ -251,10 +253,12 @@ const UserManagement = () => {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.role.name}</TableCell>
+                        <TableCell>
+                          {typeof user.role === 'object' && user.role ? user.role.name : String(user.role)}
+                        </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {user.role.permissions.map((permission) => (
+                            {(typeof user.role === 'object' && user.role ? user.role.permissions : []).map((permission) => (
                               <span 
                                 key={permission} 
                                 className="px-2 py-0.5 bg-slate-100 text-xs rounded-full"
