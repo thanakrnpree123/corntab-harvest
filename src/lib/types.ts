@@ -52,6 +52,17 @@ export interface JobLog {
   createdAt?: string;
 }
 
+// Role and Permission types
+export type Permission = 'view' | 'create' | 'update' | 'delete';
+
+export interface Role {
+  id: string;
+  name: string;
+  permissions: Permission[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // User related types
 export interface User {
   id: string;
@@ -68,17 +79,6 @@ export interface Project {
   id: string;
   name: string;
   description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Role and Permission types
-export type Permission = 'view' | 'create' | 'update' | 'delete';
-
-export interface Role {
-  id: string;
-  name: string;
-  permissions: Permission[];
   createdAt: string;
   updatedAt: string;
 }

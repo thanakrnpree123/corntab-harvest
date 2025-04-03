@@ -38,9 +38,7 @@ export default function UserManagementPage() {
             <TableRow>
               <TableCell>{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell>
-                {typeof user.role === 'object' && user.role ? user.role.name : String(user.role)}
-              </TableCell>
+              <TableCell>{user.role.name}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
