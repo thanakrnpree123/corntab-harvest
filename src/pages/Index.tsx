@@ -82,7 +82,7 @@ export default function Index() {
       
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {features.map((feature, index) => (
-          <Grid key={index} xs={12} sm={6} md={3}>
+          <Grid item key={index} xs={12} sm={6} md={3}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent>
                 <Box sx={{ mb: 2, color: 'primary.main' }}>{feature.icon}</Box>
@@ -95,7 +95,7 @@ export default function Index() {
       </Grid>
       
       <Grid container spacing={3}>
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom>Recent Jobs</Typography>
             {isLoading ? (
@@ -139,29 +139,29 @@ export default function Index() {
           </Paper>
         </Grid>
         
-        <Grid xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="h6" gutterBottom>System Status</Typography>
             <Grid container spacing={2} sx={{ mt: 1 }}>
-              <Grid xs={6}>
+              <Grid item xs={6}>
                 <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
                   <Typography variant="h4">{stats.totalJobs}</Typography>
                   <Typography variant="body2" color="text.secondary">Total Jobs</Typography>
                 </Paper>
               </Grid>
-              <Grid xs={6}>
+              <Grid item xs={6}>
                 <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
                   <Typography variant="h4" color="info.main">{stats.activeJobs}</Typography>
                   <Typography variant="body2" color="text.secondary">Active Jobs</Typography>
                 </Paper>
               </Grid>
-              <Grid xs={6}>
+              <Grid item xs={6}>
                 <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
                   <Typography variant="h4" color="success.main">{stats.completedJobs}</Typography>
                   <Typography variant="body2" color="text.secondary">Completed Jobs</Typography>
                 </Paper>
               </Grid>
-              <Grid xs={6}>
+              <Grid item xs={6}>
                 <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
                   <Typography variant="h4" color="error.main">{stats.failedJobs}</Typography>
                   <Typography variant="body2" color="text.secondary">Failed Jobs</Typography>
