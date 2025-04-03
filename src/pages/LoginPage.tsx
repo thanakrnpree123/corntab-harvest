@@ -1,178 +1,394 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  TextField, 
-  Button, 
-  Typography, 
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  InputAdornment,
+  IconButton,
+  Alert,
   CircularProgress,
-  Link as MuiLink,
-  Container
+  Snackbar,
+  Tabs,
+  Tab
 } from "@mui/material";
-import { Snackbar, Alert } from "@mui/material";
+import {
+  Visibility,
+  VisibilityOff,
+  Email,
+  Lock
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
+
+// Logo component
+const Logo = styled('div')({
+  marginBottom: '2rem',
+  textAlign: 'center',
+  '& img': {
+    maxHeight: '40px',
+  },
+});
+
+// Custom tab panel
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`login-tabpanel-${index}`}
+      aria-labelledby={`login-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ pt: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  
+  // Tab state
+  const [tabValue, setTabValue] = useState(0);
+  
+  // Login form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState<{open: boolean, message: string, severity: 'success' | 'error'}>({
+  const [error, setError] = useState("");
+  
+  // Register form state
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerName, setRegisterName] = useState("");
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [isRegisterLoading, setIsRegisterLoading] = useState(false);
+  
+  // Notification state
+  const [notification, setNotification] = useState({
     open: false,
     message: "",
-    severity: 'success'
+    severity: "success" as "success" | "error"
   });
-  const navigate = useNavigate();
-
-  const handleCloseToast = () => {
-    setToast({...toast, open: false});
+  
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+    // Reset errors when switching tabs
+    setError("");
   };
-
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Simple validation
+    if (!email || !password) {
+      setError("Please enter both email and password");
+      return;
+    }
+    
     setIsLoading(true);
-
-    // Mock successful login after 1 second
+    setError("");
+    
     try {
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // For demo purposes, accept any email with valid format and any non-empty password
-      if (!email.includes('@') || password.trim() === '') {
-        throw new Error("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      // For demo, just check for demo@example.com / password
+      if (email === "demo@example.com" && password === "password") {
+        // Store auth state
+        localStorage.setItem("user", JSON.stringify({
+          email,
+          name: "Demo User",
+          role: "admin"
+        }));
+        
+        setNotification({
+          open: true,
+          message: "Login successful",
+          severity: "success"
+        });
+        
+        setTimeout(() => {
+          navigate("/");
+        }, 1000);
+      } else {
+        throw new Error("Invalid email or password");
       }
-      
-      // Store user data in localStorage as a simple auth mechanism
-      localStorage.setItem('user', JSON.stringify({
-        email,
-        name: email.split('@')[0],
-        role: 'admin',
-        isLoggedIn: true
-      }));
-
-      setToast({
-        open: true,
-        message: "เข้าสู่ระบบสำเร็จ ยินดีต้อนรับกลับ",
-        severity: 'success'
-      });
-
-      window.location.href="/";
-      // navigate('/'); // Redirect to dashboard after login
-    } catch (error) {
-      setToast({
-        open: true,
-        message: error instanceof Error ? error.message : "กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง",
-        severity: 'error'
-      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
       setIsLoading(false);
     }
   };
+  
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Simple validation
+    if (!registerName || !registerEmail || !registerPassword) {
+      setError("Please fill in all fields");
+      return;
+    }
+    
+    setIsRegisterLoading(true);
+    setError("");
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // In real app, we'd register the user via API
+      setNotification({
+        open: true,
+        message: "Registration successful! You can now log in.",
+        severity: "success"
+      });
+      
+      // Reset form and switch to login tab
+      setRegisterName("");
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setTabValue(0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setIsRegisterLoading(false);
+    }
+  };
 
   return (
-    <Box 
-      sx={{ 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center", 
+    <Box
+      sx={{
         minHeight: "100vh",
-        bgcolor: "background.default"
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: (theme) => theme.palette.background.default,
+        py: 8,
       }}
     >
-      <Container maxWidth="sm">
-        <Card elevation={3}>
-          <CardHeader 
-            title="CronHub" 
-            subheader="เข้าสู่ระบบเพื่อจัดการ Cron Jobs ของคุณ"
-            sx={{ textAlign: 'center', pb: 1 }}
-          />
-          <CardContent>
-            <Box component="form" onSubmit={handleLogin} sx={{ mt: 1, mb: 2 }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                id="email"
-                label="อีเมล"
-                name="email"
-                autoComplete="email"
-                autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="subtitle2">รหัสผ่าน</Typography>
-                <MuiLink 
-                  component="button"
-                  variant="body2"
-                  onClick={() => setToast({open: true, message: "ฟีเจอร์นี้ยังไม่เปิดให้ใช้งาน", severity: 'info'})}
-                  type="button"
-                >
-                  ลืมรหัสผ่าน?
-                </MuiLink>
-              </Box>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label="รหัสผ่าน"
-                type="password"
-                id="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                sx={{ mb: 3 }}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                sx={{ mb: 2 }}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: "450px",
+          p: { xs: 2, sm: 3 },
+        }}
+      >
+        <Logo>
+          <Typography variant="h4" fontWeight="bold" color="primary">
+            CronMaster
+          </Typography>
+        </Logo>
+
+        <Card sx={{ boxShadow: 5 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h5" fontWeight="500" align="center">
+                Welcome to CronMaster
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                sx={{ mt: 1 }}
               >
-                {isLoading ? (
-                  <>
-                    <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
-                    กำลังเข้าสู่ระบบ...
-                  </>
-                ) : (
-                  "เข้าสู่ระบบ"
-                )}
-              </Button>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary" display="inline">
-                  ยังไม่มีบัญชี?{' '}
-                </Typography>
-                <MuiLink 
-                  component="button" 
-                  variant="body2"
-                  onClick={() => setToast({open: true, message: "ฟีเจอร์นี้จะเปิดให้ใช้งานเร็วๆ นี้", severity: 'info'})}
-                  type="button"
-                >
-                  ลงทะเบียน
-                </MuiLink>
-              </Box>
+                The professional job scheduler for your applications
+              </Typography>
             </Box>
+
+            <Tabs
+              value={tabValue}
+              onChange={handleTabChange}
+              variant="fullWidth"
+              sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}
+            >
+              <Tab label="Login" />
+              <Tab label="Register" />
+            </Tabs>
+
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }}>
+                {error}
+              </Alert>
+            )}
+
+            <TabPanel value={tabValue} index={0}>
+              <form onSubmit={handleLogin}>
+                <TextField
+                  label="Email Address"
+                  fullWidth
+                  margin="normal"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <FormControl fullWidth margin="normal" variant="outlined">
+                  <InputLabel htmlFor="password">Password</InputLabel>
+                  <OutlinedInput
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Lock fontSize="small" />
+                      </InputAdornment>
+                    }
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                    label="Password"
+                  />
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  sx={{ mt: 3 }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Login"
+                  )}
+                </Button>
+              </form>
+            </TabPanel>
+
+            <TabPanel value={tabValue} index={1}>
+              <form onSubmit={handleRegister}>
+                <TextField
+                  label="Full Name"
+                  fullWidth
+                  margin="normal"
+                  value={registerName}
+                  onChange={(e) => setRegisterName(e.target.value)}
+                  placeholder="Enter your name"
+                />
+
+                <TextField
+                  label="Email Address"
+                  fullWidth
+                  margin="normal"
+                  type="email"
+                  value={registerEmail}
+                  onChange={(e) => setRegisterEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email fontSize="small" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <FormControl fullWidth margin="normal" variant="outlined">
+                  <InputLabel htmlFor="register-password">Password</InputLabel>
+                  <OutlinedInput
+                    id="register-password"
+                    type={showRegisterPassword ? "text" : "password"}
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    placeholder="Create a password"
+                    startAdornment={
+                      <InputAdornment position="start">
+                        <Lock fontSize="small" />
+                      </InputAdornment>
+                    }
+                    endAdornment={
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowRegisterPassword(!showRegisterPassword)
+                          }
+                          edge="end"
+                        >
+                          {showRegisterPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    }
+                    label="Password"
+                  />
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  sx={{ mt: 3 }}
+                  disabled={isRegisterLoading}
+                >
+                  {isRegisterLoading ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Register"
+                  )}
+                </Button>
+              </form>
+            </TabPanel>
           </CardContent>
         </Card>
-      </Container>
-      
-      <Snackbar 
-        open={toast.open} 
-        autoHideDuration={6000} 
-        onClose={handleCloseToast}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <Alert 
-          onClose={handleCloseToast} 
-          severity={toast.severity} 
-          sx={{ width: '100%' }}
+
+        <Typography
+          variant="body2"
+          align="center"
+          sx={{ mt: 3, color: "text.secondary" }}
         >
-          {toast.message}
+          © {new Date().getFullYear()} CronMaster. All rights reserved.
+        </Typography>
+      </Box>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={() => setNotification({ ...notification, open: false })}
+      >
+        <Alert severity={notification.severity} sx={{ width: "100%" }}>
+          {notification.message}
         </Alert>
       </Snackbar>
     </Box>

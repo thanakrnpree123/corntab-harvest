@@ -1,171 +1,180 @@
 
-import { useState } from 'react';
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  CardHeader,
-  Typography,
-  Chip,
-  IconButton,
-  Paper,
-  Table,
-  TableContainer,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Button
-} from '@mui/material';
-import {
-  MoreVert as MoreVertIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Refresh as RefreshIcon,
-  Pause as PauseIcon,
-  PlayArrow as PlayArrowIcon
-} from '@mui/icons-material';
-import MainLayout from '../components/layout/MainLayout';
-
-// Mock data
-const statCards = [
-  { title: 'Total Jobs', value: '124', color: 'primary.main' },
-  { title: 'Running Jobs', value: '45', color: 'success.main' },
-  { title: 'Paused Jobs', value: '12', color: 'warning.main' },
-  { title: 'Failed Jobs', value: '3', color: 'error.main' },
-];
-
-const recentJobs = [
-  { id: 1, name: 'Daily Database Backup', status: 'success', lastRun: '2023-10-15 13:45', nextRun: '2023-10-16 13:45' },
-  { id: 2, name: 'User Reports Generation', status: 'failed', lastRun: '2023-10-15 10:30', nextRun: '2023-10-16 10:30' },
-  { id: 3, name: 'Email Newsletter', status: 'paused', lastRun: '2023-10-14 08:00', nextRun: '-' },
-  { id: 4, name: 'System Health Check', status: 'running', lastRun: '2023-10-15 14:00', nextRun: '2023-10-15 15:00' },
-  { id: 5, name: 'Analytics Processing', status: 'success', lastRun: '2023-10-15 12:00', nextRun: '2023-10-16 12:00' },
-];
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case 'success':
-      return <CheckCircleIcon fontSize="small" color="success" />;
-    case 'failed':
-      return <ErrorIcon fontSize="small" color="error" />;
-    case 'running':
-      return <RefreshIcon fontSize="small" color="info" />;
-    case 'paused':
-      return <PauseIcon fontSize="small" color="warning" />;
-    default:
-      return null;
-  }
-};
-
-const getStatusChip = (status: string) => {
-  let color: 'success' | 'error' | 'warning' | 'info' = 'info';
-  let label = status.charAt(0).toUpperCase() + status.slice(1);
-  
-  switch (status) {
-    case 'success':
-      color = 'success';
-      break;
-    case 'failed':
-      color = 'error';
-      break;
-    case 'paused':
-      color = 'warning';
-      break;
-    default:
-      color = 'info';
-  }
-  
-  return <Chip size="small" icon={getStatusIcon(status)} label={label} color={color} />;
-};
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Typography, Box, Paper, Grid, Card, CardContent, CircularProgress } from "@mui/material";
+import { apiService } from "@/lib/api-service";
+import MainLayout from "@/components/layout/MainLayout";
+import { ChevronRight, Layers, Activity, Timer, Settings } from "lucide-react";
+import { format } from "date-fns";
 
 export default function Index() {
-  const [jobs] = useState(recentJobs);
+  const [stats, setStats] = useState({
+    totalJobs: 0,
+    activeJobs: 0,
+    completedJobs: 0,
+    failedJobs: 0
+  });
   
+  // Recent jobs data
+  const [recentJobs, setRecentJobs] = useState([]);
+  
+  // Mock feature cards
+  const features = [
+    {
+      title: 'Job Scheduling',
+      description: 'Schedule jobs with cron expressions or fixed intervals',
+      icon: <Timer size={24} />
+    },
+    {
+      title: 'HTTP Webhooks',
+      description: 'Make HTTP requests to any endpoint with custom data',
+      icon: <Activity size={24} />
+    },
+    {
+      title: 'Project Organization',
+      description: 'Organize jobs into projects for better management',
+      icon: <Layers size={24} />
+    },
+    {
+      title: 'Advanced Settings',
+      description: 'Configure timeouts, retries, and notifications',
+      icon: <Settings size={24} />
+    }
+  ];
+  
+  // Fetch jobs data
+  const { isLoading } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: async () => {
+      try {
+        const response = await apiService.getJobs();
+        if (response.success && response.data) {
+          const jobs = response.data;
+          
+          // Update statistics
+          setStats({
+            totalJobs: jobs.length,
+            activeJobs: jobs.filter(job => job.status === 'running').length,
+            completedJobs: jobs.filter(job => job.status === 'success').length,
+            failedJobs: jobs.filter(job => job.status === 'failed').length
+          });
+          
+          // Get 5 most recent jobs
+          const recent = [...jobs]
+            .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+            .slice(0, 5);
+          
+          setRecentJobs(recent);
+          return jobs;
+        }
+        return [];
+      } catch (error) {
+        console.error("Failed to fetch jobs:", error);
+        return [];
+      }
+    }
+  });
+
   return (
     <MainLayout>
-      <Typography variant="h4" gutterBottom>
-        Dashboard
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom>Dashboard</Typography>
+        <Typography variant="body1" color="text.secondary">
+          Overview of your scheduled jobs and system status
+        </Typography>
+      </Box>
       
-      {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {statCards.map((card, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card>
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Typography variant="subtitle1" color="text.secondary">
-                  {card.title}
-                </Typography>
-                <Typography variant="h3" sx={{ color: card.color, my: 1 }}>
-                  {card.value}
-                </Typography>
+        {features.map((feature, index) => (
+          <Grid key={index} item xs={12} sm={6} md={3}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent>
+                <Box sx={{ mb: 2, color: 'primary.main' }}>{feature.icon}</Box>
+                <Typography variant="h6" gutterBottom>{feature.title}</Typography>
+                <Typography variant="body2" color="text.secondary">{feature.description}</Typography>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
       
-      {/* Recent Jobs */}
-      <Card>
-        <CardHeader 
-          title="Recent Jobs" 
-          action={
-            <IconButton aria-label="settings">
-              <MoreVertIcon />
-            </IconButton>
-          }
-        />
-        <CardContent>
-          <TableContainer component={Paper} elevation={0}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell align="center">Status</TableCell>
-                  <TableCell align="center">Last Run</TableCell>
-                  <TableCell align="center">Next Run</TableCell>
-                  <TableCell align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {jobs.map((job) => (
-                  <TableRow key={job.id}>
-                    <TableCell component="th" scope="row">
-                      {job.name}
-                    </TableCell>
-                    <TableCell align="center">
-                      {getStatusChip(job.status)}
-                    </TableCell>
-                    <TableCell align="center">{job.lastRun}</TableCell>
-                    <TableCell align="center">{job.nextRun}</TableCell>
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                        {job.status === 'paused' ? (
-                          <IconButton size="small" color="primary">
-                            <PlayArrowIcon fontSize="small" />
-                          </IconButton>
-                        ) : job.status !== 'running' ? (
-                          <IconButton size="small" color="warning">
-                            <PauseIcon fontSize="small" />
-                          </IconButton>
-                        ) : null}
-                        <IconButton size="small" color="primary">
-                          <RefreshIcon fontSize="small" />
-                        </IconButton>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>Recent Jobs</Typography>
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                <CircularProgress size={30} />
+              </Box>
+            ) : recentJobs.length > 0 ? (
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                {recentJobs.map((job) => (
+                  <Box 
+                    key={job.id} 
+                    sx={{ 
+                      py: 1.5, 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      '&:last-child': {
+                        borderBottom: 'none'
+                      }
+                    }}
+                  >
+                    <Box>
+                      <Typography variant="body1">{job.name}</Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {job.lastRun ? `Last run: ${format(new Date(job.lastRun), 'MMM dd, HH:mm')}` : 'Never run'}
+                        </Typography>
                       </Box>
-                    </TableCell>
-                  </TableRow>
+                    </Box>
+                    <ChevronRight size={18} />
+                  </Box>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-            <Button variant="outlined">View All Jobs</Button>
-          </Box>
-        </CardContent>
-      </Card>
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: 'center', p: 2, color: 'text.secondary' }}>
+                <Typography>No recent jobs found</Typography>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+        
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>System Status</Typography>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={6}>
+                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
+                  <Typography variant="h4">{stats.totalJobs}</Typography>
+                  <Typography variant="body2" color="text.secondary">Total Jobs</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6}>
+                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
+                  <Typography variant="h4" color="info.main">{stats.activeJobs}</Typography>
+                  <Typography variant="body2" color="text.secondary">Active Jobs</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6}>
+                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
+                  <Typography variant="h4" color="success.main">{stats.completedJobs}</Typography>
+                  <Typography variant="body2" color="text.secondary">Completed Jobs</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={6}>
+                <Paper elevation={0} sx={{ p: 2, bgcolor: 'background.default', textAlign: 'center' }}>
+                  <Typography variant="h4" color="error.main">{stats.failedJobs}</Typography>
+                  <Typography variant="body2" color="text.secondary">Failed Jobs</Typography>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Paper>
+        </Grid>
+      </Grid>
     </MainLayout>
   );
 }

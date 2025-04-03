@@ -85,7 +85,12 @@ export default function UserManagementPage() {
 
   const handleEditPermissions = (user: User) => {
     setSelectedUser(user);
-    setSelectedPermissions(user.role?.permissions || []);
+    // Extract permissions from user's role if it's an object
+    let permissions: Permission[] = [];
+    if (typeof user.role === 'object' && user.role && 'permissions' in user.role) {
+      permissions = user.role.permissions as Permission[];
+    }
+    setSelectedPermissions(permissions);
     setIsPermissionDialogOpen(true);
   };
 
@@ -123,7 +128,7 @@ export default function UserManagementPage() {
 
       // Update the user's role
       const updateResponse = await apiService.updateUser(selectedUser.id, {
-        roleId: role.id
+        role: role
       });
 
       if (updateResponse.success) {
@@ -196,18 +201,21 @@ export default function UserManagementPage() {
                       </TableCell>
                       <TableCell className="font-medium">{user.name}</TableCell>
                       <TableCell>{user.email}</TableCell>
-                      <TableCell>{user.role?.name || "No Role"}</TableCell>
+                      <TableCell>
+                        {typeof user.role === 'object' && user.role ? user.role.name : user.role}
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {user.role?.permissions.map((permission) => (
-                            <span
-                              key={permission}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground"
-                            >
-                              {permission}
-                            </span>
-                          ))}
-                          {!user.role?.permissions.length && (
+                          {typeof user.role === 'object' && user.role && user.role.permissions ? (
+                            user.role.permissions.map((permission) => (
+                              <span
+                                key={permission}
+                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground"
+                              >
+                                {permission}
+                              </span>
+                            ))
+                          ) : (
                             <span className="text-muted-foreground">No permissions</span>
                           )}
                         </div>
@@ -233,7 +241,11 @@ export default function UserManagementPage() {
                                   <div key={permission} className="flex items-center space-x-2">
                                     <Checkbox
                                       id={`permission-${permission}`}
-                                      checked={user.role?.permissions.includes(permission)}
+                                      checked={
+                                        typeof user.role === 'object' && user.role && user.role.permissions
+                                          ? user.role.permissions.includes(permission)
+                                          : false
+                                      }
                                       disabled
                                     />
                                     <Label htmlFor={`permission-${permission}`} className="capitalize">
