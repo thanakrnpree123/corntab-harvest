@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { 
@@ -32,6 +33,7 @@ import { toast } from "sonner";
 import { User, Role, Permission } from "@/lib/types";
 import { User as UserIcon, UserPlus, Edit, Trash, Shield, Key } from "lucide-react";
 
+// Mock data for users
 const mockUsers: User[] = [
   {
     id: "1",
@@ -77,6 +79,7 @@ const mockUsers: User[] = [
   }
 ];
 
+// Mock data for roles
 const mockRoles: Role[] = [
   {
     id: "1",
@@ -109,10 +112,12 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   
+  // New user form state
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserRoleId, setNewUserRoleId] = useState("");
   
+  // Edit role form state
   const [editRoleName, setEditRoleName] = useState("");
   const [editRolePermissions, setEditRolePermissions] = useState<Permission[]>([]);
 
@@ -167,8 +172,9 @@ const UserManagement = () => {
         : role
     );
 
+    // Update users with this role
     const updatedUsers = users.map(user => {
-      if (typeof user.role === 'object' && user.role && user.role.id === selectedRole.id) {
+      if (user.role.id === selectedRole.id) {
         return {
           ...user,
           role: {
@@ -251,9 +257,7 @@ const UserManagement = () => {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
-                        <TableCell>
-                          {user.role.name}
-                        </TableCell>
+                        <TableCell>{user.role.name}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {user.role.permissions.map((permission) => (
@@ -326,6 +330,7 @@ const UserManagement = () => {
           </div>
         </div>
         
+        {/* Add User Dialog */}
         <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -380,6 +385,7 @@ const UserManagement = () => {
           </DialogContent>
         </Dialog>
         
+        {/* Edit Role Dialog */}
         <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>

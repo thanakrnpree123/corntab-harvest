@@ -1,59 +1,58 @@
 
-// Job related types
-export type JobStatus = 'running' | 'paused' | 'success' | 'failed' | 'idle';
+export type Permission = "view" | "create" | "update" | "delete";
 
-export interface Job {
-  id: string;
-  name: string;
-  description: string;
-  schedule: string;
-  command: string;
-  status: JobStatus;
-  lastRun?: string | null;
-  nextRun?: string | null;
-  createdAt: string;
-  updatedAt: string;
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
-// CronJob type (extended Job)
-export interface CronJob {
+export interface Project {
   id: string;
   name: string;
   description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type JobStatus = "idle" | "running" | "success" | "failed" | "paused";
+
+export interface CronJob {
+  id: string;
+  name: string;
   schedule: string;
-  status: JobStatus;
   endpoint: string;
   httpMethod: string;
   requestBody?: string;
+  description?: string;
   projectId: string;
-  timezone?: string;
-  useLocalTime?: boolean;
-  lastRun?: string | null;
-  nextRun?: string | null;
+  status: JobStatus;
+  useLocalTime: boolean;
+  timezone: string;
+  lastRun: string | null;
+  nextRun: string | null;
   createdAt: string;
   updatedAt: string;
-  tags?: string[];
-  successCount?: number;
-  failCount?: number;
-  averageRuntime?: number | null;
+  tags: string[];
+  successCount: number;
+  failCount: number;
+  averageRuntime: number | null;
   emailNotifications?: string | null;
+  webhookUrl?: string | null;
 }
 
-// Log related types
 export interface JobLog {
   id: string;
   jobId: string;
-  startTime: string | null;
-  endTime: string | null;
-  duration?: number;
   status: string;
+  startTime: string;
+  endTime: string | null;
+  duration: number | null;
   output: string;
-  error?: string;
-  createdAt?: string;
+  error: string | null;
+  createdAt: string;
 }
-
-// Role and Permission types
-export type Permission = 'view' | 'create' | 'update' | 'delete';
 
 export interface Role {
   id: string;
@@ -63,29 +62,36 @@ export interface Role {
   updatedAt: string;
 }
 
-// User related types
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role?: Role;
+  roleId?: string;
   avatar?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-// Project type
-export interface Project {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
+export interface EmailNotificationSettings {
+  recipients: string[];
+  onSuccess?: boolean;
+  onFailure?: boolean;
 }
 
-// API Response type
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
+export interface WebhookSettings {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  onSuccess?: boolean;
+  onFailure?: boolean;
+}
+
+export interface KeyValuePair {
+  key: string;
+  value: string;
+}
+
+export interface FormDataBody {
+  pairs: KeyValuePair[];
 }

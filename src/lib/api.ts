@@ -425,13 +425,7 @@ export const userApi = {
             id: "1",
             name: "Admin User",
             email: "admin@example.com",
-            role: {
-              id: "1",
-              name: "admin",
-              permissions: ["view", "create", "update", "delete"],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
+            roleId: "1",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           },
@@ -439,13 +433,7 @@ export const userApi = {
             id: "2",
             name: "Regular User",
             email: "user@example.com",
-            role: {
-              id: "2",
-              name: "user",
-              permissions: ["view"],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            },
+            roleId: "2",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           }
@@ -468,13 +456,7 @@ export const userApi = {
           id,
           name: `User ${id}`,
           email: `user${id}@example.com`,
-          role: {
-            id: "2",
-            name: "user",
-            permissions: ["view"],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
+          roleId: "1",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
@@ -520,22 +502,11 @@ export const userApi = {
         return handleResponse<User>(response);
       } catch (error) {
         console.warn("Using mock update user due to API error:", error);
-        
-        const roleObject: Role = typeof user.role === 'object' ? 
-          user.role : 
-          {
-            id: "2",
-            name: "user",
-            permissions: ["view"],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          
         const mockUser: User = {
           id,
           name: user.name || `User ${id}`,
           email: user.email || `user${id}@example.com`,
-          role: roleObject,
+          roleId: user.roleId || "1",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };

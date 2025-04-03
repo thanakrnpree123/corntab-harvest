@@ -2,13 +2,14 @@
 import { useEffect } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MuiThemeProvider } from "@/components/MuiThemeProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 // Pages
 import Index from "./pages/Index";
-import JobsPage from "./pages/JobsPage"; // Now importing the default export
+import JobsPage from "./pages/JobsPage";
 import LogsPage from "./pages/LogsPage";
-import UserManagementPage from "./pages/UserManagementPage"; // Now importing the default export
+import UserManagementPage from "./pages/UserManagementPage";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -24,9 +25,7 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // const isLoggedIn = !!localStorage.getItem("user");
-
-  const isLoggedIn = true
+  const isLoggedIn = !!localStorage.getItem("user");
 
   // Setup mock data when running in development
   useEffect(() => {
@@ -37,7 +36,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <MuiThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="light" storageKey="cron-hub-theme">
         <BrowserRouter>
           <Routes>
             <Route 
@@ -66,8 +65,9 @@ function App() {
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <Toaster />
         </BrowserRouter>
-      </MuiThemeProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
