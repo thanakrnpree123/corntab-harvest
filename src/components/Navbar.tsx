@@ -54,10 +54,10 @@ export function Navbar() {
   return (
     <header className="border-b">
       <div className="container flex h-14 items-center">
-        <Link to="/" className="font-bold mr-8">
-        <AlarmClock className="h-6 w-6" />
+      <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+            <AlarmClock className="h-6 w-6" />
             <span>CornTab</span>
-        </Link>
+          </Link>
 
         {/* Desktop menu */}
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mr-auto">
