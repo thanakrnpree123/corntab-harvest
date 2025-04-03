@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CronJob } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -69,7 +68,6 @@ export function JobExportImport({ jobs, onImportJobs }: JobExportImportProps) {
           return;
         }
 
-        // Validate each job in the array
         const validJobs: CronJob[] = [];
         for (const job of jsonData) {
           if (

@@ -13,9 +13,9 @@ import {
   Chip,
   Collapse, 
   IconButton, 
-  Grid, 
   Paper
 } from "@mui/material";
+import Grid from '@mui/material/Unstable_Grid2'; // Import the Grid component correctly
 import { 
   Search as SearchIcon, 
   ExpandMore as ExpandMoreIcon, 

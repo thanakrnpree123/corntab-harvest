@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Typography, Box, Paper, Grid, Card, CardContent, CircularProgress } from "@mui/material";
+import { Typography, Box, Paper, Card, CardContent, CircularProgress } from "@mui/material";
+import Grid from '@mui/material/Unstable_Grid2';
 import { apiService } from "@/lib/api-service";
 import MainLayout from "@/components/layout/MainLayout";
 import { ChevronRight, Layers, Activity, Timer, Settings } from "lucide-react";
@@ -15,10 +15,8 @@ export default function Index() {
     failedJobs: 0
   });
   
-  // Recent jobs data
   const [recentJobs, setRecentJobs] = useState([]);
   
-  // Mock feature cards
   const features = [
     {
       title: 'Job Scheduling',
@@ -42,7 +40,6 @@ export default function Index() {
     }
   ];
   
-  // Fetch jobs data
   const { isLoading } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
@@ -51,7 +48,6 @@ export default function Index() {
         if (response.success && response.data) {
           const jobs = response.data;
           
-          // Update statistics
           setStats({
             totalJobs: jobs.length,
             activeJobs: jobs.filter(job => job.status === 'running').length,
@@ -59,7 +55,6 @@ export default function Index() {
             failedJobs: jobs.filter(job => job.status === 'failed').length
           });
           
-          // Get 5 most recent jobs
           const recent = [...jobs]
             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
             .slice(0, 5);

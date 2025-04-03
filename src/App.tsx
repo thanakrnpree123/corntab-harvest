@@ -6,9 +6,9 @@ import { MuiThemeProvider } from "@/components/MuiThemeProvider";
 
 // Pages
 import Index from "./pages/Index";
-import JobsPage from "./pages/JobsPage";
+import JobsPage from "./pages/JobsPage"; // Now importing the default export
 import LogsPage from "./pages/LogsPage";
-import UserManagementPage from "./pages/UserManagementPage";
+import UserManagementPage from "./pages/UserManagementPage"; // Now importing the default export
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
