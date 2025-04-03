@@ -204,12 +204,39 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            <Button variant="default" className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
+            {/* <Button variant="default" className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
               <Play className="mr-2 h-4 w-4" />
               รันตอนนี้
-            </Button>
+            </Button> */}
+            <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="default" 
+                      className="flex-1"
+                      disabled={isLoading || job.status === "running" || isRunningNow}
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      รันตอนนี้
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>รันงานตอนนี้</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        คุณแน่ใจหรือไม่ที่จะรันงาน "{job.name}" ตอนนี้?
+                        งานจะถูกรันทันทีโดยไม่คำนึงถึงตารางเวลา
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRunJob}>
+                        รันตอนนี้
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
-            <Button variant={job.status === "paused" ? "default" : "outline"} className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
+            {/* <Button variant={job.status === "paused" ? "default" : "outline"} className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
               {job.status === "paused" ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4" />
@@ -221,7 +248,47 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                   หยุดชั่วคราว
                 </>
               )}
-            </Button>
+            </Button> */}
+
+<AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant={job.status === "paused" ? "default" : "outline"}
+                      className="flex-1"
+                      disabled={isLoading || job.status === "running" || isRunningNow}
+                    >
+                      {job.status === "paused" ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          เปิดใช้งาน
+                        </>
+                      ) : (
+                        <>
+                          <Pause className="mr-2 h-4 w-4" />
+                          หยุดชั่วคราว
+                        </>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        {job.status === "paused" ? "เปิดใช้งาน" : "หยุดงานชั่วคราว"}
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {job.status === "paused" 
+                          ? `คุณแน่ใจหรือไม่ที่จะเปิดใช้งาน "${job.name}"? งานจะกลับมาทำงานตามตารางเวลาที่กำหนด` 
+                          : `คุณแน่ใจหรือไม่ที่จะหยุด "${job.name}" ชั่วคราว? งานจะไม่รันจนกว่าคุณจะเปิดใช้งานอีกครั้ง`}
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleToggleStatus}>
+                        {job.status === "paused" ? "เปิดใช้งาน" : "หยุดชั่วคราว"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
           </div>
         </div>
       </CardContent>
