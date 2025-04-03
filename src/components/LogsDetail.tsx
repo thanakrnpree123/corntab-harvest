@@ -58,14 +58,14 @@ export function LogsDetail({ jobId, jobName }: LogsDetailProps) {
   //     fetchLogs();
   //   }, 30000);
     
-    setRefreshInterval(interval);
+    // setRefreshInterval(interval);
     
-    return () => {
-      if (refreshInterval) {
-        clearInterval(refreshInterval);
-      }
-    };
-  }, [jobId]);
+  //   return () => {
+  //     if (refreshInterval) {
+  //       clearInterval(refreshInterval);
+  //     }
+  //   };
+  // }, [jobId]);
 
   return (
     <Card className="shadow-sm ">
