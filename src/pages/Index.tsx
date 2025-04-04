@@ -1,21 +1,42 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { CronJob } from "@/lib/types";
 import { StatusBadge } from "@/components/StatusBadge";
 import dayjs from "dayjs";
-import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { 
+  Activity, 
+  AlertTriangle, 
+  Calendar, 
+  CheckCircle, 
+  Clock, 
+  Server 
+} from "lucide-react";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Grid,
+  Tabs,
+  Tab,
+  Button,
+  Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondary
+} from "@mui/material";
 
 export default function Index() {
   const { toast } = useToast();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("recent");
   
   // Fetch all jobs
   const {
@@ -65,109 +86,147 @@ export default function Index() {
     success: jobs.filter(job => job.status === "success").length,
   };
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setActiveTab(newValue);
+  };
+
   return (
     <PageLayout title="Dashboard">
-      <div className="grid gap-6">
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {/* Stats cards */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <StatsCard title="งานทั้งหมด" value={jobStats.total} />
-          <StatsCard title="กำลังทำงาน" value={jobStats.active} />
-          <StatsCard title="สำเร็จ" value={jobStats.success} color="green" icon={CheckCircle} />
-          <StatsCard title="ล้มเหลว" value={jobStats.failed} color="red" icon={AlertTriangle} />
-          <StatsCard title="หยุดชั่วคราว" value={jobStats.paused} color="gray" />
-        </div>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4} lg={20/100}>
+            <StatsCard title="งานทั้งหมด" value={jobStats.total} />
+          </Grid>
+          <Grid item xs={12} md={4} lg={20/100}>
+            <StatsCard title="กำลังทำงาน" value={jobStats.active} />
+          </Grid>
+          <Grid item xs={12} md={4} lg={20/100}>
+            <StatsCard 
+              title="สำเร็จ" 
+              value={jobStats.success} 
+              color="success.main" 
+              icon={CheckCircle} 
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={20/100}>
+            <StatsCard 
+              title="ล้มเหลว" 
+              value={jobStats.failed} 
+              color="error.main" 
+              icon={AlertTriangle} 
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={20/100}>
+            <StatsCard 
+              title="หยุดชั่วคราว" 
+              value={jobStats.paused} 
+              color="text.secondary" 
+            />
+          </Grid>
+        </Grid>
 
         {/* Recent jobs */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="md:col-span-1 space-y-6">
-         <Card>
-    <CardHeader>
-      <CardTitle>งานล่าสุด</CardTitle>
-      <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
-    </CardHeader>
-    <CardContent className="p-0">
-      <Tabs defaultValue="recent">
-        <TabsList className="w-full bg-transparent border-b rounded-none">
-          <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
-          <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
-          <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
-          <div className="divide-y">
-            {recentJobs.length > 0 ? (
-              recentJobs.map((job) => (
-                <JobListItem 
-                  key={job.id} 
-                  job={job} 
-                  isSelected={job.id === selectedJobId}
-                  onSelect={() => setSelectedJobId(job.id)} 
-                />
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                ยังไม่มีงานที่เคยรัน
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="failed" className="m-0 h-[300px] overflow-y-auto">
-          <div className="divide-y">
-            {failedJobs.length > 0 ? (
-              failedJobs.map((job) => (
-                <JobListItem 
-                  key={job.id} 
-                  job={job} 
-                  isSelected={job.id === selectedJobId}
-                  onSelect={() => setSelectedJobId(job.id)} 
-                />
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                ไม่มีงานที่ล้มเหลว
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="paused" className="m-0 h-[300px] overflow-y-auto">
-          <div className="divide-y">
-            {pausedJobs.length > 0 ? (
-              pausedJobs.map((job) => (
-                <JobListItem 
-                  key={job.id} 
-                  job={job} 
-                  isSelected={job.id === selectedJobId}
-                  onSelect={() => setSelectedJobId(job.id)} 
-                />
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                ไม่มีงานที่ถูกหยุดชั่วคราว
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </CardContent>
-  </Card>
-</div>
-
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Paper elevation={2} sx={{ height: '100%' }}>
+              <CardHeader 
+                title="งานล่าสุด"
+                subheader="งานที่มีการทำงานล่าสุด"
+              />
+              <Tabs 
+                value={activeTab}
+                onChange={handleTabChange}
+                sx={{ borderBottom: 1, borderColor: 'divider' }}
+                centered
+              >
+                <Tab label="ล่าสุด" value="recent" />
+                <Tab label="ล้มเหลว" value="failed" />
+                <Tab label="หยุดชั่วคราว" value="paused" />
+              </Tabs>
+              
+              <Box sx={{ maxHeight: '50vh', overflow: 'auto' }}>
+                <List sx={{ width: '100%', p: 0 }}>
+                  {activeTab === "recent" && (
+                    recentJobs.length > 0 ? (
+                      recentJobs.map((job) => (
+                        <JobListItem 
+                          key={job.id} 
+                          job={job} 
+                          isSelected={job.id === selectedJobId}
+                          onSelect={() => setSelectedJobId(job.id)} 
+                        />
+                      ))
+                    ) : (
+                      <ListItem sx={{ justifyContent: 'center', py: 3 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          ยังไม่มีงานที่เคยรัน
+                        </Typography>
+                      </ListItem>
+                    )
+                  )}
+                  
+                  {activeTab === "failed" && (
+                    failedJobs.length > 0 ? (
+                      failedJobs.map((job) => (
+                        <JobListItem 
+                          key={job.id} 
+                          job={job} 
+                          isSelected={job.id === selectedJobId}
+                          onSelect={() => setSelectedJobId(job.id)} 
+                        />
+                      ))
+                    ) : (
+                      <ListItem sx={{ justifyContent: 'center', py: 3 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          ไม่มีงานที่ล้มเหลว
+                        </Typography>
+                      </ListItem>
+                    )
+                  )}
+                  
+                  {activeTab === "paused" && (
+                    pausedJobs.length > 0 ? (
+                      pausedJobs.map((job) => (
+                        <JobListItem 
+                          key={job.id} 
+                          job={job} 
+                          isSelected={job.id === selectedJobId}
+                          onSelect={() => setSelectedJobId(job.id)} 
+                        />
+                      ))
+                    ) : (
+                      <ListItem sx={{ justifyContent: 'center', py: 3 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          ไม่มีงานที่ถูกหยุดชั่วคราว
+                        </Typography>
+                      </ListItem>
+                    )
+                  )}
+                </List>
+              </Box>
+            </Paper>
+          </Grid>
           
-          <div className="md:col-span-2">
+          <Grid item xs={12} md={8}>
             {selectedJob ? (
               <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
             ) : (
-              <Card className="h-full flex items-center justify-center p-6">
-                <div className="text-center text-muted-foreground">
+              <Paper sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                p: 3
+              }}>
+                <Typography variant="body1" color="text.secondary">
                   เลือกงานจากรายการเพื่อดูรายละเอียด
-                </div>
-              </Card>
+                </Typography>
+              </Paper>
             )}
-          </div>
-        </div>
-      </div>
+          </Grid>
+        </Grid>
+      </Box>
     </PageLayout>
   );
 }
@@ -179,35 +238,53 @@ function JobListItem({ job, isSelected, onSelect }: {
   onSelect: () => void;
 }) {
   return (
-    <button
-      className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors ${
-        isSelected ? "bg-muted" : ""
-      }`}
+    <ListItem 
+      button
+      selected={isSelected}
       onClick={onSelect}
+      sx={{
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        transition: 'all 0.2s',
+        '&:hover': {
+          bgcolor: 'action.hover',
+        },
+        ...(isSelected && {
+          bgcolor: 'action.selected',
+        }),
+      }}
     >
-      <div className="flex items-start justify-between mb-1">
-        <div className="font-medium truncate mr-2">{job.name}</div>
-        <StatusBadge status={job.status} />
-      </div>
-      <div className="flex items-center text-xs text-muted-foreground gap-2">
-        <div className="flex items-center gap-1">
-          <Server className="h-3 w-3" />
-          <span>{job.httpMethod}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
-          <span>{job.schedule}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          <span>
-            {job.lastRun 
-              ? dayjs(job.lastRun).format('DD/MM HH:mm')
-              : "ยังไม่เคยรัน"}
-          </span>
-        </div>
-      </div>
-    </button>
+      <ListItemText
+        primary={
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="body1" noWrap sx={{ flex: 1, mr: 1 }}>
+              {job.name}
+            </Typography>
+            <StatusBadge status={job.status} />
+          </Box>
+        }
+        secondary={
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5, flexWrap: 'wrap' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Server className="h-3 w-3" />
+              <Typography variant="caption">{job.httpMethod}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Calendar className="h-3 w-3" />
+              <Typography variant="caption">{job.schedule}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Clock className="h-3 w-3" />
+              <Typography variant="caption">
+                {job.lastRun 
+                  ? dayjs(job.lastRun).format('DD/MM HH:mm')
+                  : "ยังไม่เคยรัน"}
+              </Typography>
+            </Box>
+          </Box>
+        }
+      />
+    </ListItem>
   );
 }
 
@@ -215,33 +292,38 @@ function JobListItem({ job, isSelected, onSelect }: {
 function StatsCard({ 
   title,
   value,
-  color = "blue",
+  color = "primary.main",
   icon: Icon = Activity
 }: {
   title: string;
   value: number;
-  color?: "blue" | "green" | "red" | "gray";
+  color?: string;
   icon?: React.ComponentType<{ className?: string }>;
 }) {
-  const colorClasses = {
-    blue: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
-    green: "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400",
-    red: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400",
-    gray: "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
-  };
-  
   return (
     <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-            <p className="text-3xl font-bold">{value}</p>
-          </div>
-          <div className={`p-2 rounded-full ${colorClasses[color]}`}>
+      <CardContent sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {title}
+            </Typography>
+            <Typography variant="h4" component="div">
+              {value}
+            </Typography>
+          </Box>
+          <Box sx={{ 
+            p: 1, 
+            borderRadius: '50%', 
+            bgcolor: `${color}15`, 
+            color: color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
             <Icon className="h-5 w-5" />
-          </div>
-        </div>
+          </Box>
+        </Box>
       </CardContent>
     </Card>
   );

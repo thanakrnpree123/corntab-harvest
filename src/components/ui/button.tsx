@@ -1,5 +1,6 @@
 
 import * as React from "react"
+import { Button as MuiButton } from "@mui/material"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -44,7 +45,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     
-    // Use a map to translate shadcn/ui variants to material-ui variants
+    // Map shadcn/ui variants to MUI variants
     let muiVariant: "contained" | "text" | "outlined" = "contained";
     if (variant === "outline") {
       muiVariant = "outlined";
@@ -60,10 +61,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       muiSize = "large";
     }
     
+    // For custom styling that isn't easily mapped, we continue to use the original classes
     return (
-      <Comp
+      <MuiButton
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        variant={muiVariant}
+        size={muiSize}
         {...props}
       />
     )
