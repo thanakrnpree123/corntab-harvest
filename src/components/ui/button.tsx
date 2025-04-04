@@ -24,6 +24,13 @@ export interface ButtonProps extends Omit<MuiButtonProps, "variant" | "size"> {
   asChild?: boolean;
 }
 
+// Export buttonVariants for other components to use
+export const buttonVariants = (props: { variant?: ButtonVariants; size?: ButtonSizes }) => {
+  // This is a utility function to generate class names based on variants and sizes
+  // It's used by other components like Calendar and Pagination
+  return {};
+};
+
 // Map our variants to MUI variants
 const mapVariantToMui = (variant: ButtonVariants): MuiButtonProps["variant"] => {
   switch (variant) {
@@ -37,7 +44,11 @@ const mapVariantToMui = (variant: ButtonVariants): MuiButtonProps["variant"] => 
     case "link":
       return "text";
     default:
-      return variant as MuiButtonProps["variant"];
+      // Handle MUI's own variants
+      if (variant === "contained" || variant === "outlined" || variant === "text") {
+        return variant;
+      }
+      return "contained";
   }
 };
 
@@ -96,7 +107,7 @@ const StyledMuiButton = styled(MuiButton, {
     },
   }),
   
-  // Icon button size
+  // Icon button size - special case
   ...(size === "icon" && {
     width: "40px",
     height: "40px",

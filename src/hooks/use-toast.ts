@@ -1,16 +1,28 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Snackbar, Alert, AlertColor } from '@mui/material';
+import { AlertColor } from '@mui/material';
 
 export type ToastProps = {
   id?: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
-  variant?: AlertColor;
+  variant?: AlertColor | "default" | "destructive";
   open?: boolean;
   duration?: number;
 };
+
+// Helper to convert custom variants to MUI AlertColor
+export function mapVariantToAlertColor(variant?: ToastProps["variant"]): AlertColor {
+  switch (variant) {
+    case "destructive":
+      return "error";
+    case "default":
+      return "info";
+    default:
+      return (variant as AlertColor) || "info";
+  }
+}
 
 type ToastState = {
   toasts: ToastProps[];
@@ -135,7 +147,7 @@ export function toast(props: ToastProps) {
       ...props,
       id,
       open: true,
-      onDismiss: dismiss,
+      // No onDismiss property in ToastProps
     },
   });
 

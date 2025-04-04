@@ -28,7 +28,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { apiService } from "@/lib/api-service";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -55,6 +55,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
       toast({
         title: "เริ่มรันงานแล้ว",
         description: `งาน "${job.name}" กำลังทำงาน`,
+        variant: "default", // mapped to info
       });
       
       // จำลองเวลารันงานประมาณ 5 วินาที
@@ -63,7 +64,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
       toast({
         title: "รันงานเสร็จสิ้น",
         description: `งาน "${job.name}" รันสำเร็จแล้ว`,
-        variant: "default",
+        variant: "default", // mapped to info
       });
       
       onRefresh();
@@ -71,7 +72,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
       toast({
         title: "เกิดข้อผิดพลาด",
         description: `ไม่สามารถรันงาน: ${error instanceof Error ? error.message : "Unknown error"}`,
-        variant: "destructive",
+        variant: "destructive", // mapped to error
       });
     } finally {
       setIsLoading(false);
@@ -93,6 +94,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
         description: newStatus === "paused" 
           ? `งาน "${job.name}" ถูกหยุดชั่วคราวแล้ว` 
           : `งาน "${job.name}" กลับมาทำงานแล้ว`,
+        variant: "default", // mapped to info
       });
       
       onRefresh();
@@ -100,7 +102,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
       toast({
         title: "เกิดข้อผิดพลาด",
         description: `ไม่สามารถเปลี่ยนสถานะงาน: ${error instanceof Error ? error.message : "Unknown error"}`,
-        variant: "destructive",
+        variant: "destructive", // mapped to error
       });
     } finally {
       setIsLoading(false);
@@ -191,7 +193,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                 <Clock className="w-4 h-4" />
                 <span>รันล่าสุด</span>
               </div>
-              <div>{job.lastRun ? format(new Date(job.lastRun), 'dd/MM/yyyy HH:mm:ss') : "ไม่มีข้อมูล"}</div>
+              <div>{job.lastRun ? dayjs(job.lastRun).format('DD/MM/YYYY HH:mm:ss') : "ไม่มีข้อมูล"}</div>
             </div>
             
             <div className="space-y-1">
@@ -204,10 +206,6 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
           </div>
 
           <div className="flex flex-wrap gap-2 pt-2">
-            {/* <Button variant="default" className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
-              <Play className="mr-2 h-4 w-4" />
-              รันตอนนี้
-            </Button> */}
             <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
@@ -236,21 +234,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                   </AlertDialogContent>
                 </AlertDialog>
 
-            {/* <Button variant={job.status === "paused" ? "default" : "outline"} className="flex-1" disabled={isLoading || job.status === "running" || isRunningNow}>
-              {job.status === "paused" ? (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  เปิดใช้งาน
-                </>
-              ) : (
-                <>
-                  <Pause className="mr-2 h-4 w-4" />
-                  หยุดชั่วคราว
-                </>
-              )}
-            </Button> */}
-
-<AlertDialog>
+            <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
                       variant={job.status === "paused" ? "default" : "outline"}
@@ -305,6 +289,5 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
     </Card>
   </div>
 </div>
-
   );
 }

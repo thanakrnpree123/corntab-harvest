@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, 
-         Drawer, List, ListItem, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
+         Drawer, List, ListItemButton, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
@@ -44,11 +44,10 @@ export function Navbar() {
     <Box sx={{ width: 250 }} role="presentation">
       <List>
         {navItems.map((item) => (
-          <ListItem 
-            button 
-            component={Link} 
-            to={item.path} 
-            key={item.label} 
+          <ListItemButton
+            component={Link}
+            to={item.path}
+            key={item.label}
             selected={isActive(item.path)}
             onClick={() => toggleDrawer(false)}
             sx={{
@@ -60,15 +59,14 @@ export function Navbar() {
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.label} />
-          </ListItem>
+          </ListItemButton>
         ))}
-        <ListItem 
-          button 
+        <ListItemButton
           onClick={handleLogout}
         >
           <ListItemIcon><LogoutIcon /></ListItemIcon>
           <ListItemText primary="Logout" />
-        </ListItem>
+        </ListItemButton>
       </List>
     </Box>
   );

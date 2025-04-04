@@ -30,14 +30,14 @@ export function LogsDetail({ jobId, jobName }: LogsDetailProps) {
         toast({
           title: "ไม่สามารถโหลดข้อมูลล็อกได้",
           description: response.error || "เกิดข้อผิดพลาดในการโหลดข้อมูล โปรดลองใหม่อีกครั้ง",
-          variant: "destructive",
+          variant: "destructive", // This will be mapped to "error" AlertColor
         });
       }
     } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
         description: "ไม่สามารถโหลดข้อมูลล็อกได้ โปรดลองใหม่อีกครั้ง",
-        variant: "destructive",
+        variant: "destructive", // This will be mapped to "error" AlertColor
       });
     } finally {
       setIsLoading(false);
@@ -68,7 +68,7 @@ export function LogsDetail({ jobId, jobName }: LogsDetailProps) {
   }, [jobId]);
 
   return (
-    <Card className="shadow-sm ">
+    <Card className="shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-xl">
           {jobName ? `ประวัติการทำงาน: ${jobName}` : "ประวัติการทำงาน"}

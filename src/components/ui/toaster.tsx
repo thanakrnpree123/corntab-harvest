@@ -1,8 +1,8 @@
 
-import { useEffect, useState } from 'react';
-import { Snackbar, Alert, AlertColor } from '@mui/material';
+import { useEffect } from 'react';
+import { Snackbar, Alert } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useToast } from "@/hooks/use-toast";
+import { useToast, mapVariantToAlertColor } from "@/hooks/use-toast";
 
 export function Toaster() {
   const { toasts } = useToast();
@@ -24,7 +24,7 @@ export function Toaster() {
           }}
         >
           <Alert
-            severity={variant as AlertColor || 'info'}
+            severity={mapVariantToAlertColor(variant)}
             onClose={() => dispatch({ type: "DISMISS_TOAST", toastId: id || '' })}
             sx={{ width: '100%' }}
             action={action}

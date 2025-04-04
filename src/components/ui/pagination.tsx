@@ -1,8 +1,10 @@
+
 import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+import { Button, ButtonProps as MuiButtonProps } from "@mui/material"
 
 import { cn } from "@/lib/utils"
-import { ButtonProps, buttonVariants } from "@/components/ui/button"
+import { ButtonProps, ButtonVariants } from "@/components/ui/button"
 
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
@@ -48,10 +50,8 @@ const PaginationLink = ({
   <a
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      buttonVariants({
-        variant: isActive ? "outline" : "ghost",
-        size,
-      }),
+      isActive ? "bg-primary text-primary-foreground" : "bg-transparent",
+      "flex h-9 w-9 items-center justify-center rounded-md text-sm",
       className
     )}
     {...props}
