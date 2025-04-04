@@ -100,7 +100,7 @@ export default function Index() {
                   งาน CRON ทั้งหมด
                 </Typography>
                 <Typography variant="h4" gutterBottom>
-                  {dashboardData?.stats.totalJobs || 0}
+                  {dashboardData?.summary?.totalJobs || 0}
                 </Typography>
               </Box>
             </CardContent>
