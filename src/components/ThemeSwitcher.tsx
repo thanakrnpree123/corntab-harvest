@@ -1,91 +1,77 @@
 
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Moon, Sun, Laptop } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useTheme } from "@/components/ThemeProvider";
+import { Button, Menu, MenuItem, IconButton } from "@mui/material";
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import ComputerIcon from '@mui/icons-material/Computer';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 type Theme = "light" | "dark" | "system";
 
 export function ThemeSwitcher() {
-  const [theme, setTheme] = useState<Theme>("light");
+  const { theme, setTheme } = useTheme();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
 
-  // On mount, read the theme preference from localStorage
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme") as Theme | null;
-    if (storedTheme) {
-      setTheme(storedTheme);
-      if (storedTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else if (storedTheme === "light") {
-        document.documentElement.classList.remove("dark");
-      } else {
-        // Apply system preference
-        applySystemTheme();
-      }
-    } else {
-      applySystemTheme();
-    }
-  }, []);
-
-  // Helper to apply system theme
-  const applySystemTheme = () => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  // Toggle theme function
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
   const toggleTheme = (newTheme: Theme) => {
     setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
+    handleClose();
+  };
 
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (newTheme === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
-      // Apply system preference
-      applySystemTheme();
-      
-      // Add listener for system theme changes
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (localStorage.getItem("theme") === "system") {
-          if (e.matches) {
-            document.documentElement.classList.add("dark");
-          } else {
-            document.documentElement.classList.remove("dark");
-          }
-        }
-      });
+  const getThemeIcon = () => {
+    switch (theme) {
+      case "light":
+        return <Brightness7Icon />;
+      case "dark":
+        return <Brightness4Icon />;
+      case "system":
+        return <ComputerIcon />;
+      default:
+        return <Brightness7Icon />;
     }
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          {theme === "light" && <Sun className="h-[1.2rem] w-[1.2rem]" />}
-          {theme === "dark" && <Moon className="h-[1.2rem] w-[1.2rem]" />}
-          {theme === "system" && <Laptop className="h-[1.2rem] w-[1.2rem]" />}
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => toggleTheme("light")}>
-          <Sun className="mr-2 h-4 w-4" />
-          <span>Light</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => toggleTheme("dark")}>
-          <Moon className="mr-2 h-4 w-4" />
-          <span>Dark</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => toggleTheme("system")}>
-          <Laptop className="mr-2 h-4 w-4" />
-          <span>System</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <Button
+        variant="outlined"
+        onClick={handleClick}
+        startIcon={getThemeIcon()}
+        endIcon={<ArrowDropDownIcon />}
+        size="small"
+      >
+        {theme.charAt(0).toUpperCase() + theme.slice(1)}
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          'aria-labelledby': 'theme-button',
+        }}
+      >
+        <MenuItem onClick={() => toggleTheme("light")}>
+          <Brightness7Icon sx={{ mr: 1 }} />
+          Light
+        </MenuItem>
+        <MenuItem onClick={() => toggleTheme("dark")}>
+          <Brightness4Icon sx={{ mr: 1 }} />
+          Dark
+        </MenuItem>
+        <MenuItem onClick={() => toggleTheme("system")}>
+          <ComputerIcon sx={{ mr: 1 }} />
+          System
+        </MenuItem>
+      </Menu>
+    </>
   );
 }
