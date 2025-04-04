@@ -651,3 +651,175 @@ export const roleApi = {
     }
   }
 };
+
+/**
+ * Fetches all jobs, optionally filtered by project ID
+ * @param {Object} params - Optional parameters
+ * @param {string} [params.projectId] - Optional project ID to filter jobs
+ * @returns {Promise<Array>} - Array of job objects
+ */
+export async function fetchJobs({ projectId } = {}) {
+  const response = await jobApi.getAll(projectId);
+  
+  if (!response.success) {
+    throw new Error(response.error || 'Failed to fetch jobs');
+  }
+  
+  return response.data;
+}
+
+/**
+ * Toggles a job's status between active and paused
+ * @param {string} jobId - The ID of the job to toggle
+ * @param {string} currentStatus - The current job status
+ * @returns {Promise<Object>} - Updated job object
+ */
+export async function toggleJobStatus(jobId, currentStatus) {
+  const newStatus = currentStatus === 'paused' ? 'idle' : 'paused';
+  
+  const response = await jobApi.update(jobId, { status: newStatus });
+  
+  if (!response.success) {
+    throw new Error(response.error || 'Failed to update job status');
+  }
+  
+  return response.data;
+}
+
+/**
+ * Deletes a job by ID
+ * @param {string} jobId - The ID of the job to delete
+ * @returns {Promise<void>}
+ */
+export async function deleteJob(jobId) {
+  const response = await jobApi.delete(jobId);
+  
+  if (!response.success) {
+    throw new Error(response.error || 'Failed to delete job');
+  }
+  
+  return response.data;
+}
+
+/**
+ * Duplicates a job by ID
+ * @param {string} jobId - The ID of the job to duplicate
+ * @returns {Promise<Object>} - Duplicated job object
+ */
+export async function duplicateJob(jobId) {
+  const response = await jobApi.duplicate(jobId);
+  
+  if (!response.success) {
+    throw new Error(response.error || 'Failed to duplicate job');
+  }
+  
+  return response.data;
+}
+
+/**
+ * Fetches dashboard summary data
+ * @returns {Promise<Object>} - Dashboard summary data
+ */
+export async function fetchDashboardData() {
+  // Get projects, jobs, and calculate statistics
+  const [projectsResponse, jobsResponse] = await Promise.all([
+    projectApi.getAll(),
+    jobApi.getAll()
+  ]);
+  
+  if (!projectsResponse.success || !jobsResponse.success) {
+    throw new Error('Failed to fetch dashboard data');
+  }
+  
+  const projects = projectsResponse.data;
+  const jobs = jobsResponse.data;
+  
+  // Calculate summary statistics
+  const totalProjects = projects.length;
+  const totalJobs = jobs.length;
+  const activeJobs = jobs.filter(job => job.status !== 'paused').length;
+  const failedJobs = jobs.filter(job => job.status === 'failed').length;
+  
+  // Calculate success rate
+  const totalRuns = jobs.reduce((sum, job) => sum + job.successCount + job.failCount, 0);
+  const successRate = totalRuns > 0 
+    ? Math.round((jobs.reduce((sum, job) => sum + job.successCount, 0) / totalRuns) * 100) 
+    : 100;
+  
+  // Get recent logs from all jobs to show activity
+  const recentActivityPromises = jobs.slice(0, 5).map(job => jobApi.getLogs(job.id));
+  const recentActivityResponses = await Promise.all(recentActivityPromises);
+  const recentActivity = recentActivityResponses
+    .filter(response => response.success)
+    .flatMap(response => response.data || [])
+    .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+    .slice(0, 10);
+  
+  return {
+    summary: {
+      totalProjects,
+      totalJobs,
+      activeJobs,
+      failedJobs,
+      successRate
+    },
+    recentActivity,
+    projects,
+    jobs
+  };
+}
+
+/**
+ * Fetches user notifications 
+ * @returns {Promise<Array>} - Array of notification objects
+ */
+export async function fetchUserNotifications() {
+  // This is a mock implementation since the original API doesn't have a notifications endpoint
+  // In a real implementation, this would call a notifications API endpoint
+  
+  // Generate mock notifications based on job statuses
+  const jobsResponse = await jobApi.getAll();
+  
+  if (!jobsResponse.success) {
+    throw new Error('Failed to fetch notifications');
+  }
+  
+  const jobs = jobsResponse.data;
+  const notifications = [];
+  
+  // Create notifications for failed jobs
+  const failedJobs = jobs.filter(job => job.status === 'failed');
+  failedJobs.forEach(job => {
+    notifications.push({
+      id: `notification-failed-${job.id}`,
+      type: 'error',
+      message: `Job "${job.name}" failed to run`,
+      timestamp: job.lastRun || new Date().toISOString(),
+      read: false,
+      jobId: job.id
+    });
+  });
+  
+  // Create notifications for jobs that haven't run in a while
+  const currentTime = new Date();
+  const inactiveJobs = jobs.filter(job => {
+    if (!job.lastRun || job.status === 'paused') return false;
+    const lastRunTime = new Date(job.lastRun);
+    const daysSinceLastRun = (currentTime - lastRunTime) / (1000 * 60 * 60 * 24);
+    return daysSinceLastRun > 7;
+  });
+  
+  inactiveJobs.forEach(job => {
+    notifications.push({
+      id: `notification-inactive-${job.id}`,
+      type: 'warning',
+      message: `Job "${job.name}" hasn't run in over a week`,
+      timestamp: new Date().toISOString(),
+      read: false,
+      jobId: job.id
+    });
+  });
+  
+  // Sort notifications by timestamp (newest first)
+  return notifications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+};
