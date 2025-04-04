@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { JobLog } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import dayjs from "dayjs";
+import { dayjs } from "dayjs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
@@ -34,12 +33,9 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
     }));
   };
 
-  // Filter logs based on status and search term
   const filteredLogs = logs.filter((log) => {
-    // Filter by status
     if (filterStatus && log.status !== filterStatus) return false;
     
-    // Filter by search term
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       return (
@@ -51,11 +47,10 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
     return true;
   });
 
-  // Format date for display using dayjs
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
     try {
-      return dayjs(dateString).format("DD MMM YYYY HH:mm:ss");
+      return dayjs(dateString).format("dd MMM yyyy HH:mm:ss");
     } catch (e) {
       return dateString;
     }

@@ -1,7 +1,5 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { ThemeProvider as MUIThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
 
 type Theme = "dark" | "light" | "system";
 
@@ -28,61 +26,21 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
 
-  // MUI theme objects
-  const lightTheme = createTheme({
-    palette: {
-      mode: 'light',
-      primary: {
-        main: '#1976d2',
-      },
-      secondary: {
-        main: '#9c27b0',
-      },
-      background: {
-        default: '#f8f9fa',
-        paper: '#ffffff',
-      },
-    },
-  });
-
-  const darkTheme = createTheme({
-    palette: {
-      mode: 'dark',
-      primary: {
-        main: '#90caf9',
-      },
-      secondary: {
-        main: '#ce93d8',
-      },
-      background: {
-        default: '#121212',
-        paper: '#1e1e1e',
-      },
-    },
-  });
-
-  // Determine which theme to use
-  const determineTheme = () => {
-    if (theme === 'system') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? darkTheme : lightTheme;
-    }
-    return theme === 'dark' ? darkTheme : lightTheme;
-  };
-
   useEffect(() => {
-    // Apply class to document for any tailwind fallbacks that might be needed
     const root = window.document.documentElement;
+
     root.classList.remove("light", "dark");
-    
+
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light";
+
       root.classList.add(systemTheme);
       return;
     }
-    
+
     root.classList.add(theme);
   }, [theme]);
 
@@ -96,10 +54,7 @@ export function ThemeProvider({
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
-      <MUIThemeProvider theme={determineTheme()}>
-        <CssBaseline />
-        {children}
-      </MUIThemeProvider>
+      {children}
     </ThemeProviderContext.Provider>
   );
 }

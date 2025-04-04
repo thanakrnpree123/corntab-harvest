@@ -21,7 +21,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { Input } from "@/components/ui/input";
 import {
   Card,
@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/card";
 import { LogsDetail } from "@/components/LogsDetail";
 import { Badge } from "@/components/ui/badge";
-import dayjs from "dayjs";
 
 interface LogsFilter {
   status: string;
@@ -59,7 +58,6 @@ export default function LogsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // ถ้าไม่สำเร็จ ให้ใช้ mock data
         return getMockProjects();
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
@@ -90,7 +88,6 @@ export default function LogsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // ถ้าไม่สำเร็จ ให้ใช้ mock data
         return getMockJobs(selectedProjectId);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -124,7 +121,6 @@ export default function LogsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // ถ้าไม่สำเร็จ ให้ใช้ mock data
         return getMockLogs(selectedJobId);
       } catch (error) {
         console.warn("Using mock logs due to API error:", error);
@@ -136,18 +132,15 @@ export default function LogsPage() {
   
   // Filter logs
   const filteredLogs = logs.filter((log: JobLog) => {
-    // Status filter
     if (logsFilter.status && log.status !== logsFilter.status) {
       return false;
     }
     
-    // Date range filter
     if (logsFilter.dateRange && logsFilter.dateRange[0] && logsFilter.dateRange[1]) {
       const logDate = new Date(log.startTime);
       const startDate = logsFilter.dateRange[0];
       const endDate = logsFilter.dateRange[1];
       
-      // Set endDate to end of day
       endDate.setHours(23, 59, 59, 999);
       
       if (logDate < startDate || logDate > endDate) {
@@ -155,7 +148,6 @@ export default function LogsPage() {
       }
     }
     
-    // Search filter
     if (logsFilter.search) {
       const searchLower = logsFilter.search.toLowerCase();
       const outputMatch = log.output?.toLowerCase().includes(searchLower);
@@ -221,7 +213,6 @@ export default function LogsPage() {
     });
   };
   
-  // Active filter count
   const activeFiltersCount = [
     logsFilter.status !== "",
     logsFilter.dateRange !== null,
@@ -241,7 +232,6 @@ export default function LogsPage() {
             isLoading={isLoadingProjects}
           />
           
-          {/* Job selector */}
           <div className="flex items-center gap-2 w-full md:w-auto">
             <Select 
               value={selectedJobId} 
@@ -282,9 +272,7 @@ export default function LogsPage() {
           </div>
         </div>
 
-        {/* Log filtering options */}
         <div className="flex flex-wrap items-center gap-4">
-          {/* Status Filter */}
           <div className="flex-1 min-w-[150px]">
             <Select 
               value={logsFilter.status} 
@@ -302,7 +290,6 @@ export default function LogsPage() {
             </Select>
           </div>
 
-          {/* Date Range Filter */}
           <div className="flex-1 min-w-[240px]">
             <Popover>
               <PopoverTrigger asChild>
@@ -316,9 +303,9 @@ export default function LogsPage() {
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {logsFilter.dateRange && logsFilter.dateRange[0] && logsFilter.dateRange[1] ? (
                     logsFilter.dateRange[0]?.toLocaleDateString() === logsFilter.dateRange[1]?.toLocaleDateString() ? (
-                      dayjs(logsFilter.dateRange[0]).format("MMMM D, YYYY")
+                      dayjs(logsFilter.dateRange[0]).format("MMM D, YYYY")
                     ) : (
-                      `${dayjs(logsFilter.dateRange[0]).format("MMMM D, YYYY")} - ${dayjs(logsFilter.dateRange[1]).format("MMMM D, YYYY")}`
+                      `${dayjs(logsFilter.dateRange[0]).format("MMM D, YYYY")} - ${dayjs(logsFilter.dateRange[1]).format("MMM D, YYYY")}`
                     )
                   ) : (
                     <span>เลือกช่วงวันที่</span>
@@ -344,7 +331,6 @@ export default function LogsPage() {
             </Popover>
           </div>
 
-          {/* Search Filter */}
           <div className="flex-1 min-w-[200px]">
             <Input
               type="search"
@@ -354,7 +340,6 @@ export default function LogsPage() {
             />
           </div>
           
-          {/* Clear filters button */}
           {activeFiltersCount > 0 && (
             <Button variant="ghost" onClick={handleClearFilters} size="sm">
               ล้างตัวกรอง ({activeFiltersCount})
@@ -362,7 +347,6 @@ export default function LogsPage() {
           )}
         </div>
 
-        {/* Log display */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-xl flex items-center justify-between">
@@ -475,8 +459,6 @@ export default function LogsPage() {
   );
 }
 
-// Mock functions for UI testing
-
 function getMockProjects(): Project[] {
   return [
     {
@@ -553,14 +535,13 @@ function getMockJobs(projectId: string) {
 }
 
 function getMockLogs(jobId: string): JobLog[] {
-  // สร้าง logs ย้อนหลังไปสัก 10 วัน โดยสุ่มระหว่าง success และ failed
   const logs = [];
   const statuses = ["success", "failed", "running"];
   const baseTime = Date.now();
   
   for (let i = 0; i < 20; i++) {
     const startTime = new Date(baseTime - (i * 12 * 3600000));
-    const status = statuses[Math.floor(Math.random() * (i === 0 ? 3 : 2))]; // ให้รายการล่าสุดมีโอกาสเป็น running
+    const status = statuses[Math.floor(Math.random() * (i === 0 ? 3 : 2))];
     const duration = status === "running" ? null : Math.floor(Math.random() * 60000) + 1000;
     const endTime = duration ? new Date(startTime.getTime() + duration) : null;
     
