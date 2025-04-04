@@ -90,7 +90,7 @@ export default function JobsPage() {
   };
 
   // Filter jobs based on search and filter mode
-  const filteredJobs = jobs.filter((job) => {
+  const filteredJobs = jobs?.filter((job) => {
     const matchesSearch = job.name.toLowerCase().includes(deferredSearch.toLowerCase()) ||
                           job.endpoint.toLowerCase().includes(deferredSearch.toLowerCase()) ||
                           job.schedule.toLowerCase().includes(deferredSearch.toLowerCase());

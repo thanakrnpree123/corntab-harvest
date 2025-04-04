@@ -182,7 +182,7 @@ export const jobApi = {
         }
         
         if (projectId) {
-          return createMockResponse(mockJobs.filter(job => job.projectId === projectId));
+          return createMockResponse(mockJobs?.filter(job => job.projectId === projectId));
         }
         return createMockResponse(mockJobs);
       }
@@ -737,8 +737,8 @@ export async function fetchDashboardData() {
   // Calculate summary statistics
   const totalProjects = projects.length;
   const totalJobs = jobs.length;
-  const activeJobs = jobs.filter(job => job.status !== 'paused').length;
-  const failedJobs = jobs.filter(job => job.status === 'failed').length;
+  const activeJobs = jobs?.filter(job => job.status !== 'paused').length;
+  const failedJobs = jobs?.filter(job => job.status === 'failed').length;
   
   // Calculate success rate
   const totalRuns = jobs.reduce((sum, job) => sum + job.successCount + job.failCount, 0);
@@ -749,8 +749,7 @@ export async function fetchDashboardData() {
   // Get recent logs from all jobs to show activity
   const recentActivityPromises = jobs.slice(0, 5).map(job => jobApi.getLogs(job.id));
   const recentActivityResponses = await Promise.all(recentActivityPromises);
-  const recentActivity = recentActivityResponses
-    .filter(response => response.success)
+  const recentActivity = recentActivityResponses?.filter(response => response.success)
     .flatMap(response => response.data || [])
     .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
     .slice(0, 10);
@@ -788,7 +787,7 @@ export async function fetchUserNotifications() {
   const notifications = [];
   
   // Create notifications for failed jobs
-  const failedJobs = jobs.filter(job => job.status === 'failed');
+  const failedJobs = jobs?.filter(job => job.status === 'failed');
   failedJobs.forEach(job => {
     notifications.push({
       id: `notification-failed-${job.id}`,
@@ -802,7 +801,7 @@ export async function fetchUserNotifications() {
   
   // Create notifications for jobs that haven't run in a while
   const currentTime = new Date();
-  const inactiveJobs = jobs.filter(job => {
+  const inactiveJobs = jobs?.filter(job => {
     if (!job.lastRun || job.status === 'paused') return false;
     const lastRunTime = new Date(job.lastRun);
     const daysSinceLastRun = (currentTime - lastRunTime) / (1000 * 60 * 60 * 24);

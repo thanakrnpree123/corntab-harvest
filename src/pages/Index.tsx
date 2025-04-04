@@ -56,7 +56,7 @@ export default function Index() {
   };
 
   // กรองข้อมูลตาม tab ที่เลือก
-  const filteredJobs = dashboardData?.recentJobs.filter((job) => {
+  const filteredJobs = dashboardData?.recentJobs?.filter((job) => {
     if (selectedTab === 0) return true;
     else if (selectedTab === 1) return job.status === 'active';
     else if (selectedTab === 2) return job.status === 'failed';

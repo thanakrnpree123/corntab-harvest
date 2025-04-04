@@ -280,7 +280,7 @@ export default function UserManagementPage() {
                       setSelectedPermissions([...selectedPermissions, permission]);
                     } else {
                       setSelectedPermissions(
-                        selectedPermissions.filter((p) => p !== permission)
+                        selectedPermissions?.filter((p) => p !== permission)
                       );
                     }
                   }}
