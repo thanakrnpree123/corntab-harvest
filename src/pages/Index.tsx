@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { CronJob } from "@/lib/types";
 import { StatusBadge } from "@/components/StatusBadge";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
@@ -202,7 +202,7 @@ function JobListItem({ job, isSelected, onSelect }: {
           <Clock className="h-3 w-3" />
           <span>
             {job.lastRun 
-              ? format(new Date(job.lastRun), 'dd/MM HH:mm') 
+              ? dayjs(job.lastRun).format('DD/MM HH:mm')
               : "ยังไม่เคยรัน"}
           </span>
         </div>

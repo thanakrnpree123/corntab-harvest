@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CronJob } from "@/lib/types";
 import {
@@ -28,7 +27,7 @@ import {
   ExternalLink
 } from "lucide-react";
 import { apiService } from "@/lib/api-service";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -191,7 +190,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                 <Clock className="w-4 h-4" />
                 <span>รันล่าสุด</span>
               </div>
-              <div>{job.lastRun ? format(new Date(job.lastRun), 'dd/MM/yyyy HH:mm:ss') : "ไม่มีข้อมูล"}</div>
+              <div>{job.lastRun ? dayjs(job.lastRun).format('dd/MM/yyyy HH:mm:ss') : "ไม่มีข้อมูล"}</div>
             </div>
             
             <div className="space-y-1">
