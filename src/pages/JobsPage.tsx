@@ -10,7 +10,7 @@ import { Search, Plus, ListFilter, CalendarDays, Layout, FileJson } from "lucide
 import { useDeferredValue } from "react";
 import { useNavigate } from "react-router-dom";
 import { CronJob } from "@/lib/types";
-import {  toggleJobStatus, deleteJob, duplicateJob } from "@/lib/api";
+import { fetchJobs, toggleJobStatus, deleteJob, duplicateJob } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { JobExportImport } from "@/components/JobExportImport";
 
@@ -27,7 +27,7 @@ export default function JobsPage() {
 
   const { data: jobs = [] } = useQuery({
     queryKey: ['jobs'],
-    // queryFn: fetchJobs,
+    queryFn: fetchJobs,
   });
 
   const toggleStatusMutation = useMutation({
