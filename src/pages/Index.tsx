@@ -12,8 +12,8 @@ import { useNavigate } from 'react-router-dom';
 import { CronJob } from '@/lib/types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { fetchDashboardData } from '@/lib/api';
-import { fetchUserNotifications } from '@/lib/api';
+// import { fetchDashboardData } from '@/lib/api';
+// import { fetchUserNotifications } from '@/lib/api';
 
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);
@@ -27,12 +27,12 @@ export default function Index() {
 
   const { data: dashboardData, isLoading } = useQuery({
     queryKey: ['dashboard'],
-    queryFn: fetchDashboardData,
+    // queryFn: fetchDashboardData,
   });
 
   const { data: notifications } = useQuery({
     queryKey: ['notifications'],
-    queryFn: fetchUserNotifications,
+    // queryFn: fetchUserNotifications,
   });
 
   // หมวดหมู่ในภาษาไทย
