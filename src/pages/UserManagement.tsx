@@ -196,7 +196,7 @@ const UserManagement = () => {
   };
 
   const handleDeleteUser = (userId: string) => {
-    setUsers(users?.filter(user => user.id !== userId));
+    setUsers(users.filter(user => user.id !== userId));
     toast.success("User deleted successfully");
   };
 
@@ -216,7 +216,7 @@ const UserManagement = () => {
   const togglePermission = (permission: Permission) => {
     setEditRolePermissions(current => 
       current.includes(permission)
-        ? current?.filter(p => p !== permission)
+        ? current.filter(p => p !== permission)
         : [...current, permission]
     );
   };

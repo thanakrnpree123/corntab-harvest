@@ -1,201 +1,210 @@
-
-import React, { useState } from 'react';
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table"
 import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Menu,
-  MenuItem,
-  Typography,
-  IconButton,
-  Pagination,
-  Box,
-  ListItemIcon
-} from '@mui/material';
-import { StatusBadge } from "@/components/StatusBadge";
-import { MoreHorizontal, Copy, Edit, Trash } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { CronJob } from "@/lib/types";
-import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog";
+} from "@/components/ui/table"
+import { CronJob } from "@/lib/types"
+import { StatusBadge } from "@/components/StatusBadge"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
+import { ConfirmDeleteDialog } from "@/components/ConfirmDeleteDialog"
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);
 
-export interface JobsTableProps {
-  jobs: CronJob[];
-  onEdit: (job: CronJob) => void;
-  onDelete: (job: CronJob) => void;
-  onDuplicate: (job: CronJob) => void;
-  onViewDetails?: (job: CronJob) => void;
-  onToggleStatus?: (jobId: string) => React.ReactNode;
+interface JobsTableProps {
+  jobs: CronJob[]
+  onEdit: (job: CronJob) => void
+  onDelete: (job: CronJob) => void
+  onDuplicate: (job: CronJob) => void
 }
 
-export function JobsTable({ 
-  jobs, 
-  onEdit, 
-  onDelete, 
-  onDuplicate, 
-  onViewDetails,
-  onToggleStatus 
-}: JobsTableProps) {
-  const { toast } = useToast();
-  const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null);
-  const [open, setOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage] = useState(10);
+export function JobsTable({ jobs, onEdit, onDelete, onDuplicate }: JobsTableProps) {
+  const { toast } = useToast()
+  const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null)
+  const [open, setOpen] = useState(false)
 
-  const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, job: CronJob) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedJob(job);
-  };
+  const columns: ColumnDef<CronJob>[] = [
+    {
+      accessorKey: "name",
+      header: "ชื่องาน",
+    },
+    {
+      accessorKey: "schedule",
+      header: "ตารางเวลา",
+    },
+    {
+      accessorKey: "endpoint",
+      header: "ปลายทาง",
+    },
+    {
+      accessorKey: "lastRun",
+      header: "ทำงานล่าสุด",
+      cell: ({ row }) => {
+        const lastRun = row.original.lastRun
+        return lastRun ? dayjs(lastRun).fromNow() : "ไม่เคยรัน"
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "สถานะ",
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const job = row.original
 
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-    setSelectedJob(null);
-  };
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onDuplicate(job)}>
+                <Copy className="mr-2 h-4 w-4" />
+                คัดลอก
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(job)}>
+                <Edit className="mr-2 h-4 w-4" />
+                แก้ไข
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setJobToDelete(job)
+                  setOpen(true)
+                }}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                ลบ
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage - 1);
-  };
-
-  const handleRowClick = (job: CronJob) => {
-    if (onViewDetails) {
-      onViewDetails(job);
-    }
-  };
+  const table = useReactTable({
+    data: jobs,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  })
 
   return (
     <>
-      <TableContainer component={Paper}>
+      <div className="rounded-md border">
         <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ชื่องาน</TableCell>
-              <TableCell>ตารางเวลา</TableCell>
-              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>ปลายทาง</TableCell>
-              <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>ทำงานล่าสุด</TableCell>
-              <TableCell>สถานะ</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
           <TableBody>
-            {jobs.length ? (
-              jobs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((job) => (
-                <TableRow 
-                  key={job.id} 
-                  hover={!!onViewDetails}
-                  onClick={onViewDetails ? () => handleRowClick(job) : undefined}
-                  sx={onViewDetails ? { cursor: 'pointer' } : undefined}
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  <TableCell>{job.name}</TableCell>
-                  <TableCell>{job.schedule}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{job.endpoint}</TableCell>
-                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                    {job.lastRun ? dayjs(job.lastRun).fromNow() : "ไม่เคยรัน"}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={job.status} />
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenMenu(e, job);
-                    }} size="small">
-                      <MoreHorizontal size={18} />
-                    </IconButton>
-                  </TableCell>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                  <Typography variant="body1">ไม่พบข้อมูล</Typography>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  ไม่พบข้อมูล
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </TableContainer>
-      
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mt: 2,
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: { xs: 1, sm: 0 }
-      }}>
-        <Typography variant="body2" color="text.secondary">
-          {jobs.length} row(s)
-        </Typography>
-        <Pagination
-          count={Math.ceil(jobs.length / rowsPerPage)}
-          page={page + 1}
-          onChange={handleChangePage}
-          color="primary"
-          size="small"
-        />
-      </Box>
-      
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleCloseMenu}
-      >
-        <MenuItem onClick={() => {
-          if (selectedJob) onDuplicate(selectedJob);
-          handleCloseMenu();
-        }}>
-          <ListItemIcon>
-            <Copy size={18} />
-          </ListItemIcon>
-          คัดลอก
-        </MenuItem>
-        <MenuItem onClick={() => {
-          if (selectedJob) onEdit(selectedJob);
-          handleCloseMenu();
-        }}>
-          <ListItemIcon>
-            <Edit size={18} />
-          </ListItemIcon>
-          แก้ไข
-        </MenuItem>
-        <MenuItem onClick={() => {
-          if (selectedJob) {
-            setJobToDelete(selectedJob);
-            setOpen(true);
-          }
-          handleCloseMenu();
-        }} sx={{ color: 'error.main' }}>
-          <ListItemIcon>
-            <Trash size={18} color="error" />
-          </ListItemIcon>
-          ลบ
-        </MenuItem>
-      </Menu>
-      
+      </div>
+      <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredRowModel().rows.length} of {jobs.length} row(s)
+        </div>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
       <ConfirmDeleteDialog
         open={open}
         setOpen={setOpen}
         onConfirm={() => {
           if (jobToDelete) {
-            onDelete(jobToDelete);
+            onDelete(jobToDelete)
             toast({
               title: "ลบงานสำเร็จ",
               description: `งาน "${jobToDelete.name}" ถูกลบแล้ว`,
-            });
-            setJobToDelete(null);
+            })
+            setJobToDelete(null)
           }
         }}
       />
     </>
-  );
+  )
 }

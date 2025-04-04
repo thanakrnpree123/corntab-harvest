@@ -3,33 +3,24 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "./ThemeSwitcher";
-import { MenuIcon, User, Settings, LogOut, AlarmClock } from "lucide-react";
-import { 
-  AppBar, 
-  Toolbar, 
-  IconButton, 
-  Drawer, 
-  List, 
-  ListItem, 
-  ListItemText, 
-  Box, 
-  Typography,
-  Divider,
-  Avatar as MuiAvatar,
-  Menu,
-  MenuItem,
-  ListItemIcon
-} from "@mui/material";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { MenuIcon, User, Settings, LogOut, Icon, AlarmClock } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   // โหลดข้อมูลผู้ใช้จาก localStorage
   useEffect(() => {
@@ -58,160 +49,92 @@ export function Navbar() {
       description: "คุณได้ออกจากระบบแล้ว",
     });
     navigate("/login");
-    setAnchorEl(null);
-  };
-
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorEl(null);
-  };
-
-  const handleMenuItemClick = (href: string) => {
-    navigate(href);
-    setIsMenuOpen(false);
   };
 
   return (
-    <AppBar position="static" color="default" elevation={1}>
-      <Toolbar>
-        <Box 
-          component={Link} 
-          to="/" 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1, 
-            textDecoration: 'none', 
-            color: 'text.primary',
-            fontWeight: 'bold',
-            fontSize: '1.25rem'
-          }}
-        >
-          <AlarmClock size={24} />
-          <Typography variant="h6" noWrap>
-            CornTab
-          </Typography>
-        </Box>
+    <header className="border-b">
+      <div className="container flex h-14 items-center">
+      <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+            <AlarmClock className="h-6 w-6" />
+            <span>CornTab</span>
+          </Link>
 
         {/* Desktop menu */}
-        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mt-[0.45%] ml-[1%]">
           {navLinks.map((link) => (
-            <Button
+            <Link
               key={link.name}
-              component={Link}
               to={link.href}
-              variant="ghost"
-              sx={{ mx: 1 }}
+              className="text-sm font-medium transition-colors hover:text-primary"
             >
               {link.name}
-            </Button>
+            </Link>
           ))}
-        </Box>
+        </nav>
 
-        {/* Mobile menu toggle */}
-        <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-end' }}>
-          <IconButton
-            size="large"
-            aria-label="open drawer"
-            onClick={() => setIsMenuOpen(true)}
-            color="inherit"
-          >
-            <MenuIcon />
-          </IconButton>
-        </Box>
-
-        {/* Mobile drawer menu */}
-        <Drawer
-          anchor="left"
-          open={isMenuOpen}
-          onClose={() => setIsMenuOpen(false)}
-        >
-          <Box
-            sx={{ width: 250, pt: 2, pb: 2 }}
-            role="presentation"
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', px: 2, mb: 2 }}>
-              <AlarmClock size={24} />
-              <Typography variant="h6" sx={{ ml: 1 }}>
-                CornTab
-              </Typography>
-            </Box>
-            <Divider />
-            <List>
+        {/* Mobile menu */}
+        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="outline" size="icon">
+              <MenuIcon className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+            <nav className="flex flex-col space-y-4 mt-8">
               {navLinks.map((link) => (
-                <ListItem 
-                  button 
+                <Link
                   key={link.name}
-                  onClick={() => handleMenuItemClick(link.href)}
+                  to={link.href}
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  <ListItemText primary={link.name} />
-                </ListItem>
+                  {link.name}
+                </Link>
               ))}
-            </List>
-          </Box>
-        </Drawer>
+            </nav>
+          </SheetContent>
+        </Sheet>
 
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <div className="flex items-center ml-auto space-x-4">
           <ThemeSwitcher />
           
           {user && (
-            <>
-              <IconButton
-                onClick={handleOpenUserMenu}
-                sx={{ ml: 2 }}
-              >
-                <MuiAvatar
-                  alt={user.name}
-                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
-                  sx={{ width: 32, height: 32 }}
-                />
-              </IconButton>
-              <Menu
-                id="user-menu"
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleCloseUserMenu}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              >
-                <Box sx={{ px: 2, py: 1 }}>
-                  <Typography variant="subtitle2">{user.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">{user.email}</Typography>
-                </Box>
-                <Divider />
-                <MenuItem onClick={() => {
-                  navigate("/users");
-                  handleCloseUserMenu();
-                }}>
-                  <ListItemIcon>
-                    <User size={18} />
-                  </ListItemIcon>
-                  <Typography variant="body2">โปรไฟล์</Typography>
-                </MenuItem>
-                <MenuItem onClick={() => {
-                  navigate("/settings");
-                  handleCloseUserMenu();
-                }}>
-                  <ListItemIcon>
-                    <Settings size={18} />
-                  </ListItemIcon>
-                  <Typography variant="body2">ตั้งค่า</Typography>
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <LogOut size={18} />
-                  </ListItemIcon>
-                  <Typography variant="body2">ออกจากระบบ</Typography>
-                </MenuItem>
-              </Menu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`} alt={user.name} />
+                    <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/users")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>โปรไฟล์</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>ตั้งค่า</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>ออกจากระบบ</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-        </Box>
-      </Toolbar>
-    </AppBar>
+        </div>
+      </div>
+    </header>
   );
 }

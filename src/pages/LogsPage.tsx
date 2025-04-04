@@ -131,7 +131,7 @@ export default function LogsPage() {
   });
   
   // Filter logs
-  const filteredLogs = logs?.filter((log: JobLog) => {
+  const filteredLogs = logs.filter((log: JobLog) => {
     if (logsFilter.status && log.status !== logsFilter.status) {
       return false;
     }
