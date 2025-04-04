@@ -33,41 +33,43 @@ export const buttonVariants = (props: { variant?: ButtonVariants; size?: ButtonS
 
 // Map our variants to MUI variants
 const mapVariantToMui = (variant: ButtonVariants): MuiButtonProps["variant"] => {
-  switch (variant) {
-    case "default":
-    case "destructive":
-    case "secondary":
-      return "contained";
-    case "outline":
-    case "outlined":
-      return "outlined";
-    case "ghost":
-    case "link":
-      return "text";
-    default:
-      // Handle MUI's own variants
-      if (variant === "contained" || variant === "text") {
-        return variant;
-      }
-      return "contained";
+  // First handle our custom variants
+  if (variant === "default" || variant === "destructive" || variant === "secondary") {
+    return "contained";
   }
+  
+  if (variant === "outline" || variant === "outlined") {
+    return "outlined";
+  }
+  
+  if (variant === "ghost" || variant === "link") {
+    return "text";
+  }
+  
+  // Then handle MUI's own variants
+  if (variant === "contained" || variant === "text" || variant === "outlined") {
+    return variant;
+  }
+  
+  // Default fallback
+  return "contained";
 };
 
 // Map our sizes to MUI sizes
 const mapSizeToMui = (size: ButtonSizes): MuiButtonProps["size"] => {
-  switch (size) {
-    case "sm":
-    case "small":
-      return "small";
-    case "lg":
-    case "large":
-      return "large";
-    case "icon":
-    case "default":
-    case "medium":
-    default:
-      return "medium";
+  if (size === "sm" || size === "small") {
+    return "small";
   }
+  
+  if (size === "lg" || size === "large") {
+    return "large";
+  }
+  
+  if (size === "icon" || size === "default" || size === "medium") {
+    return "medium";
+  }
+  
+  return "medium";
 };
 
 // Styled MUI button to handle our custom variants
