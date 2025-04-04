@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -11,12 +12,12 @@ import { format } from "date-fns";
 import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
-import dayjs from "dayjs";
 
 export default function Index() {
   const { toast } = useToast();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   
+  // Fetch all jobs
   const {
     data: jobs = [],
     isLoading,
@@ -38,6 +39,7 @@ export default function Index() {
     },
   });
   
+  // Set first job as selected when data loads
   useEffect(() => {
     if (jobs.length > 0 && !selectedJobId) {
       setSelectedJobId(jobs[0].id);
@@ -46,6 +48,7 @@ export default function Index() {
 
   const selectedJob = jobs.find(job => job.id === selectedJobId);
 
+  // Group jobs by status
   const recentJobs = [...jobs].sort((a, b) => 
     new Date(b.lastRun || 0).getTime() - new Date(a.lastRun || 0).getTime()
   ).slice(0, 5);
@@ -53,6 +56,7 @@ export default function Index() {
   const failedJobs = jobs.filter(job => job.status === "failed");
   const pausedJobs = jobs.filter(job => job.status === "paused");
   
+  // Calculate statistics
   const jobStats = {
     total: jobs.length,
     active: jobs.filter(job => job.status !== "paused").length,
@@ -64,6 +68,7 @@ export default function Index() {
   return (
     <PageLayout title="Dashboard">
       <div className="grid gap-6">
+        {/* Stats cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatsCard title="งานทั้งหมด" value={jobStats.total} />
           <StatsCard title="กำลังทำงาน" value={jobStats.active} />
@@ -72,82 +77,84 @@ export default function Index() {
           <StatsCard title="หยุดชั่วคราว" value={jobStats.paused} color="gray" />
         </div>
 
+        {/* Recent jobs */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="md:col-span-1 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>งานล่าสุด</CardTitle>
-                <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Tabs defaultValue="recent">
-                  <TabsList className="w-full bg-transparent border-b rounded-none">
-                    <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
-                    <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
-                    <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
-                    <div className="divide-y">
-                      {recentJobs.length > 0 ? (
-                        recentJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          ยังไม่มีงานที่เคยรัน
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="failed" className="m-0 h-[300px] overflow-y-auto">
-                    <div className="divide-y">
-                      {failedJobs.length > 0 ? (
-                        failedJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          ไม่มีงานที่ล้มเหลว
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="paused" className="m-0 h-[300px] overflow-y-auto">
-                    <div className="divide-y">
-                      {pausedJobs.length > 0 ? (
-                        pausedJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          ไม่มีงานที่ถูกหยุดชั่วคราว
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+        <div className="md:col-span-1 space-y-6">
+         <Card>
+    <CardHeader>
+      <CardTitle>งานล่าสุด</CardTitle>
+      <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
+    </CardHeader>
+    <CardContent className="p-0">
+      <Tabs defaultValue="recent">
+        <TabsList className="w-full bg-transparent border-b rounded-none">
+          <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
+          <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
+          <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
+          <div className="divide-y">
+            {recentJobs.length > 0 ? (
+              recentJobs.map((job) => (
+                <JobListItem 
+                  key={job.id} 
+                  job={job} 
+                  isSelected={job.id === selectedJobId}
+                  onSelect={() => setSelectedJobId(job.id)} 
+                />
+              ))
+            ) : (
+              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                ยังไม่มีงานที่เคยรัน
+              </div>
+            )}
           </div>
+        </TabsContent>
+        
+        <TabsContent value="failed" className="m-0 h-[300px] overflow-y-auto">
+          <div className="divide-y">
+            {failedJobs.length > 0 ? (
+              failedJobs.map((job) => (
+                <JobListItem 
+                  key={job.id} 
+                  job={job} 
+                  isSelected={job.id === selectedJobId}
+                  onSelect={() => setSelectedJobId(job.id)} 
+                />
+              ))
+            ) : (
+              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                ไม่มีงานที่ล้มเหลว
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="paused" className="m-0 h-[300px] overflow-y-auto">
+          <div className="divide-y">
+            {pausedJobs.length > 0 ? (
+              pausedJobs.map((job) => (
+                <JobListItem 
+                  key={job.id} 
+                  job={job} 
+                  isSelected={job.id === selectedJobId}
+                  onSelect={() => setSelectedJobId(job.id)} 
+                />
+              ))
+            ) : (
+              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                ไม่มีงานที่ถูกหยุดชั่วคราว
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </CardContent>
+  </Card>
+</div>
 
+          
           <div className="md:col-span-2">
             {selectedJob ? (
               <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
@@ -165,6 +172,7 @@ export default function Index() {
   );
 }
 
+// Job list item component
 function JobListItem({ job, isSelected, onSelect }: { 
   job: CronJob; 
   isSelected: boolean;
@@ -194,7 +202,7 @@ function JobListItem({ job, isSelected, onSelect }: {
           <Clock className="h-3 w-3" />
           <span>
             {job.lastRun 
-              ? dayjs(new Date(job.lastRun)).format('DD/MM HH:mm')
+              ? format(new Date(job.lastRun), 'dd/MM HH:mm') 
               : "ยังไม่เคยรัน"}
           </span>
         </div>
@@ -203,6 +211,7 @@ function JobListItem({ job, isSelected, onSelect }: {
   );
 }
 
+// Stats card component
 function StatsCard({ 
   title,
   value,
@@ -238,6 +247,7 @@ function StatsCard({
   );
 }
 
+// Mock functions for UI testing
 function getMockJobs(): CronJob[] {
   return [
     {

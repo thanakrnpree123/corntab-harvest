@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { JobLog } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
-import dayjs from "dayjs";
+import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
@@ -51,11 +50,11 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
     return true;
   });
 
-  // Format date for display using dayjs
+  // Format date for display
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
     try {
-      return dayjs(dateString).format("DD MMM YYYY HH:mm:ss");
+      return format(new Date(dateString), "dd MMM yyyy HH:mm:ss");
     } catch (e) {
       return dateString;
     }

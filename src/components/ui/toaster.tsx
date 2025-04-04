@@ -1,55 +1,52 @@
 
-import { useEffect } from 'react';
-import { Snackbar, Alert } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { useToast, mapVariantToAlertColor } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast"
+import {
+  Toast,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from "@/components/ui/toast"
+import { AlertCircle, CheckCircle, Info, AlertTriangle } from "lucide-react"
 
 export function Toaster() {
-  const { toasts } = useToast();
-  const muiTheme = useTheme();
-  
+  const { toasts } = useToast()
+
   return (
-    <>
-      {toasts.map(({ id, title, description, variant, open, action, duration = 5000 }) => (
-        <Snackbar
-          key={id}
-          open={open}
-          autoHideDuration={duration}
-          onClose={() => dispatch({ type: "DISMISS_TOAST", toastId: id || '' })}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          sx={{
-            '& + &': {
-              marginTop: '10px',
-            },
-          }}
-        >
-          <Alert
-            severity={mapVariantToAlertColor(variant)}
-            onClose={() => dispatch({ type: "DISMISS_TOAST", toastId: id || '' })}
-            sx={{ width: '100%' }}
-            action={action}
-          >
-            {title && <div style={{ fontWeight: 'bold' }}>{title}</div>}
-            {description && <div>{description}</div>}
-          </Alert>
-        </Snackbar>
-      ))}
-    </>
-  );
+    <ToastProvider>
+      {toasts.map(function ({ id, title, description, action, variant, ...props }) {
+        const Icon = variant === "destructive" 
+          ? AlertCircle 
+          : title?.toString().toLowerCase().includes("warning") 
+            ? AlertTriangle 
+            : title?.toString().toLowerCase().includes("success") 
+              ? CheckCircle 
+              : Info
+              
+        return (
+          <Toast key={id} {...props} variant={variant}>
+            <div className="flex gap-3">
+              {Icon && (
+                <Icon className={`h-5 w-5 ${
+                  variant === "destructive" 
+                    ? "text-destructive-foreground" 
+                    : "text-foreground"
+                }`} />
+              )}
+              <div className="grid gap-1">
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                  <ToastDescription>{description}</ToastDescription>
+                )}
+              </div>
+            </div>
+            {action}
+            <ToastClose />
+          </Toast>
+        )
+      })}
+      <ToastViewport />
+    </ToastProvider>
+  )
 }
-
-// Global action dispatcher referenced from use-toast.ts
-const dispatch = (action: any) => {
-  window.dispatchEvent(new CustomEvent('toast-dispatch', { detail: action }));
-};
-
-// Listen for dispatch events from use-toast.ts
-useEffect(() => {
-  const handler = (e: any) => {
-    dispatch(e.detail);
-  };
-  window.addEventListener('toast-dispatch', handler);
-  return () => {
-    window.removeEventListener('toast-dispatch', handler);
-  };
-}, []);

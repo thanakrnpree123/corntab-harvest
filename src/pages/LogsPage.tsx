@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -31,7 +32,6 @@ import {
 } from "@/components/ui/card";
 import { LogsDetail } from "@/components/LogsDetail";
 import { Badge } from "@/components/ui/badge";
-import dayjs from "dayjs";
 
 interface LogsFilter {
   status: string;
@@ -316,9 +316,9 @@ export default function LogsPage() {
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {logsFilter.dateRange && logsFilter.dateRange[0] && logsFilter.dateRange[1] ? (
                     logsFilter.dateRange[0]?.toLocaleDateString() === logsFilter.dateRange[1]?.toLocaleDateString() ? (
-                      dayjs(logsFilter.dateRange[0]).format("MMMM D, YYYY")
+                      format(logsFilter.dateRange[0], "PPP")
                     ) : (
-                      `${dayjs(logsFilter.dateRange[0]).format("MMMM D, YYYY")} - ${dayjs(logsFilter.dateRange[1]).format("MMMM D, YYYY")}`
+                      `${format(logsFilter.dateRange[0], "PPP")} - ${format(logsFilter.dateRange[1], "PPP")}`
                     )
                   ) : (
                     <span>เลือกช่วงวันที่</span>

@@ -1,139 +1,140 @@
 
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Box, IconButton, 
-         Drawer, List, ListItemButton, ListItemIcon, ListItemText, useMediaQuery } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import MenuIcon from '@mui/icons-material/Menu';
-import HomeIcon from '@mui/icons-material/Home';
-import WorkIcon from '@mui/icons-material/Work';
-import ListAltIcon from '@mui/icons-material/ListAlt';
-import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LogoutIcon from '@mui/icons-material/Logout';
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "./ThemeSwitcher";
+import { MenuIcon, User, Settings, LogOut, Icon, AlarmClock } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 
 export function Navbar() {
-  const location = useLocation();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const toggleDrawer = (open: boolean) => {
-    setDrawerOpen(open);
-  };
+  // โหลดข้อมูลผู้ใช้จาก localStorage
+  useEffect(() => {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser(userData);
+      } catch (e) {
+        console.error("Error parsing user data", e);
+      }
+    }
+  }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
-
-  const navItems = [
-    { label: 'Dashboard', path: '/', icon: <HomeIcon /> },
-    { label: 'Jobs', path: '/jobs', icon: <WorkIcon /> },
-    { label: 'Logs', path: '/logs', icon: <ListAltIcon /> },
-    { label: 'Users', path: '/users', icon: <PeopleIcon /> },
-    { label: 'Settings', path: '/settings', icon: <SettingsIcon /> },
+  const navLinks = [
+    { name: "Dashboard", href: "/" },
+    { name: "Jobs", href: "/jobs" },
+    { name: "Logs", href: "/logs" },
+    { name: "Users", href: "/users" },
   ];
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    toast({
+      title: "ออกจากระบบสำเร็จ",
+      description: "คุณได้ออกจากระบบแล้ว",
+    });
+    navigate("/login");
   };
 
-  const drawer = (
-    <Box sx={{ width: 250 }} role="presentation">
-      <List>
-        {navItems.map((item) => (
-          <ListItemButton
-            component={Link}
-            to={item.path}
-            key={item.label}
-            selected={isActive(item.path)}
-            onClick={() => toggleDrawer(false)}
-            sx={{
-              backgroundColor: isActive(item.path) ? 'action.selected' : 'transparent',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              }
-            }}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
-        ))}
-        <ListItemButton
-          onClick={handleLogout}
-        >
-          <ListItemIcon><LogoutIcon /></ListItemIcon>
-          <ListItemText primary="Logout" />
-        </ListItemButton>
-      </List>
-    </Box>
-  );
-
   return (
-    <AppBar position="static" color="default" elevation={1}>
-      <Toolbar>
-        {isMobile && (
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={() => toggleDrawer(true)}
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-        )}
-        
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Corntab
-        </Typography>
-        
-        {!isMobile && (
-          <Box sx={{ display: 'flex', mr: 2 }}>
-            {navItems.map((item) => (
-              <Button
-                key={item.label}
-                component={Link}
-                to={item.path}
-                color={isActive(item.path) ? "primary" : "inherit"}
-                sx={{ 
-                  mx: 1,
-                  fontWeight: isActive(item.path) ? 'bold' : 'normal',
-                  '&:hover': {
-                    backgroundColor: 'action.hover',
-                  }
-                }}
-                startIcon={item.icon}
-              >
-                {item.label}
-              </Button>
-            ))}
-          </Box>
-        )}
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <ThemeSwitcher />
-          {!isMobile && (
-            <Button 
-              color="inherit" 
-              onClick={handleLogout}
-              startIcon={<LogoutIcon />}
+    <header className="border-b">
+      <div className="container flex h-14 items-center">
+      <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+            <AlarmClock className="h-6 w-6" />
+            <span>CornTab</span>
+          </Link>
+
+        {/* Desktop menu */}
+        <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mt-[0.45%] ml-[1%]">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              to={link.href}
+              className="text-sm font-medium transition-colors hover:text-primary"
             >
-              Logout
+              {link.name}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Mobile menu */}
+        <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+          <SheetTrigger asChild className="md:hidden">
+            <Button variant="outline" size="icon">
+              <MenuIcon className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
             </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+            <nav className="flex flex-col space-y-4 mt-8">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex items-center ml-auto space-x-4">
+          <ThemeSwitcher />
+          
+          {user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="rounded-full h-8 w-8 p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`} alt={user.name} />
+                    <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/users")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>โปรไฟล์</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>ตั้งค่า</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>ออกจากระบบ</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-        </Box>
-      </Toolbar>
-      
-      <Drawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={() => toggleDrawer(false)}
-      >
-        {drawer}
-      </Drawer>
-    </AppBar>
+        </div>
+      </div>
+    </header>
   );
 }

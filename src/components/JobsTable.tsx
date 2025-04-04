@@ -2,13 +2,9 @@
 import { CronJob } from "@/lib/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/status-badge";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
+import { formatDistance, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
-
-// Initialize dayjs plugins
-dayjs.extend(relativeTime);
 
 export interface JobsTableProps {
   jobs: CronJob[];
@@ -60,10 +56,10 @@ export function JobsTable({
                     {job.lastRun ? (
                       <div>
                         <div className="text-xs text-muted-foreground">
-                          {dayjs(job.lastRun).format("MMM DD, YYYY - HH:mm")}
+                          {format(new Date(job.lastRun), "MMM dd, yyyy - HH:mm")}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {dayjs(job.lastRun).fromNow()}
+                          {formatDistance(new Date(job.lastRun), new Date(), { addSuffix: true })}
                         </div>
                       </div>
                     ) : (
@@ -76,10 +72,10 @@ export function JobsTable({
                     {job.nextRun ? (
                       <div>
                         <div className="text-xs text-muted-foreground">
-                          {dayjs(job.nextRun).format("MMM DD, YYYY - HH:mm")}
+                          {format(new Date(job.nextRun), "MMM dd, yyyy - HH:mm")}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {dayjs(job.nextRun).fromNow()}
+                          {formatDistance(new Date(job.nextRun), new Date(), { addSuffix: true })}
                         </div>
                       </div>
                     ) : (
