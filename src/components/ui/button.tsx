@@ -36,16 +36,17 @@ const mapVariantToMui = (variant: ButtonVariants): MuiButtonProps["variant"] => 
   switch (variant) {
     case "default":
     case "destructive":
+    case "secondary":
       return "contained";
     case "outline":
+    case "outlined":
       return "outlined";
-    case "secondary":
     case "ghost":
     case "link":
       return "text";
     default:
       // Handle MUI's own variants
-      if (variant === "contained" || variant === "outlined" || variant === "text") {
+      if (variant === "contained" || variant === "text") {
         return variant;
       }
       return "contained";
@@ -61,6 +62,7 @@ const mapSizeToMui = (size: ButtonSizes): MuiButtonProps["size"] => {
     case "lg":
     case "large":
       return "large";
+    case "icon":
     case "default":
     case "medium":
     default:
