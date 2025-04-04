@@ -97,7 +97,7 @@ export function Navbar() {
         </Sheet>
 
         <div className="flex items-center ml-auto space-x-4">
-          <ThemeSwitcher />
+          {/* <ThemeSwitcher /> */}
           
           {user && (
             <DropdownMenu>
