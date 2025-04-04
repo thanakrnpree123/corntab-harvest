@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Typography, CircularProgress } from '@mui/material';
 import { JobLog } from '@/lib/types';
 import { StatusBadge } from '@/components/StatusBadge';
 import dayjs from 'dayjs';
@@ -11,9 +11,19 @@ dayjs.extend(relativeTime);
 
 interface LogListProps {
   logs: JobLog[];
+  isLoading?: boolean;
 }
 
-export function LogList({ logs }: LogListProps) {
+export function LogList({ logs, isLoading = false }: LogListProps) {
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', p: 3 }}>
+        <CircularProgress size={24} sx={{ mr: 1 }} />
+        <Typography variant="body2">กำลังโหลด...</Typography>
+      </Box>
+    );
+  }
+
   return (
     <TableContainer component={Paper}>
       <Table>

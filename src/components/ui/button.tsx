@@ -46,15 +46,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button"
     
     // Map shadcn/ui variants to MUI variants
-    let muiVariant: "contained" | "text" | "outlined" = "contained";
+    let muiVariant: "contained" | "text" | "outlined" | undefined = "contained";
+    let muiColor: "primary" | "secondary" | "success" | "error" | "info" | "warning" | "inherit" | undefined = "primary";
+    
+    // Map variant to MUI variant and color
     if (variant === "outline") {
       muiVariant = "outlined";
-    } else if (variant === "ghost" || variant === "link") {
+    } else if (variant === "ghost") {
       muiVariant = "text";
+    } else if (variant === "link") {
+      muiVariant = "text";
+    } else if (variant === "destructive") {
+      muiColor = "error";
+    } else if (variant === "secondary") {
+      muiColor = "secondary";
     }
     
     // Map size to material-ui size
-    let muiSize: "small" | "medium" | "large" = "medium";
+    let muiSize: "small" | "medium" | "large" | undefined = "medium";
     if (size === "sm") {
       muiSize = "small";
     } else if (size === "lg") {
@@ -62,15 +71,25 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     
     // For custom styling that isn't easily mapped, we continue to use the original classes
+    if (asChild) {
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...props}
+        />
+      );
+    }
+    
     return (
       <MuiButton
         className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
         variant={muiVariant}
+        color={muiColor}
         size={muiSize}
         {...props}
       />
-    )
+    );
   }
 )
 Button.displayName = "Button"

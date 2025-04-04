@@ -228,7 +228,7 @@ export function JobExportImport({ jobs, onImport }: JobExportImportProps) {
       toast({
         title: "พบข้อมูลบางรายการไม่ถูกต้อง",
         description: `จะนำเข้าเฉพาะ ${validJobs.length} รายการที่มีข้อมูลครบถ้วน จากทั้งหมด ${jobsToImport.length} รายการ`,
-        variant: "warning"
+        variant: "destructive"
       });
     }
     

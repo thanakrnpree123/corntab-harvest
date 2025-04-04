@@ -28,13 +28,14 @@ import relativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(relativeTime);
 
 interface JobsTableProps {
-  jobs: CronJob[]
-  onEdit: (job: CronJob) => void
-  onDelete: (job: CronJob) => void
-  onDuplicate: (job: CronJob) => void
+  jobs: CronJob[];
+  onEdit: (job: CronJob) => void;
+  onDelete: (job: CronJob) => void;
+  onDuplicate: (job: CronJob) => void;
+  onViewDetails?: (job: CronJob) => void;
 }
 
-export function JobsTable({ jobs, onEdit, onDelete, onDuplicate }: JobsTableProps) {
+export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }: JobsTableProps) {
   const { toast } = useToast();
   const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null);
   const [open, setOpen] = useState(false);
@@ -57,6 +58,12 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate }: JobsTableProp
     setPage(newPage - 1);
   };
 
+  const handleRowClick = (job: CronJob) => {
+    if (onViewDetails) {
+      onViewDetails(job);
+    }
+  };
+
   return (
     <>
       <TableContainer component={Paper}>
@@ -74,7 +81,12 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate }: JobsTableProp
           <TableBody>
             {jobs.length ? (
               jobs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((job) => (
-                <TableRow key={job.id}>
+                <TableRow 
+                  key={job.id} 
+                  hover={!!onViewDetails}
+                  onClick={onViewDetails ? () => handleRowClick(job) : undefined}
+                  sx={onViewDetails ? { cursor: 'pointer' } : undefined}
+                >
                   <TableCell>{job.name}</TableCell>
                   <TableCell>{job.schedule}</TableCell>
                   <TableCell>{job.endpoint}</TableCell>
@@ -83,7 +95,10 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate }: JobsTableProp
                     <StatusBadge status={job.status} />
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton onClick={(e) => handleOpenMenu(e, job)}>
+                    <IconButton onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenMenu(e, job);
+                    }}>
                       <MoreHorizontal className="h-4 w-4" />
                     </IconButton>
                   </TableCell>

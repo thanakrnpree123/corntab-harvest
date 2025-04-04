@@ -21,7 +21,7 @@ import {
   CardContent,
   CardHeader,
   Typography,
-  Grid,
+  Grid as MuiGrid,
   Tabs,
   Tab,
   Button,
@@ -29,8 +29,7 @@ import {
   Divider,
   List,
   ListItem,
-  ListItemText,
-  ListItemSecondary
+  ListItemText
 } from "@mui/material";
 
 export default function Index() {
@@ -94,41 +93,41 @@ export default function Index() {
     <PageLayout title="Dashboard">
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {/* Stats cards */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={4} lg={20/100}>
+        <MuiGrid container spacing={2}>
+          <MuiGrid xs={12} md={4} lg={20/100}>
             <StatsCard title="งานทั้งหมด" value={jobStats.total} />
-          </Grid>
-          <Grid item xs={12} md={4} lg={20/100}>
+          </MuiGrid>
+          <MuiGrid xs={12} md={4} lg={20/100}>
             <StatsCard title="กำลังทำงาน" value={jobStats.active} />
-          </Grid>
-          <Grid item xs={12} md={4} lg={20/100}>
+          </MuiGrid>
+          <MuiGrid xs={12} md={4} lg={20/100}>
             <StatsCard 
               title="สำเร็จ" 
               value={jobStats.success} 
               color="success.main" 
               icon={CheckCircle} 
             />
-          </Grid>
-          <Grid item xs={12} md={6} lg={20/100}>
+          </MuiGrid>
+          <MuiGrid xs={12} md={6} lg={20/100}>
             <StatsCard 
               title="ล้มเหลว" 
               value={jobStats.failed} 
               color="error.main" 
               icon={AlertTriangle} 
             />
-          </Grid>
-          <Grid item xs={12} md={6} lg={20/100}>
+          </MuiGrid>
+          <MuiGrid xs={12} md={6} lg={20/100}>
             <StatsCard 
               title="หยุดชั่วคราว" 
               value={jobStats.paused} 
               color="text.secondary" 
             />
-          </Grid>
-        </Grid>
+          </MuiGrid>
+        </MuiGrid>
 
         {/* Recent jobs */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
+        <MuiGrid container spacing={3}>
+          <MuiGrid xs={12} md={4}>
             <Paper elevation={2} sx={{ height: '100%' }}>
               <CardHeader 
                 title="งานล่าสุด"
@@ -206,9 +205,9 @@ export default function Index() {
                 </List>
               </Box>
             </Paper>
-          </Grid>
+          </MuiGrid>
           
-          <Grid item xs={12} md={8}>
+          <MuiGrid xs={12} md={8}>
             {selectedJob ? (
               <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
             ) : (
@@ -224,8 +223,8 @@ export default function Index() {
                 </Typography>
               </Paper>
             )}
-          </Grid>
-        </Grid>
+          </MuiGrid>
+        </MuiGrid>
       </Box>
     </PageLayout>
   );
@@ -239,10 +238,9 @@ function JobListItem({ job, isSelected, onSelect }: {
 }) {
   return (
     <ListItem 
-      button
-      selected={isSelected}
       onClick={onSelect}
       sx={{
+        cursor: 'pointer',
         borderBottom: '1px solid',
         borderColor: 'divider',
         transition: 'all 0.2s',
