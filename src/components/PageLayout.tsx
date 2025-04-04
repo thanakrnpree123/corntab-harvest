@@ -1,6 +1,7 @@
 
 import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
+import { Box, Container, Typography } from "@mui/material";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -9,15 +10,20 @@ interface PageLayoutProps {
 
 export function PageLayout({ children, title }: PageLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100vh', 
+      bgcolor: 'background.default' 
+    }}>
       <Navbar />
       
-      <main className="flex-1 container py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 }, flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Typography variant="h4" fontWeight="600">{title}</Typography>
           {children}
-        </div>
-      </main>
-    </div>
+        </Box>
+      </Container>
+    </Box>
   );
 }

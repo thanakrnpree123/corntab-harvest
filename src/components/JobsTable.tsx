@@ -8,13 +8,13 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Button,
   Menu,
   MenuItem,
   Typography,
   IconButton,
   Pagination,
-  Box
+  Box,
+  ListItemIcon
 } from '@mui/material';
 import { StatusBadge } from "@/components/StatusBadge";
 import { MoreHorizontal, Copy, Edit, Trash } from "lucide-react";
@@ -27,15 +27,23 @@ import relativeTime from "dayjs/plugin/relativeTime";
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);
 
-interface JobsTableProps {
+export interface JobsTableProps {
   jobs: CronJob[];
   onEdit: (job: CronJob) => void;
   onDelete: (job: CronJob) => void;
   onDuplicate: (job: CronJob) => void;
   onViewDetails?: (job: CronJob) => void;
+  onToggleStatus?: (jobId: string) => React.ReactNode;
 }
 
-export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }: JobsTableProps) {
+export function JobsTable({ 
+  jobs, 
+  onEdit, 
+  onDelete, 
+  onDuplicate, 
+  onViewDetails,
+  onToggleStatus 
+}: JobsTableProps) {
   const { toast } = useToast();
   const [jobToDelete, setJobToDelete] = useState<CronJob | null>(null);
   const [open, setOpen] = useState(false);
@@ -72,8 +80,8 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }
             <TableRow>
               <TableCell>ชื่องาน</TableCell>
               <TableCell>ตารางเวลา</TableCell>
-              <TableCell>ปลายทาง</TableCell>
-              <TableCell>ทำงานล่าสุด</TableCell>
+              <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>ปลายทาง</TableCell>
+              <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>ทำงานล่าสุด</TableCell>
               <TableCell>สถานะ</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
@@ -89,8 +97,10 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }
                 >
                   <TableCell>{job.name}</TableCell>
                   <TableCell>{job.schedule}</TableCell>
-                  <TableCell>{job.endpoint}</TableCell>
-                  <TableCell>{job.lastRun ? dayjs(job.lastRun).fromNow() : "ไม่เคยรัน"}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{job.endpoint}</TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    {job.lastRun ? dayjs(job.lastRun).fromNow() : "ไม่เคยรัน"}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={job.status} />
                   </TableCell>
@@ -98,8 +108,8 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }
                     <IconButton onClick={(e) => {
                       e.stopPropagation();
                       handleOpenMenu(e, job);
-                    }}>
-                      <MoreHorizontal className="h-4 w-4" />
+                    }} size="small">
+                      <MoreHorizontal size={18} />
                     </IconButton>
                   </TableCell>
                 </TableRow>
@@ -115,7 +125,14 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }
         </Table>
       </TableContainer>
       
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mt: 2,
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 1, sm: 0 }
+      }}>
         <Typography variant="body2" color="text.secondary">
           {jobs.length} row(s)
         </Typography>
@@ -136,15 +153,19 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }
         <MenuItem onClick={() => {
           if (selectedJob) onDuplicate(selectedJob);
           handleCloseMenu();
-        }} sx={{ gap: 1 }}>
-          <Copy className="h-4 w-4" />
+        }}>
+          <ListItemIcon>
+            <Copy size={18} />
+          </ListItemIcon>
           คัดลอก
         </MenuItem>
         <MenuItem onClick={() => {
           if (selectedJob) onEdit(selectedJob);
           handleCloseMenu();
-        }} sx={{ gap: 1 }}>
-          <Edit className="h-4 w-4" />
+        }}>
+          <ListItemIcon>
+            <Edit size={18} />
+          </ListItemIcon>
           แก้ไข
         </MenuItem>
         <MenuItem onClick={() => {
@@ -153,8 +174,10 @@ export function JobsTable({ jobs, onEdit, onDelete, onDuplicate, onViewDetails }
             setOpen(true);
           }
           handleCloseMenu();
-        }} sx={{ gap: 1, color: 'error.main' }}>
-          <Trash className="h-4 w-4" />
+        }} sx={{ color: 'error.main' }}>
+          <ListItemIcon>
+            <Trash size={18} color="error" />
+          </ListItemIcon>
           ลบ
         </MenuItem>
       </Menu>

@@ -47,7 +47,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     
     // Map shadcn/ui variants to MUI variants
     let muiVariant: "contained" | "text" | "outlined" | undefined = "contained";
-    let muiColor: "primary" | "secondary" | "success" | "error" | "info" | "warning" | "inherit" | undefined = "primary";
+    let muiColor: "primary" | "secondary" | "success" | "error" | "info" | "warning" | "inherit" = "primary";
     
     // Map variant to MUI variant and color
     if (variant === "outline") {
@@ -63,7 +63,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     
     // Map size to material-ui size
-    let muiSize: "small" | "medium" | "large" | undefined = "medium";
+    let muiSize: "small" | "medium" | "large" = "medium";
     if (size === "sm") {
       muiSize = "small";
     } else if (size === "lg") {
@@ -87,6 +87,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         variant={muiVariant}
         color={muiColor}
         size={muiSize}
+        ref={ref}
         {...props}
       />
     );

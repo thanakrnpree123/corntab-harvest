@@ -9,7 +9,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);
 
-interface LogListProps {
+export interface LogListProps {
   logs: JobLog[];
   isLoading?: boolean;
 }
