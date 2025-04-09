@@ -651,7 +651,7 @@ export default function JobsPage() {
                 </CardContent>
               </Card>
               
-              {selectedProjectId && (
+              {/* {selectedProjectId && (
                 <div className="space-y-4">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
@@ -914,7 +914,7 @@ export default function JobsPage() {
                     </CardContent>
                   </Card>
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">

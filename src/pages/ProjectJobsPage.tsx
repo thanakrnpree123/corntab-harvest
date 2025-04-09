@@ -566,10 +566,10 @@ export default function ProjectJobsPage() {
                 </Popover>
               </div>
               
-              <Button onClick={() => setIsCreateModalOpen(true)}>
+              {/* <Button onClick={() => setIsCreateModalOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 เพิ่มงาน
-              </Button>
+              </Button> */}
             </div>
             
             {jobs.length > 0 && (
