@@ -386,21 +386,21 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
       <DialogTrigger asChild>
         <Button variant="outline">
           <ArrowUpFromLine className="mr-2 h-4 w-4" />
-          Import/Export
+          Import
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import/Export Projects</DialogTitle>
+          <DialogTitle>Import Projects</DialogTitle>
           <DialogDescription>
-            Import from JSON/CSV or export your projects and jobs
+            Import from JSON/CSV your projects and jobs
           </DialogDescription>
         </DialogHeader>
         
         <Tabs defaultValue="import">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="import">Import</TabsTrigger>
-            <TabsTrigger value="export">Export</TabsTrigger>
+            {/* <TabsTrigger value="export">Export</TabsTrigger> */}
           </TabsList>
           
           <TabsContent value="import">
@@ -463,7 +463,7 @@ project_id,name,description,schedule,endpoint,httpMethod
             </DialogFooter>
           </TabsContent>
           
-          <TabsContent value="export">
+          {/* <TabsContent value="export">
             <div className="space-y-4 py-4">
               <p>Select the format to export your projects and their jobs:</p>
               <div className="flex gap-4 justify-center mt-6">
@@ -487,7 +487,7 @@ project_id,name,description,schedule,endpoint,httpMethod
                 </Button>
               </div>
             </div>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </DialogContent>
     </Dialog>

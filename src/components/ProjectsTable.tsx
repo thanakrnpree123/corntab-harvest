@@ -91,7 +91,7 @@ export function ProjectsTable({
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
             <TableHead className="hidden md:table-cell w-[35%]">รายละเอียด</TableHead>
             <TableHead className="hidden md:table-cell w-[15%]">วันที่สร้าง</TableHead>
-            <TableHead className="text-right w-[20%]">การจัดการ</TableHead>
+            {/* <TableHead className="text-right w-[20%]">การจัดการ</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
