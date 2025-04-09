@@ -6,22 +6,51 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
-import { CronJob } from "@/lib/types";
+import { CronJob, Project } from "@/lib/types";
 import { StatusBadge } from "@/components/StatusBadge";
 import dayjs from "dayjs";
-import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server } from "lucide-react";
+import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 export default function Index() {
   const { toast } = useToast();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  
+  // Fetch all projects
+  const {
+    data: projects = [],
+    isLoading: isLoadingProjects,
+  } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      try {
+        const response = await apiService.getProjects();
+        if (response.success && response.data) {
+          return response.data;
+        }
+        console.warn("Using mock projects due to API error:", response.error);
+        return getMockProjects();
+      } catch (error) {
+        console.warn("Using mock projects due to API error:", error);
+        return getMockProjects();
+      }
+    },
+  });
   
   // Fetch all jobs
   const {
-    data: jobs = [],
-    isLoading,
-    refetch
+    data: allJobs = [],
+    isLoading: isLoadingJobs,
+    refetch: refetchJobs
   } = useQuery({
     queryKey: ['jobs'],
     queryFn: async () => {
@@ -38,6 +67,11 @@ export default function Index() {
       }
     },
   });
+  
+  // Filter jobs by selected project
+  const jobs = selectedProjectId 
+    ? allJobs.filter(job => job.projectId === selectedProjectId)
+    : allJobs;
   
   // Set first job as selected when data loads
   useEffect(() => {
@@ -66,102 +100,138 @@ export default function Index() {
   };
 
   return (
-    <PageLayout title="Dashboard">
+    <PageLayout title="">
       <div className="grid gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+          <div>
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">Overview of your scheduled jobs</p>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground mr-2">Filter by project:</span>
+            </div>
+            <Select
+              value={selectedProjectId || "all"}
+              onValueChange={(value) => setSelectedProjectId(value === "all" ? null : value)}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="All projects" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All projects</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Stats cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <StatsCard title="งานทั้งหมด" value={jobStats.total} />
-          <StatsCard title="กำลังทำงาน" value={jobStats.active} />
-          <StatsCard title="สำเร็จ" value={jobStats.success} color="green" icon={CheckCircle} />
-          <StatsCard title="ล้มเหลว" value={jobStats.failed} color="red" icon={AlertTriangle} />
-          <StatsCard title="หยุดชั่วคราว" value={jobStats.paused} color="gray" />
+          <StatsCard title="Total Jobs" value={jobStats.total} />
+          <StatsCard title="Active" value={jobStats.active} />
+          <StatsCard title="Success" value={jobStats.success} color="green" icon={CheckCircle} />
+          <StatsCard title="Failed" value={jobStats.failed} color="red" icon={AlertTriangle} />
+          <StatsCard title="Paused" value={jobStats.paused} color="gray" />
         </div>
 
         {/* Recent jobs */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="md:col-span-1 space-y-6">
-         <Card>
-    <CardHeader>
-      <CardTitle>งานล่าสุด</CardTitle>
-      <CardDescription>งานที่มีการทำงานล่าสุด</CardDescription>
-    </CardHeader>
-    <CardContent className="p-0">
-      <Tabs defaultValue="recent">
-        <TabsList className="w-full bg-transparent border-b rounded-none">
-          <TabsTrigger value="recent" className="flex-1">ล่าสุด</TabsTrigger>
-          <TabsTrigger value="failed" className="flex-1">ล้มเหลว</TabsTrigger>
-          <TabsTrigger value="paused" className="flex-1">หยุดชั่วคราว</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
-          <div className="divide-y">
-            {recentJobs.length > 0 ? (
-              recentJobs.map((job) => (
-                <JobListItem 
-                  key={job.id} 
-                  job={job} 
-                  isSelected={job.id === selectedJobId}
-                  onSelect={() => setSelectedJobId(job.id)} 
-                />
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                ยังไม่มีงานที่เคยรัน
-              </div>
-            )}
+          <div className="md:col-span-1 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Jobs</CardTitle>
+                <CardDescription>
+                  {selectedProjectId 
+                    ? `Jobs in project: ${projects.find(p => p.id === selectedProjectId)?.name}` 
+                    : "Jobs across all projects"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Tabs defaultValue="recent">
+                  <TabsList className="w-full bg-transparent border-b rounded-none">
+                    <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
+                    <TabsTrigger value="failed" className="flex-1">Failed</TabsTrigger>
+                    <TabsTrigger value="paused" className="flex-1">Paused</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
+                    <div className="divide-y">
+                      {recentJobs.length > 0 ? (
+                        recentJobs.map((job) => (
+                          <JobListItem 
+                            key={job.id} 
+                            job={job} 
+                            projectName={projects.find(p => p.id === job.projectId)?.name}
+                            isSelected={job.id === selectedJobId}
+                            onSelect={() => setSelectedJobId(job.id)} 
+                          />
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          No jobs have run yet
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="failed" className="m-0 h-[300px] overflow-y-auto">
+                    <div className="divide-y">
+                      {failedJobs.length > 0 ? (
+                        failedJobs.map((job) => (
+                          <JobListItem 
+                            key={job.id} 
+                            job={job} 
+                            projectName={projects.find(p => p.id === job.projectId)?.name}
+                            isSelected={job.id === selectedJobId}
+                            onSelect={() => setSelectedJobId(job.id)} 
+                          />
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          No failed jobs
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="paused" className="m-0 h-[300px] overflow-y-auto">
+                    <div className="divide-y">
+                      {pausedJobs.length > 0 ? (
+                        pausedJobs.map((job) => (
+                          <JobListItem 
+                            key={job.id} 
+                            job={job}
+                            projectName={projects.find(p => p.id === job.projectId)?.name}
+                            isSelected={job.id === selectedJobId}
+                            onSelect={() => setSelectedJobId(job.id)} 
+                          />
+                        ))
+                      ) : (
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                          No paused jobs
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </div>
-        </TabsContent>
-        
-        <TabsContent value="failed" className="m-0 h-[300px] overflow-y-auto">
-          <div className="divide-y">
-            {failedJobs.length > 0 ? (
-              failedJobs.map((job) => (
-                <JobListItem 
-                  key={job.id} 
-                  job={job} 
-                  isSelected={job.id === selectedJobId}
-                  onSelect={() => setSelectedJobId(job.id)} 
-                />
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                ไม่มีงานที่ล้มเหลว
-              </div>
-            )}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="paused" className="m-0 h-[300px] overflow-y-auto">
-          <div className="divide-y">
-            {pausedJobs.length > 0 ? (
-              pausedJobs.map((job) => (
-                <JobListItem 
-                  key={job.id} 
-                  job={job} 
-                  isSelected={job.id === selectedJobId}
-                  onSelect={() => setSelectedJobId(job.id)} 
-                />
-              ))
-            ) : (
-              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                ไม่มีงานที่ถูกหยุดชั่วคราว
-              </div>
-            )}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </CardContent>
-  </Card>
-</div>
-
           
           <div className="md:col-span-2">
             {selectedJob ? (
-              <JobDashboardDetail job={selectedJob} onRefresh={refetch} />
+              <JobDashboardDetail job={selectedJob} onRefresh={refetchJobs} />
             ) : (
               <Card className="h-full flex items-center justify-center p-6">
                 <div className="text-center text-muted-foreground">
-                  เลือกงานจากรายการเพื่อดูรายละเอียด
+                  Select a job from the list to view details
                 </div>
               </Card>
             )}
@@ -173,8 +243,9 @@ export default function Index() {
 }
 
 // Job list item component
-function JobListItem({ job, isSelected, onSelect }: { 
+function JobListItem({ job, projectName, isSelected, onSelect }: { 
   job: CronJob; 
+  projectName?: string;
   isSelected: boolean;
   onSelect: () => void;
 }) {
@@ -189,6 +260,11 @@ function JobListItem({ job, isSelected, onSelect }: {
         <div className="font-medium truncate mr-2">{job.name}</div>
         <StatusBadge status={job.status} />
       </div>
+      {projectName && (
+        <div className="text-xs text-muted-foreground mb-1">
+          Project: {projectName}
+        </div>
+      )}
       <div className="flex items-center text-xs text-muted-foreground gap-2">
         <div className="flex items-center gap-1">
           <Server className="h-3 w-3" />
@@ -203,7 +279,7 @@ function JobListItem({ job, isSelected, onSelect }: {
           <span>
             {job.lastRun 
               ? dayjs(job.lastRun).format('DD/MM HH:mm')
-              : "ยังไม่เคยรัน"}
+              : "Never run"}
           </span>
         </div>
       </div>
@@ -248,6 +324,32 @@ function StatsCard({
 }
 
 // Mock functions for UI testing
+function getMockProjects(): Project[] {
+  return [
+    {
+      id: "project-1",
+      name: "Marketing Automation",
+      description: "Marketing campaign automation tasks",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "project-2",
+      name: "Data Sync",
+      description: "Database synchronization jobs",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "project-3",
+      name: "Reporting",
+      description: "Automated reporting tasks",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  ];
+}
+
 function getMockJobs(): CronJob[] {
   return [
     {

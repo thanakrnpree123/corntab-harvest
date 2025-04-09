@@ -1,203 +1,155 @@
 
-# Corntab-Harvest Project
+# Corntab - Modern Cron Job Management System
 
-A comprehensive cron job management system that allows users to create, monitor, and manage scheduled tasks across multiple projects.
+A comprehensive cron job management system that allows users to create, monitor, and manage scheduled tasks across multiple projects with a modern responsive UI.
 
-## User Stories for Azure DevOps
+## User Stories
 
 ### Epics
 
-#### 1. Job Management System
-The core system that enables users to create, configure, and manage automated jobs across different projects.
+#### 1. Project & Job Management System
+The core system that enables users to organize jobs into projects and manage automated tasks with an intuitive UI.
 
 #### 2. Monitoring and Analytics
-A comprehensive system for tracking job performance, identifying issues, and providing insights into system efficiency.
+A comprehensive system for tracking job performance, identifying issues, and providing visual insights into system efficiency.
 
 #### 3. User Management and Security
-A system to manage user access, permissions, and secure the platform according to industry standards.
+A system to manage user access, permissions, and secure the platform according to industry standards with role-based access control.
 
-#### 4. System Integration and Extensibility
-Capabilities to integrate with other systems and extend functionality through APIs and plugins.
+#### 4. UI/UX and Responsiveness
+A modern, responsive interface that provides a seamless experience across desktop and mobile devices.
 
 ### Features
 
-#### Under Epic: Job Management System
+#### Under Epic: Project & Job Management System
 1. **Project Organization**
-   - Ability to create and manage multiple projects to organize jobs
-   - Project-level configurations and settings
+   - Create, edit, and delete projects to organize related jobs
+   - Project-level configurations and dashboard views
+   - Quick project switching via dropdown selector
+   - Import/export projects with their jobs in JSON/CSV formats
 
 2. **Job Configuration**
-   - Comprehensive job creation and configuration
-   - Support for various scheduling formats
-   - Command execution settings
+   - Comprehensive job creation with intuitive modal interface
+   - Support for cron expression scheduling with human-readable preview
+   - Advanced command execution settings with environment variable support
+   - Job status management (activate/pause)
 
-3. **Job Execution**
-   - Reliable job scheduling and execution
-   - Status tracking and management
-   - Job action controls (pause, resume, restart)
+3. **Job Execution Control**
+   - One-click job status toggling (active/paused)
+   - Manual job triggering for on-demand execution
+   - Job duplication and quick editing capabilities
+   - Bulk import/export of jobs in JSON/CSV formats
 
 #### Under Epic: Monitoring and Analytics
-1. **Job Logging System**
-   - Detailed execution logs for each job
-   - Log retention and search capabilities
-   - Log level configuration
+1. **Dashboard and Visualization**
+   - Project-filtered dashboard views
+   - At-a-glance status cards showing key metrics
+   - Visual representations of job success rates and trends
+   - Recent activity timeline with filterable events
 
-2. **Performance Analytics**
-   - Job performance metrics and trends
-   - Resource utilization tracking
-   - System health indicators
+2. **Detailed Job Logs**
+   - Comprehensive execution logs with timestamps
+   - Log filtering and search capabilities
+   - Real-time log streaming for active jobs
 
-3. **Alerting and Notifications**
-   - Configurable alerts for job failures
-   - Notification channels (email, SMS, webhook)
-   - Alert severity levels and escalation
+3. **Performance Metrics**
+   - Execution time tracking and performance analysis
+   - Resource utilization monitoring
+   - Anomaly detection for underperforming jobs
 
 #### Under Epic: User Management and Security
-1. **User Authentication**
-   - Secure login and authentication
-   - Multi-factor authentication options
-   - Session management
+1. **Authentication System**
+   - Secure login with JWT token authentication
+   - Remember me functionality for improved UX
+   - Session management with automatic timeout
 
 2. **Role-Based Access Control**
-   - Configurable user roles and permissions
-   - Resource-level access controls
-   - Permission auditing
+   - Predefined roles with granular permissions
+   - User assignment to projects with specific access levels
+   - Activity auditing and access logs
 
-3. **Security and Compliance**
-   - Audit logging of system activities
-   - Compliance with security standards
-   - Data encryption and protection
+#### Under Epic: UI/UX and Responsiveness
+1. **Modern UI Implementation**
+   - Clean, intuitive interface using modern UI components
+   - Consistent design language throughout the application
+   - Dark/light theme support with user preference storage
 
-#### Under Epic: System Integration and Extensibility
-1. **API and Webhooks**
-   - Comprehensive API for external integration
-   - Webhook support for event-driven integration
-   - API versioning and documentation
+2. **Mobile Responsiveness**
+   - Adaptive layouts for various screen sizes
+   - Touch-friendly controls for mobile users
+   - Optimized navigation for small screens
 
-2. **Third-party Integrations**
-   - Integration with popular monitoring tools
-   - Support for cloud services
-   - Version control system integration
+3. **Accessibility Compliance**
+   - WCAG 2.1 standards compliance
+   - Keyboard navigation support
+   - Screen reader compatibility
 
-### Stories
+### User Stories
 
 #### Under Feature: Project Organization
-1. As a user, I want to create new projects to organize related jobs, so I can manage them efficiently.
+1. As a user, I want to organize my jobs into projects, so I can manage related tasks together.
    - Acceptance Criteria:
-     - Users can create projects with name and description
-     - Users can view a list of all projects
-     - Projects display a count of associated jobs
+     - Create, edit, and delete projects
+     - View all jobs within a project
+     - Add jobs to specific projects
+     - Filter jobs by project
 
-2. As a user, I want to update project details, so I can keep information current.
+2. As a user, I want to import/export projects with their jobs, so I can backup or share my configurations.
    - Acceptance Criteria:
-     - Users can edit project name and description
-     - Updates are reflected immediately across the system
-     - Edit history is maintained
+     - Export projects and all associated jobs in JSON or CSV format
+     - Import projects and jobs from exported files
+     - Validate imported data for correctness
+     - Provide clear feedback on import success or failure
 
-3. As a user, I want to archive projects that are no longer active, so my dashboard remains focused on current work.
+3. As a user, I want to quickly navigate between projects, so I can efficiently manage multiple projects.
    - Acceptance Criteria:
-     - Users can archive projects
-     - Archived projects can be viewed in a separate section
-     - Archived projects can be restored if needed
+     - Dropdown selector for available projects
+     - Default to first project if no project is selected
+     - Clear indication of which project is currently active
+     - Remember last selected project between sessions
 
 #### Under Feature: Job Configuration
-1. As a user, I want to create new cron jobs with a standard cron expression, so I can schedule tasks to run automatically.
+1. As a user, I want to create and configure jobs with all necessary parameters, so they run correctly in my environment.
    - Acceptance Criteria:
-     - Users can enter a cron expression
-     - System validates the expression format
-     - Users can see a human-readable description of the schedule
+     - Form for name, description, schedule, endpoint, and method
+     - Support for cron expressions with preview
+     - Configure HTTP headers and body
+     - Set environment variables and timezone
 
-2. As a user, I want to set environment variables for my jobs, so they can access necessary configuration.
+2. As a user, I want to duplicate existing jobs, so I can create similar jobs without retyping all settings.
    - Acceptance Criteria:
-     - Users can add key-value pairs for environment variables
-     - Variables are securely stored
-     - Variables are injected into the job environment at runtime
+     - Single-click job duplication with confirmation
+     - New job should have "(copy)" appended to name
+     - All settings copied except for run history
+     - Immediately editable after duplication
 
-3. As a user, I want to set retry policies for failed jobs, so transient issues don't cause permanent failures.
+3. As a user, I want to import/export jobs, so I can share job configurations between projects or systems.
    - Acceptance Criteria:
-     - Users can specify retry count and delay
-     - System automatically retries failed jobs according to policy
-     - Retry history is visible in job logs
+     - Export selected jobs to JSON or CSV
+     - Import jobs from JSON or CSV files
+     - Validate imported jobs for required fields
+     - Option to assign imported jobs to current project
 
-#### Under Feature: Job Execution
-1. As a user, I want to manually trigger jobs, so I can run them on-demand outside of the schedule.
+#### Under Feature: Dashboard and Visualization
+1. As a user, I want a dashboard that shows job statistics, so I can assess the health of my scheduled tasks.
    - Acceptance Criteria:
-     - Users can trigger jobs with a single click
-     - Manual runs are marked distinctly in logs
-     - Job status updates in real-time
+     - Cards showing total, active, success, failed, and paused jobs
+     - Option to filter dashboard by project
+     - List of recent job executions
+     - Separate tabs for recent, failed, and paused jobs
 
-2. As a user, I want to pause active jobs, so I can temporarily suspend them without deletion.
+2. As a user, I want to see detailed information about a specific job, so I can troubleshoot issues.
    - Acceptance Criteria:
-     - Users can toggle job status between active and paused
-     - Paused jobs don't execute on schedule
-     - System clearly indicates paused status
-
-3. As a user, I want to view the next scheduled run time for each job, so I know when to expect execution.
-   - Acceptance Criteria:
-     - Next run time is displayed in local timezone
-     - Time updates automatically as schedules progress
-     - Visual indicator for jobs due to run soon
-
-#### Under Feature: Job Logging System
-1. As a user, I want to view detailed execution logs for each job run, so I can troubleshoot issues.
-   - Acceptance Criteria:
-     - Logs show start time, end time, and duration
-     - Logs display command output and errors
-     - Users can download logs for offline analysis
-
-2. As a user, I want to search logs using keywords, so I can find specific information quickly.
-   - Acceptance Criteria:
-     - Full-text search across log content
-     - Results highlight matching terms
-     - Advanced filtering options by date, status, etc.
-
-3. As a user, I want to set log retention policies, so I can manage storage costs and system performance.
-   - Acceptance Criteria:
-     - Configure retention period by time or count
-     - Option to archive logs before deletion
-     - Automatic enforcement of retention policies
-
-#### Under Feature: Performance Analytics
-1. As a user, I want to view dashboards showing job success rates, so I can identify problematic jobs.
-   - Acceptance Criteria:
-     - Visual charts showing success/failure rates
-     - Ability to filter by time period and project
-     - Trend indicators for improving/degrading performance
-
-2. As a user, I want to analyze job duration trends, so I can identify performance degradation.
-   - Acceptance Criteria:
-     - Line charts showing execution duration over time
-     - Statistical indicators for outliers
-     - Comparison against historical averages
-
-3. As a user, I want to export performance metrics, so I can include them in reports.
-   - Acceptance Criteria:
-     - Export to common formats (CSV, Excel)
-     - Scheduling of automated exports
-     - Customizable export templates
-
-#### Under Feature: Alerting and Notifications
-1. As a user, I want to set up email notifications for job failures, so I'm immediately aware of issues.
-   - Acceptance Criteria:
-     - Configure recipients for notifications
-     - Customizable email templates
-     - Option to include log excerpts in notifications
-
-2. As a user, I want to create custom alert conditions, so I'm notified about specific scenarios I care about.
-   - Acceptance Criteria:
-     - Alert on duration thresholds
-     - Alert on success/failure patterns
-     - Alert on output content matching patterns
-
-3. As a user, I want to configure notification channels per job, so different teams receive relevant alerts.
-   - Acceptance Criteria:
-     - Job-specific notification settings
-     - Support for multiple notification channels
-     - Option to escalate after repeated failures
+     - Display job configuration details
+     - Show execution history and status
+     - Provide log output for recent runs
+     - Show next scheduled run time
 
 ## Getting Started
 
-See our [documentation](docs/README.md) for installation and setup instructions.
+See our backend documentation for installation and setup instructions:
+- [NestJS Backend](nestjs-backend/README.md)
+- [Golang Backend](golang-backend/README.md)
 
 ## Contributing
 

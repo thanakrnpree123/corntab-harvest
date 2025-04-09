@@ -40,6 +40,9 @@ export interface CronJob {
   averageRuntime: number | null;
   emailNotifications?: string | null;
   webhookUrl?: string | null;
+  // Add the missing properties
+  headers?: Record<string, string>;
+  body?: string;
 }
 
 export interface JobLog {
