@@ -1,3 +1,4 @@
+
 import { CronJob } from "@/lib/types";
 import {
   Table,
@@ -41,10 +42,10 @@ export function JobsTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>Schedule</TableHead>
+            <TableHead className="hidden md:table-cell">Schedule</TableHead>
             <TableHead>Status</TableHead>
-            {showLastRun && <TableHead>Last Run</TableHead>}
-            {showNextRun && <TableHead>Next Run</TableHead>}
+            {showLastRun && <TableHead className="hidden md:table-cell">Last Run</TableHead>}
+            {showNextRun && <TableHead className="hidden md:table-cell">Next Run</TableHead>}
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -52,8 +53,27 @@ export function JobsTable({
           {jobs.map((job) => {
             return (
               <TableRow key={job.id}>
-                <TableCell className="font-medium">{job.name}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium">
+                  <div className="font-medium">{job.name}</div>
+                  <div className="text-xs text-muted-foreground md:hidden">
+                    {job.schedule}
+                  </div>
+                  {showLastRun && (
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Last: {job.lastRun 
+                        ? dayjs(job.lastRun).format("MM/DD HH:mm") 
+                        : "Never"}
+                    </div>
+                  )}
+                  {showNextRun && (
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Next: {job.nextRun 
+                        ? dayjs(job.nextRun).format("MM/DD HH:mm") 
+                        : "Not scheduled"}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
                   <code className="bg-muted text-xs px-1 py-0.5 rounded">
                     {job.schedule}
                   </code>
@@ -62,7 +82,7 @@ export function JobsTable({
                   <StatusBadge status={job.status} />
                 </TableCell>
                 {showLastRun && (
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {job.lastRun ? (
                       <div>
                         <div className="text-xs text-muted-foreground">
@@ -80,7 +100,7 @@ export function JobsTable({
                   </TableCell>
                 )}
                 {showNextRun && (
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     {job.nextRun ? (
                       <div>
                         <div className="text-xs text-muted-foreground">
@@ -97,17 +117,34 @@ export function JobsTable({
                     )}
                   </TableCell>
                 )}
-                <TableCell className="text-right flex justify-end items-center gap-2">
+                <TableCell className="text-right flex justify-end items-center gap-2 flex-wrap">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => onViewDetails(job)}
+                    className="hidden sm:inline-flex"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  {onToggleStatus(job.id)}
-                  {onDuplicateJob && onDuplicateJob(job.id)}
-                  {onDeleteJob(job.id)}
+
+                  <div className="flex items-center gap-2">
+                    {onToggleStatus(job.id)}
+                    
+                    <div className="hidden sm:block">
+                      {onDuplicateJob && onDuplicateJob(job.id)}
+                    </div>
+                    
+                    {onDeleteJob(job.id)}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onViewDetails(job)}
+                    className="sm:hidden w-full mt-1"
+                  >
+                    View Details
+                  </Button>
                 </TableCell>
               </TableRow>
             );
