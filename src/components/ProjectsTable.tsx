@@ -30,6 +30,7 @@ import {
   Pause,
   Copy,
   Edit,
+  EllipsisVertical
 } from "lucide-react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -63,6 +64,7 @@ export function ProjectsTable({
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({});
   const [projectJobs, setProjectJobs] = useState<Record<string, CronJob[]>>({});
   const [loadingJobs, setLoadingJobs] = useState<Record<string, boolean>>({});
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const fetchJobsForProject = async (projectId: string) => {
     setLoadingJobs((prev) => ({ ...prev, [projectId]: true }));
@@ -109,7 +111,7 @@ export function ProjectsTable({
               const isLoading = loadingJobs[project.id] || false;
               const jobs = projectJobs[project.id] || [];
               const jobCount = jobs.length;
-            
+
               return (
                 <Collapsible
                   key={project.id}
@@ -138,59 +140,88 @@ export function ProjectsTable({
                     <TableCell className="hidden md:table-cell">{dayjs(project.createdAt).format("DD/MM/YYYY")}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end items-center gap-2 overflow-auto">
-                       {/**add : button */}
+                        {/**add : button */}
                       </div>
                     </TableCell>
                   </TableRow>
-            
+
                   <CollapsibleContent className="contents"> {/* 👈 ให้ layout ไม่พัง */}
                     <TableRow>
                       <TableCell colSpan={4} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
-                            
+
                             {isLoading ? (
                               <p className="text-muted-foreground text-sm py-4 text-center">กำลังโหลดรายการงาน...</p>
                             ) : jobs.length === 0 ? (
                               <p className="text-muted-foreground text-sm py-4 text-center">ไม่พบงานในโปรเจคนี้</p>
                             ) : (
                               <div className="max-h-[400px] overflow-auto">
-                              <Table className="w-full table-fixed">
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead className="w-[35%] truncate">ชื่องาน</TableHead>
-                                    <TableHead className="hidden md:table-cell w-[25%] truncate">ตารางเวลา</TableHead>
-                                    <TableHead className="w-[15%] truncate">สถานะ</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {jobs.map((job) => (
-                                    <TableRow
-                                      key={job.id}
-                                      className="cursor-pointer hover:bg-muted/40"
-                                      onClick={() => handleViewJobDetails(job)}
-                                    >
-                                      <TableCell>
-                                        <div className="font-medium truncate">{job.name}</div>
-                                        <div className="text-xs text-muted-foreground md:hidden">{job.schedule}</div>
-                                      </TableCell>
-                                      <TableCell className="hidden md:table-cell">
-                                        <code className="bg-muted text-xs px-1 py-0.5 rounded">
-                                          {job.schedule}
-                                        </code>
-                                      </TableCell>
-                                      <TableCell>
-                                        <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
-                                        <StatusBadge status={job.status} />
-                                        </div>
-                                      </TableCell>
-                                      
+                                <Table className="w-full table-fixed">
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead className="w-[35%] truncate">ชื่องาน</TableHead>
+                                      <TableHead className="hidden md:table-cell w-[25%] truncate">ตารางเวลา</TableHead>
+                                      <TableHead className="w-[15%] truncate">สถานะ</TableHead>
                                     </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
-                            
+                                  </TableHeader>
+                                  <TableBody>
+                                    {jobs.map((job) => (
+                                      <TableRow
+                                        key={job.id}
+                                        className="cursor-pointer hover:bg-muted/40"
+                                        onClick={() => handleViewJobDetails(job)}
+                                      >
+                                        <TableCell>
+                                          <div className="font-medium truncate">{job.name}</div>
+                                          <div className="text-xs text-muted-foreground md:hidden">{job.schedule}</div>
+                                        </TableCell>
+                                        <TableCell className="hidden md:table-cell">
+                                          <code className="bg-muted text-xs px-1 py-0.5 rounded">
+                                            {job.schedule}
+                                          </code>
+                                        </TableCell>
+                                        <TableCell>
+                                          <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
+                                            <StatusBadge status={job.status} />
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="relative">
+                                          <div className="relative">
+                                            <button
+                                              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                              className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
+                                            >
+                                              <EllipsisVertical color="#000000" strokeWidth={0.75} />
+                                            </button>
+
+                                            {isDropdownOpen && (
+                                              <div className="absolute right-0 top-8 bg-white border rounded-md shadow-lg z-50">
+                                                <div className="py-1 w-32">
+                                                  <button
+                                                    // onClick={}
+                                                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                                  >
+                                                    Edit
+                                                  </button>
+                                                  <button
+                                                    // onClick={handleDelete}
+                                                    className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
+                                                  >
+                                                    Delete
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </TableCell>
+
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+
                             )}
                           </div>
                         </div>
