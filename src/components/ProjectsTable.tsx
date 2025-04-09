@@ -120,7 +120,7 @@ export function ProjectsTable({
                     }
                     onViewJobs(project.id);
                   }}
-                  className="w-full"
+                  // className="w-full"
                 >
                   <TableRow className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}>
                     <TableCell className="font-medium">
