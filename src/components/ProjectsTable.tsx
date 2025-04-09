@@ -64,7 +64,7 @@ export function ProjectsTable({
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({});
   const [projectJobs, setProjectJobs] = useState<Record<string, CronJob[]>>({});
   const [loadingJobs, setLoadingJobs] = useState<Record<string, boolean>>({});
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState(null);
 
   const fetchJobsForProject = async (projectId: string) => {
     setLoadingJobs((prev) => ({ ...prev, [projectId]: true }));
@@ -190,23 +190,34 @@ export function ProjectsTable({
                                         <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                           <div className="relative">
                                             <button
-                                              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenDropdownId(prev => prev === job.id ? null : job.id);
+                                              }}
                                               className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
                                             >
                                               <EllipsisVertical color="#000000" strokeWidth={0.75} />
                                             </button>
 
-                                            {isDropdownOpen && (
+                                            {openDropdownId === job.id && (
                                               <div className="absolute right-0 top-8 bg-white border rounded-md shadow-lg z-50">
                                                 <div className="py-1 w-32">
                                                   <button
-                                                    // onClick={}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      // handleEdit(job);
+                                                      setOpenDropdownId(null);
+                                                    }}
                                                     className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
                                                   >
                                                     Edit
                                                   </button>
                                                   <button
-                                                    // onClick={handleDelete}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      // handleDelete(job);
+                                                      setOpenDropdownId(null);
+                                                    }}
                                                     className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
                                                   >
                                                     Delete
