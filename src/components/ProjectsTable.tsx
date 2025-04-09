@@ -63,10 +63,10 @@ export function ProjectsTable({
               return (
                 <TableRow
                   key={project.id}
-                  className={isSelected ? "bg-muted/50" : ""}
+                  className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}
                   onClick={() => handleViewJobs(project.id)}
                 >
-                  <TableCell className="font-medium cursor-pointer">
+                  <TableCell className="font-medium">
                     {project.name}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
