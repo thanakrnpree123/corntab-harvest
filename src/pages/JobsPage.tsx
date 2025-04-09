@@ -606,7 +606,7 @@ export default function JobsPage() {
   ].filter(Boolean).length;
 
   return (
-    <PageLayout title="Jobs">
+    <PageLayout title="">
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>

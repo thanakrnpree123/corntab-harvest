@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { PlusCircle, Trash2, ChevronRight } from "lucide-react";
+import {  Trash2, ChevronRight ,Container } from "lucide-react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 
@@ -82,8 +82,8 @@ export function ProjectsTable({
                         size="sm" 
                         onClick={() => onAddJob(project.id)}
                       >
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        เพิ่มงาน
+                        <Container  className="h-4 w-4 mr-2" />
+                        {10}
                       </Button>
                       
                       <AlertDialog>
