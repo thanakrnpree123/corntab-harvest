@@ -1,5 +1,5 @@
 
-import { Project } from "@/lib/types";
+import { Project, CronJob } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -10,11 +10,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, ChevronRight, ChevronDown, Container, ChevronUp } from "lucide-react";
+import { Trash2, ChevronRight, ChevronDown, Container, ChevronUp, Play, Pause, Copy } from "lucide-react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { JobsTable } from "./JobsTable";
+import { toast } from "sonner";
+import { apiService } from "@/lib/api-service";
 
 interface ProjectsTableProps {
   projects: Project[];
@@ -33,8 +36,10 @@ export function ProjectsTable({
 }: ProjectsTableProps) {
   const navigate = useNavigate();
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({});
+  const [projectJobs, setProjectJobs] = useState<Record<string, CronJob[]>>({});
+  const [loadingJobs, setLoadingJobs] = useState<Record<string, boolean>>({});
 
-  const handleViewJobs = (projectId: string) => {
+  const handleViewJobs = async (projectId: string) => {
     // Toggle the collapse state
     setOpenProjects(prev => ({
       ...prev,
@@ -43,6 +48,86 @@ export function ProjectsTable({
     
     // Call the onViewJobs function for any other needed state updates
     onViewJobs(projectId);
+
+    // Fetch jobs for this project if needed and if opening
+    if (!openProjects[projectId] && !projectJobs[projectId]) {
+      await fetchJobsForProject(projectId);
+    }
+  };
+
+  const fetchJobsForProject = async (projectId: string) => {
+    setLoadingJobs(prev => ({ ...prev, [projectId]: true }));
+    
+    try {
+      const response = await apiService.getJobsByProject(projectId);
+      
+      if (response.success && response.data) {
+        setProjectJobs(prev => ({
+          ...prev,
+          [projectId]: response.data
+        }));
+      } else {
+        toast.error("Failed to load jobs");
+      }
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      toast.error("Failed to load jobs");
+    } finally {
+      setLoadingJobs(prev => ({ ...prev, [projectId]: false }));
+    }
+  };
+
+  const handleToggleJobStatus = (jobId: string) => {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          toast.info("Status toggle functionality would go here");
+        }}
+      >
+        <Play className="h-3 w-3 mr-1" />
+        Run
+      </Button>
+    );
+  };
+
+  const handleDeleteJob = (jobId: string) => {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="text-destructive hover:text-destructive"
+        onClick={(e) => {
+          e.stopPropagation();
+          toast.info("Delete job functionality would go here");
+        }}
+      >
+        <Trash2 className="h-3 w-3 mr-1" />
+        Delete
+      </Button>
+    );
+  };
+
+  const handleDuplicateJob = (jobId: string) => {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={(e) => {
+          e.stopPropagation();
+          toast.info("Duplicate job functionality would go here");
+        }}
+      >
+        <Copy className="h-3 w-3 mr-1" />
+        Copy
+      </Button>
+    );
+  };
+
+  const handleViewJobDetails = (job: CronJob) => {
+    navigate(`/jobs/${job.projectId}/${job.id}`);
   };
 
   return (
@@ -67,6 +152,8 @@ export function ProjectsTable({
             projects.map((project) => {
               const isSelected = project.id === selectedProjectId;
               const isOpen = openProjects[project.id] || false;
+              const isLoading = loadingJobs[project.id] || false;
+              const jobs = projectJobs[project.id] || [];
 
               return (
                 <Collapsible
@@ -77,8 +164,8 @@ export function ProjectsTable({
                       ...prev,
                       [project.id]: open
                     }));
-                    if (open) {
-                      onViewJobs(project.id);
+                    if (open && !projectJobs[project.id]) {
+                      fetchJobsForProject(project.id);
                     }
                   }}
                 >
@@ -106,11 +193,10 @@ export function ProjectsTable({
                         <Button
                           variant="outline"
                           size="sm"
-                          // onClick={() => onAddJob(project.id)}
-                          disabled
+                          onClick={() => onAddJob(project.id)}
                         >
                           <Container className="h-4 w-4 mr-2" />
-                          {10}
+                          เพิ่มงาน
                         </Button>
 
                         <AlertDialog>
@@ -158,10 +244,7 @@ export function ProjectsTable({
                       <TableCell colSpan={4} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
-                            <p className="text-muted-foreground text-sm">
-                              {isOpen ? "กำลังโหลดรายการงาน..." : ""}
-                            </p>
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center mb-4">
                               <p className="text-sm font-medium">งานในโปรเจคนี้</p>
                               <Button
                                 size="sm"
@@ -171,6 +254,26 @@ export function ProjectsTable({
                                 ดูทั้งหมด
                               </Button>
                             </div>
+                            
+                            {isLoading ? (
+                              <p className="text-muted-foreground text-sm py-4 text-center">
+                                กำลังโหลดรายการงาน...
+                              </p>
+                            ) : jobs.length === 0 ? (
+                              <p className="text-muted-foreground text-sm py-4 text-center">
+                                ไม่พบงานในโปรเจคนี้
+                              </p>
+                            ) : (
+                              <JobsTable
+                                jobs={jobs}
+                                onViewDetails={handleViewJobDetails}
+                                onToggleStatus={handleToggleJobStatus}
+                                onDeleteJob={handleDeleteJob}
+                                onDuplicateJob={handleDuplicateJob}
+                                showLastRun={false}
+                                showNextRun={false}
+                              />
+                            )}
                           </div>
                         </div>
                       </TableCell>
