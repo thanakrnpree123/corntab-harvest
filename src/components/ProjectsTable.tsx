@@ -163,6 +163,7 @@ export function ProjectsTable({
                                       <TableHead className="w-[35%] truncate">ชื่องาน</TableHead>
                                       <TableHead className="hidden md:table-cell w-[25%] truncate">ตารางเวลา</TableHead>
                                       <TableHead className="w-[15%] truncate">สถานะ</TableHead>
+                                      <TableHead className="text-right w-[25%] truncate">การจัดการ</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -182,7 +183,7 @@ export function ProjectsTable({
                                           </code>
                                         </TableCell>
                                         <TableCell>
-                                          <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
+                                          <div className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold">
                                             <StatusBadge status={job.status} />
                                           </div>
                                         </TableCell>
