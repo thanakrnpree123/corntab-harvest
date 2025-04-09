@@ -19,6 +19,7 @@ import { JobsTable } from "./JobsTable";
 import { toast } from "sonner";
 import { apiService } from "@/lib/api-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface ProjectsTableProps {
   projects: Project[];
@@ -78,100 +79,13 @@ export function ProjectsTable({
     }
   };
 
-  const handleToggleJobStatus = (jobId: string) => {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8"
-        onClick={(e) => {
-          e.stopPropagation();
-          toast.info("Status toggle functionality would go here");
-        }}
-      >
-        <Play className="h-3 w-3 mr-1" />
-        เริ่มทำงาน
-      </Button>
-    );
-  };
-
-  const handleDeleteJob = (jobId: string) => {
-    return (
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:text-destructive h-8"
-          >
-            <Trash2 className="h-3 w-3 mr-1" />
-            ลบ
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ลบงาน</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณต้องการลบงานนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                toast.info("Delete job functionality would go here");
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              ลบงาน
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    );
-  };
-
-  const handleDuplicateJob = (jobId: string) => {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8"
-        onClick={(e) => {
-          e.stopPropagation();
-          toast.info("Duplicate job functionality would go here");
-        }}
-      >
-        <Copy className="h-3 w-3 mr-1" />
-        คัดลอก
-      </Button>
-    );
-  };
-
-  const handleEditJob = (jobId: string) => {
-    return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="h-8"
-        onClick={(e) => {
-          e.stopPropagation();
-          toast.info("Edit job functionality would go here");
-        }}
-      >
-        <Edit className="h-3 w-3 mr-1" />
-        แก้ไข
-      </Button>
-    );
-  };
-
   const handleViewJobDetails = (job: CronJob) => {
     navigate(`/jobs/${job.projectId}/${job.id}`);
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table className="w-full min-w-[600px]">
+    <div className="w-full overflow-x-auto">
+      <Table className="w-full">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
@@ -193,6 +107,7 @@ export function ProjectsTable({
               const isOpen = openProjects[project.id] || false;
               const isLoading = loadingJobs[project.id] || false;
               const jobs = projectJobs[project.id] || [];
+              const jobCount = jobs.length;
 
               return (
                 <Collapsible
@@ -229,53 +144,60 @@ export function ProjectsTable({
                       {dayjs(project.createdAt).format("DD/MM/YYYY")}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onAddJob(project.id)}
-                        >
-                          <Container className="h-4 w-4 mr-2" />
-                          เพิ่มงาน
-                        </Button>
+                      <div className="flex justify-end items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onAddJob(project.id)}
+                          >
+                            <Container className="h-4 w-4 mr-1" />
+                            เพิ่มงาน
+                            {jobCount > 0 && (
+                              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                                {jobCount}
+                              </Badge>
+                            )}
+                          </Button>
 
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              ลบ
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>ลบโปรเจค</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                คุณต้องการลบโปรเจค "{project.name}" หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
-                                งานทั้งหมดภายในโปรเจคนี้จะถูกลบด้วย
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDeleteProject(project.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                ลบโปรเจค
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                ลบ
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>ลบโปรเจค</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  คุณต้องการลบโปรเจค "{project.name}" หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
+                                  งานทั้งหมดภายในโปรเจคนี้จะถูกลบด้วย
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => onDeleteProject(project.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  ลบโปรเจค
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
 
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/jobs/${project.id}`);
-                          }}
-                        >
-                          <ChevronUp className="h-4 w-4" />
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/jobs/${project.id}`);
+                            }}
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -285,7 +207,7 @@ export function ProjectsTable({
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
                             <div className="flex justify-between items-center mb-4">
-                              <p className="text-sm font-medium">งานในโปรเจคนี้</p>
+                              <p className="text-sm font-medium">งานในโปรเจคนี้ {jobCount > 0 && `(${jobCount})`}</p>
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -304,9 +226,9 @@ export function ProjectsTable({
                                 ไม่พบงานในโปรเจคนี้
                               </p>
                             ) : (
-                              <ScrollArea className="max-h-[500px]">
-                                <div className="overflow-x-auto">
-                                  <Table className="w-full min-w-[600px]">
+                              <ScrollArea className="h-auto max-h-[400px]">
+                                <div className="w-full">
+                                  <Table className="w-full">
                                     <TableHeader>
                                       <TableRow>
                                         <TableHead className="w-[35%]">ชื่องาน</TableHead>
@@ -340,10 +262,76 @@ export function ProjectsTable({
                                           </TableCell>
                                           <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                             <div className="flex flex-wrap justify-end gap-2">
-                                              {handleToggleJobStatus(job.id)}
-                                              {handleEditJob(job.id)}
-                                              {handleDuplicateJob(job.id)}
-                                              {handleDeleteJob(job.id)}
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  toast.info(`เริ่มทำงาน ${job.name}`);
+                                                }}
+                                              >
+                                                <Play className="h-3 w-3 mr-1" />
+                                                เริ่ม
+                                              </Button>
+                                              
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  toast.info(`แก้ไข ${job.name}`);
+                                                }}
+                                              >
+                                                <Edit className="h-3 w-3 mr-1" />
+                                                แก้ไข
+                                              </Button>
+                                              
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  toast.info(`คัดลอก ${job.name}`);
+                                                }}
+                                              >
+                                                <Copy className="h-3 w-3 mr-1" />
+                                                คัดลอก
+                                              </Button>
+                                              
+                                              <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-destructive hover:text-destructive h-8"
+                                                  >
+                                                    <Trash2 className="h-3 w-3 mr-1" />
+                                                    ลบ
+                                                  </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                  <AlertDialogHeader>
+                                                    <AlertDialogTitle>ลบงาน</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                      คุณต้องการลบงาน "{job.name}" หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้
+                                                    </AlertDialogDescription>
+                                                  </AlertDialogHeader>
+                                                  <AlertDialogFooter>
+                                                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                      onClick={() => {
+                                                        toast.info(`ลบงาน ${job.name}`);
+                                                      }}
+                                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                    >
+                                                      ลบงาน
+                                                    </AlertDialogAction>
+                                                  </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                              </AlertDialog>
                                             </div>
                                           </TableCell>
                                         </TableRow>
