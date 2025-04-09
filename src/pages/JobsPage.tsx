@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { JobsTable } from "@/components/JobsTable";
+import { ProjectsTable } from "@/components/ProjectsTable";
 import { CreateJobModal } from "@/components/CreateJobModal";
 import { JobDetails } from "@/components/JobDetails";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { JobExportImport } from "@/components/JobExportImport";
 import { ProjectExportImport, ProjectWithJobs } from "@/components/ProjectExportImport";
-import { ProjectCard } from "@/components/ProjectCard";
 import { CronJob, JobStatus, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { 
@@ -360,10 +359,10 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
-        mockToggleJobStatus(job, newStatus);
-        refetchJobs();
-        refetchAllJobs();
+          // If unsuccessful, use mock data
+          mockToggleJobStatus(job, newStatus);
+          refetchJobs();
+          refetchAllJobs();
       })
       .finally(() => {
         setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
@@ -611,14 +610,14 @@ export default function JobsPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Projects</h1>
-            <p className="text-muted-foreground">Manage your projects and jobs</p>
+            <h1 className="text-2xl font-bold">โปรเจค</h1>
+            <p className="text-muted-foreground">จัดการโปรเจคและงานของคุณ</p>
           </div>
           
           <div className="flex flex-col md:flex-row gap-2">
             <Button onClick={() => setIsCreateProjectModalOpen(true)}>
               <FolderPlus className="mr-2 h-4 w-4" />
-              New Project
+              สร้างโปรเจคใหม่
             </Button>
             
             <ProjectExportImport 
@@ -632,311 +631,300 @@ export default function JobsPage() {
         {isProjectLoading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-muted-foreground">Loading projects...</span>
+            <span className="ml-2 text-muted-foreground">กำลังโหลดโปรเจค...</span>
           </div>
         ) : (
           projects.length > 0 ? (
-            <div className="space-y-4">
-              {searchQuery && (
-                <div className="flex justify-between items-center">
-                  <p className="text-sm text-muted-foreground">
-                    Showing jobs matching "{searchQuery}"
-                  </p>
-                  <Button variant="ghost" size="sm" onClick={() => setSearchQuery("")}>
-                    Clear search
-                  </Button>
-                </div>
-              )}
-              
-              {projects.map(project => (
-                <div key={project.id}>
-                  <ProjectCard 
-                    project={project}
-                    onAddJob={() => {
-                      setSelectedProjectId(project.id);
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="p-0">
+                  <ProjectsTable 
+                    projects={projects}
+                    onAddJob={(projectId) => {
+                      setSelectedProjectId(projectId);
                       setIsCreateModalOpen(true);
                     }}
                     onDeleteProject={handleDeleteProject}
                     onViewJobs={setSelectedProjectId}
-                    isSelected={project.id === selectedProjectId}
+                    selectedProjectId={selectedProjectId}
                   />
-                  
-                  {project.id === selectedProjectId && (
-                    <div className="ml-4 mb-8">
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
-                        <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
-                          <div className="flex gap-2">
-                            <Input
-                              className="md:w-[200px]"
-                              placeholder="Search jobs..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            
-                            <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                              <PopoverTrigger asChild>
-                                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                                  <Filter className="h-4 w-4" />
-                                  <span>Filters</span>
-                                  {activeFiltersCount > 0 && (
-                                    <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center">
-                                      {activeFiltersCount}
-                                    </Badge>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[240px] p-4">
-                                <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium text-sm">Status</h4>
-                                    <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as any)}>
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="idle">Idle</SelectItem>
-                                        <SelectItem value="running">Running</SelectItem>
-                                        <SelectItem value="success">Success</SelectItem>
-                                        <SelectItem value="failed">Failed</SelectItem>
-                                        <SelectItem value="paused">Paused</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium text-sm">Created Date</h4>
-                                    <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select date range" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="all">All time</SelectItem>
-                                        <SelectItem value="today">Today</SelectItem>
-                                        <SelectItem value="week">Last 7 days</SelectItem>
-                                        <SelectItem value="month">Last 30 days</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                
-                                  <Separator />
-                                
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium text-sm">Sort by</h4>
-                                    <div className="flex gap-2">
-                                      <Select value={sortBy} onValueChange={setSortBy}>
-                                        <SelectTrigger className="w-full">
-                                          <SelectValue placeholder="Sort by" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="name">Name</SelectItem>
-                                          <SelectItem value="status">Status</SelectItem>
-                                          <SelectItem value="date">Created date</SelectItem>
-                                          <SelectItem value="lastRun">Last run</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      
-                                      <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as any)}>
-                                        <SelectTrigger className="w-[80px]">
-                                          <SelectValue placeholder="Order" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="asc">A-Z</SelectItem>
-                                          <SelectItem value="desc">Z-A</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-                                  
-                                  <Button 
-                                    className="w-full" 
-                                    variant="outline"
-                                    onClick={handleClearFilters}
-                                  >
-                                    Clear filters
-                                  </Button>
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                          
-                          <Button onClick={() => setIsCreateModalOpen(true)}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Add Job
-                          </Button>
-                        </div>
+                </CardContent>
+              </Card>
+              
+              {selectedProjectId && (
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
+                      <div className="flex gap-2">
+                        <Input
+                          className="md:w-[200px]"
+                          placeholder="ค้นหางาน..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                         
-                        {jobs.length > 0 && (
-                          <JobExportImport jobs={jobs} onImport={handleImportJobs} />
-                        )}
-                      </div>
-
-                      <Card>
-                        <CardContent className="p-0">
-                          {isLoadingJobs ? (
-                            <div className="flex items-center justify-center p-8">
-                              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                              <span className="ml-2 text-muted-foreground">Loading jobs...</span>
-                            </div>
-                          ) : (
-                            sortedJobs.length > 0 ? (
-                              <JobsTable 
-                                jobs={sortedJobs} 
-                                onViewDetails={handleViewJobDetails} 
-                                onToggleStatus={(jobId) => {
-                                  const job = jobs.find(j => j.id === jobId);
-                                  if (!job) return null;
-                                  
-                                  if (isJobActionInProgress[jobId]) {
-                                    return <Button variant="outline" size="sm" disabled>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Please wait
-                                    </Button>;
-                                  }
-                                  
-                                  // Determine the action based on current status
-                                  const action = job.status === "paused" ? "activate" : "pause";
-                                  const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button 
-                                          variant={action === "pause" ? "outline" : "default"} 
-                                          size="sm"
-                                        >
-                                          {action === "pause" ? "Pause" : "Activate"}
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>
-                                            {action === "pause" ? "Pause Job" : "Activate Job"}
-                                          </AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            {action === "pause" 
-                                              ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.` 
-                                              : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction onClick={onConfirm}>
-                                            {action === "pause" ? "Pause" : "Activate"}
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  );
-                                  
-                                  return (
-                                    <ActionDialog 
-                                      onConfirm={() => toggleJobStatus(jobId)} 
-                                    />
-                                  );
-                                }}
-                                onDuplicateJob={(jobId) => {
-                                  const job = jobs.find(j => j.id === jobId);
-                                  if (!job) return null;
-                                  
-                                  if (isJobActionInProgress[jobId]) {
-                                    return <Button variant="outline" size="sm" disabled>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Please wait
-                                    </Button>;
-                                  }
-                                  
-                                  return (
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                          <Copy className="mr-2 h-4 w-4" />
-                                          Duplicate
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Duplicate Job</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            Are you sure you want to duplicate "{job.name}"?
-                                            A new job will be created with the same settings.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction onClick={() => handleDuplicateJob(jobId)}>
-                                            Duplicate
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  );
-                                }}
-                                onDeleteJob={(jobId) => {
-                                  const job = jobs.find(j => j.id === jobId);
-                                  if (!job) return null;
-                                  
-                                  if (isJobActionInProgress[jobId]) {
-                                    return <Button variant="destructive" size="sm" disabled>
-                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                      Please wait
-                                    </Button>;
-                                  }
-                                  
-                                  return (
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" size="sm">Delete</Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete Job</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            Are you sure you want to delete "{job.name}"? This action cannot be undone.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction 
-                                            onClick={() => handleDeleteJob(jobId)}
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          >
-                                            Delete
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  );
-                                }}
-                              />
-                            ) : (
-                              <div className="flex flex-col items-center justify-center p-8 text-center">
-                                <p className="text-muted-foreground mb-4">
-                                  {searchQuery || statusFilter !== "all" || dateFilter !== "all"
-                                    ? "No jobs match your search criteria" 
-                                    : "No jobs found in this project"}
-                                </p>
-                                <Button onClick={() => setIsCreateModalOpen(true)}>
-                                  <PlusCircle className="mr-2 h-4 w-4" />
-                                  Add First Job
-                                </Button>
+                        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <Filter className="h-4 w-4" />
+                              <span>ตัวกรอง</span>
+                              {activeFiltersCount > 0 && (
+                                <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center">
+                                  {activeFiltersCount}
+                                </Badge>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[240px] p-4">
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">สถานะ</h4>
+                                <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as any)}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="เลือกสถานะ" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">ทั้งหมด</SelectItem>
+                                    <SelectItem value="idle">ว่าง</SelectItem>
+                                    <SelectItem value="running">กำลังทำงาน</SelectItem>
+                                    <SelectItem value="success">สำเร็จ</SelectItem>
+                                    <SelectItem value="failed">ล้มเหลว</SelectItem>
+                                    <SelectItem value="paused">หยุดชั่วคราว</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            )
-                          )}
-                        </CardContent>
-                      </Card>
+                            
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">วันที่สร้าง</h4>
+                                <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="เลือกช่วงเวลา" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">ทั้งหมด</SelectItem>
+                                    <SelectItem value="today">วันนี้</SelectItem>
+                                    <SelectItem value="week">7 วันที่ผ่านมา</SelectItem>
+                                    <SelectItem value="month">30 วันที่ผ่านมา</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            
+                              <Separator />
+                            
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">เรียงตาม</h4>
+                                <div className="flex gap-2">
+                                  <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="เรียงตาม" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="name">ชื่อ</SelectItem>
+                                      <SelectItem value="status">สถานะ</SelectItem>
+                                      <SelectItem value="date">วันที่สร้าง</SelectItem>
+                                      <SelectItem value="lastRun">รันล่าสุด</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as any)}>
+                                    <SelectTrigger className="w-[80px]">
+                                      <SelectValue placeholder="ลำดับ" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="asc">A-Z</SelectItem>
+                                      <SelectItem value="desc">Z-A</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              <Button 
+                                className="w-full" 
+                                variant="outline"
+                                onClick={handleClearFilters}
+                              >
+                                ล้างตัวกรอง
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      
+                      <Button onClick={() => setIsCreateModalOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        เพิ่มงาน
+                      </Button>
                     </div>
-                  )}
+                    
+                    {jobs.length > 0 && (
+                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
+                    )}
+                  </div>
+
+                  <Card>
+                    <CardContent className="p-0">
+                      {isLoadingJobs ? (
+                        <div className="flex items-center justify-center p-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          <span className="ml-2 text-muted-foreground">กำลังโหลดงาน...</span>
+                        </div>
+                      ) : (
+                        sortedJobs.length > 0 ? (
+                          <JobsTable 
+                            jobs={sortedJobs} 
+                            onViewDetails={handleViewJobDetails} 
+                            onToggleStatus={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="outline" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              // Determine the action based on current status
+                              const action = job.status === "paused" ? "activate" : "pause";
+                              const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant={action === "pause" ? "outline" : "default"} 
+                                      size="sm"
+                                    >
+                                      {action === "pause" ? "Pause" : "Activate"}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        {action === "pause" ? "Pause Job" : "Activate Job"}
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {action === "pause" 
+                                          ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.` 
+                                          : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={onConfirm}>
+                                        {action === "pause" ? "Pause" : "Activate"}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                              
+                              return (
+                                <ActionDialog 
+                                  onConfirm={() => toggleJobStatus(jobId)} 
+                                />
+                              );
+                            }}
+                            onDuplicateJob={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="outline" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              return (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Duplicate
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Duplicate Job</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to duplicate "{job.name}"?
+                                        A new job will be created with the same settings.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDuplicateJob(jobId)}>
+                                        Duplicate
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                            }}
+                            onDeleteJob={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="destructive" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              return (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">Delete</Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{job.name}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteJob(jobId)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-8 text-center">
+                            <p className="text-muted-foreground mb-4">
+                              {searchQuery || statusFilter !== "all" || dateFilter !== "all"
+                                ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
+                                : "ไม่พบงานในโปรเจคนี้"}
+                            </p>
+                            <Button onClick={() => setIsCreateModalOpen(true)}>
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              สร้างงานแรก
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
-              ))}
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
+              <h3 className="text-lg font-semibold mb-2">ยังไม่มีโปรเจค</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first project to get started
+                สร้างโปรเจคแรกของคุณเพื่อเริ่มต้น
               </p>
               <Button onClick={() => setIsCreateProjectModalOpen(true)}>
                 <FolderPlus className="mr-2 h-4 w-4" />
-                Create Project
+                สร้างโปรเจค
               </Button>
             </div>
           )
