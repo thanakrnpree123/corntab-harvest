@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -58,7 +57,7 @@ export default function ProjectJobsPage() {
     queryKey: ['project', projectId],
     queryFn: async () => {
       try {
-        const response = await apiService.getProjectById(projectId || "");
+        const response = await apiService.getProject(projectId || "");
         if (response.success && response.data) {
           return response.data;
         }
@@ -208,7 +207,7 @@ export default function ProjectJobsPage() {
         const mockJob = createMockJob({ ...newJobData, id: `mock-${Date.now()}` });
         refetchJobs();
         toast({
-          title: "สร้างข้อมูลทดสอบแล้ว",
+          title: "สร้างข้อมูลทดสอบแล้���",
           description: "เนื่องจาก API ไม่พร้อมใช้งาน จึงสร้างข้อมูลทดสอบให้แทน",
         });
       });
