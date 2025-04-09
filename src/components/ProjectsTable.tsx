@@ -220,7 +220,7 @@ export function ProjectsTable({
                                             {job.status}
                                           </div>
                                         </TableCell>
-                                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                        {/* <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                           <div className="flex flex-nowrap gap-2 justify-end overflow-auto">
                                             <Button variant="outline" size="sm" className="h-8" onClick={() => toast.info(`เริ่มทำงาน ${job.name}`)}>
                                               <Play className="h-3 w-3 mr-1" />เริ่ม
@@ -253,7 +253,7 @@ export function ProjectsTable({
                                               </AlertDialogContent>
                                             </AlertDialog>
                                           </div>
-                                        </TableCell>
+                                        </TableCell> */}
                                       </TableRow>
                                     ))}
                                   </TableBody>
