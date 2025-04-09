@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import {  Trash2, ChevronRight ,Container } from "lucide-react";
+import { Trash2, ChevronRight, Container } from "lucide-react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 
@@ -22,12 +22,12 @@ interface ProjectsTableProps {
   selectedProjectId: string | null;
 }
 
-export function ProjectsTable({ 
-  projects, 
-  onAddJob, 
-  onDeleteProject, 
+export function ProjectsTable({
+  projects,
+  onAddJob,
+  onDeleteProject,
   onViewJobs,
-  selectedProjectId 
+  selectedProjectId
 }: ProjectsTableProps) {
   const navigate = useNavigate();
 
@@ -59,10 +59,10 @@ export function ProjectsTable({
           ) : (
             projects.map((project) => {
               const isSelected = project.id === selectedProjectId;
-              
+
               return (
-                <TableRow 
-                  key={project.id} 
+                <TableRow
+                  key={project.id}
                   className={isSelected ? "bg-muted/50" : ""}
                   onClick={() => handleViewJobs(project.id)}
                 >
@@ -77,15 +77,16 @@ export function ProjectsTable({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => onAddJob(project.id)}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        // onClick={() => onAddJob(project.id)}
+                        disabled
                       >
-                        <Container  className="h-4 w-4 mr-2" />
+                        <Container className="h-4 w-4 mr-2" />
                         {10}
                       </Button>
-                      
+
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" size="sm">
@@ -103,7 +104,7 @@ export function ProjectsTable({
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                            <AlertDialogAction 
+                            <AlertDialogAction
                               onClick={() => onDeleteProject(project.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
@@ -112,9 +113,9 @@ export function ProjectsTable({
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-                      
-                      <Button 
-                        variant="ghost" 
+
+                      <Button
+                        variant="ghost"
                         size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
