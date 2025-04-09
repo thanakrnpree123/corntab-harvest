@@ -63,10 +63,10 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
                 <TableRow key={log.id}>
                   <TableCell className="whitespace-nowrap">
                     <div className="text-xs text-muted-foreground">
-                      {log.timestamp ? dayjs(log.timestamp).format("DD MMM YYYY - HH:mm:ss") : "N/A"}
+                      {log.startTime ? dayjs(log.startTime).format("DD MMM YYYY - HH:mm:ss") : "N/A"}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {log.timestamp ? dayjs(log.timestamp).fromNow() : ""}
+                      {log.startTime ? dayjs(log.startTime).fromNow() : ""}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -78,7 +78,7 @@ export function LogList({ logs, isLoading = false }: LogListProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    {log.message}
+                    {log.output || "No output"}
                   </TableCell>
                 </TableRow>
               );
