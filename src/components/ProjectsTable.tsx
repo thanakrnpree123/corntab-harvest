@@ -187,7 +187,7 @@ export function ProjectsTable({
                                             <StatusBadge status={job.status} />
                                           </div>
                                         </TableCell>
-                                        <TableCell className="relative">
+                                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                           <div className="relative">
                                             <button
                                               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
