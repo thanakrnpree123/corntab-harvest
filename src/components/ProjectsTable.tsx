@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -180,7 +181,7 @@ export function ProjectsTable({
                                       </TableCell>
                                       <TableCell>
                                         <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary text-primary-foreground">
-                                          {job.status}
+                                        <StatusBadge status={job.status} />
                                         </div>
                                       </TableCell>
                                       
