@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 // Pages
 import Index from "./pages/Index";
 import JobsPage from "./pages/JobsPage";
+import ProjectJobsPage from "./pages/ProjectJobsPage";
 import LogsPage from "./pages/LogsPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,10 @@ function App() {
             <Route 
               path="/jobs" 
               element={isLoggedIn ? <JobsPage /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/jobs/:projectId" 
+              element={isLoggedIn ? <ProjectJobsPage /> : <Navigate to="/login" />} 
             />
             <Route 
               path="/logs" 

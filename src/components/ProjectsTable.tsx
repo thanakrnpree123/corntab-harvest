@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PlusCircle, Trash2, ChevronRight } from "lucide-react";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectsTableProps {
   projects: Project[];
@@ -28,6 +29,15 @@ export function ProjectsTable({
   onViewJobs,
   selectedProjectId 
 }: ProjectsTableProps) {
+  const navigate = useNavigate();
+
+  const handleViewJobs = (projectId: string) => {
+    // Navigate to the project jobs page
+    navigate(`/jobs/${projectId}`);
+    // Also call the onViewJobs function for any other needed state updates
+    onViewJobs(projectId);
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table className="min-w-[600px]">
@@ -54,7 +64,7 @@ export function ProjectsTable({
                 <TableRow 
                   key={project.id} 
                   className={isSelected ? "bg-muted/50" : ""}
-                  onClick={() => onViewJobs(project.id)}
+                  onClick={() => handleViewJobs(project.id)}
                 >
                   <TableCell className="font-medium cursor-pointer">
                     {project.name}
@@ -106,7 +116,10 @@ export function ProjectsTable({
                       <Button 
                         variant="ghost" 
                         size="icon"
-                        onClick={() => onViewJobs(project.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewJobs(project.id);
+                        }}
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>

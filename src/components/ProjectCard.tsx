@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PlusCircle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useNavigate } from "react-router-dom";
 
 interface ProjectCardProps {
   project: Project;
@@ -23,6 +24,12 @@ export function ProjectCard({
   isSelected 
 }: ProjectCardProps) {
   const [isOpen, setIsOpen] = useState(isSelected);
+  const navigate = useNavigate();
+
+  const handleViewJobs = () => {
+    navigate(`/jobs/${project.id}`);
+    onViewJobs(project.id);
+  };
 
   return (
     <Card className={`mb-4 ${isSelected ? 'border-primary' : ''}`}>
@@ -33,7 +40,7 @@ export function ProjectCard({
               className="text-xl cursor-pointer" 
               onClick={() => {
                 setIsOpen(!isOpen);
-                if (!isOpen) onViewJobs(project.id);
+                if (!isOpen) handleViewJobs();
               }}
             >
               {project.name}
