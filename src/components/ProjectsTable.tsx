@@ -1,3 +1,4 @@
+
 import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
@@ -31,6 +32,8 @@ import {
   Copy,
   Edit,
   EllipsisVertical,
+  Calendar,
+  Clipboard,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -131,11 +134,14 @@ export function ProjectsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
-            <TableHead className="hidden md:table-cell w-[35%]">
+            <TableHead className="hidden md:table-cell w-[30%]">
               รายละเอียด
             </TableHead>
             <TableHead className="hidden md:table-cell w-[15%]">
               วันที่สร้าง
+            </TableHead>
+            <TableHead className="hidden md:table-cell w-[15%]">
+              จำนวนงาน
             </TableHead>
             {/* <TableHead className="text-right w-[20%]">การจัดการ</TableHead> */}
           </TableRow>
@@ -144,7 +150,7 @@ export function ProjectsTable({
           {projects.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={5}
                 className="text-center py-6 text-muted-foreground"
               >
                 ไม่พบโปรเจค
@@ -211,7 +217,22 @@ export function ProjectsTable({
                       {project.description || "-"}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {dayjs(project.createdAt).format("DD/MM/YYYY")}
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        {dayjs(project.createdAt).format("DD/MM/YYYY")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <div className="flex items-center gap-1.5">
+                        <Clipboard className="h-4 w-4 text-muted-foreground" />
+                        {isLoading ? (
+                          <span className="text-muted-foreground text-sm">กำลังโหลด...</span>
+                        ) : (
+                          <Badge variant="outline" className="text-xs font-normal">
+                            {jobCount} งาน
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end items-center gap-2 overflow-auto">
@@ -224,7 +245,7 @@ export function ProjectsTable({
                     {" "}
                     {/* 👈 ให้ layout ไม่พัง */}
                     <TableRow>
-                      <TableCell colSpan={4} className="p-0 border-t-0">
+                      <TableCell colSpan={5} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
                             {isLoading ? (
