@@ -1,4 +1,3 @@
-
 import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
@@ -42,7 +41,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
 import { apiService } from "@/lib/api-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -72,7 +71,58 @@ export function ProjectsTable({
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
+  useEffect(() => {
+    const loadAllProjectJobs = async () => {
+      const initialLoadingState: Record<string, boolean> = {};
+      projects.forEach(project => {
+        initialLoadingState[project.id] = true;
+      });
+      setLoadingJobs(initialLoadingState);
+      
+      try {
+        const jobPromises = projects.map(project => 
+          apiService.getJobsByProject(project.id)
+            .then(response => {
+              if (response.success && response.data) {
+                return { projectId: project.id, jobs: response.data };
+              }
+              return { projectId: project.id, jobs: [] };
+            })
+            .catch(() => {
+              return { projectId: project.id, jobs: [] };
+            })
+        );
+        
+        const results = await Promise.all(jobPromises);
+        
+        const newProjectJobs: Record<string, CronJob[]> = {};
+        results.forEach(result => {
+          newProjectJobs[result.projectId] = result.jobs;
+          setLoadingJobs(prev => ({ ...prev, [result.projectId]: false }));
+        });
+        
+        setProjectJobs(newProjectJobs);
+        
+      } catch (error) {
+        console.error("Error loading project jobs:", error);
+        const resetLoadingState: Record<string, boolean> = {};
+        projects.forEach(project => {
+          resetLoadingState[project.id] = false;
+        });
+        setLoadingJobs(resetLoadingState);
+      }
+    };
+
+    if (projects.length > 0) {
+      loadAllProjectJobs();
+    }
+  }, [projects]);
+
   const fetchJobsForProject = async (projectId: string) => {
+    if (projectJobs[projectId] && projectJobs[projectId].length > 0) {
+      return;
+    }
+    
     setLoadingJobs((prev) => ({ ...prev, [projectId]: true }));
     try {
       const response = await apiService.getJobsByProject(projectId);
@@ -178,7 +228,7 @@ export function ProjectsTable({
                     }
                     onViewJobs(project.id);
                   }}
-                  className="contents" // 👈 ใช้ display: contents เพื่อไม่รบกวน table layout
+                  className="contents"
                 >
                   <TableRow
                     className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}
@@ -242,8 +292,6 @@ export function ProjectsTable({
                   </TableRow>
 
                   <CollapsibleContent className="contents">
-                    {" "}
-                    {/* 👈 ให้ layout ไม่พัง */}
                     <TableRow>
                       <TableCell colSpan={5} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
