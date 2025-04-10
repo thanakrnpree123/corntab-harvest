@@ -798,13 +798,34 @@ export default function ProjectJobsPage() {
                                       <span>Duplicate</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDeleteJob(job.id)}
-                                      className="flex items-center cursor-pointer text-destructive focus:text-destructive"
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      <span>Delete</span>
-                                    </DropdownMenuItem>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem 
+                                          onSelect={(e) => e.preventDefault()}
+                                          className="flex items-center cursor-pointer text-destructive focus:text-destructive"
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          <span>Delete</span>
+                                        </DropdownMenuItem>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>ยืนยันการลบงาน</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            คุณต้องการลบงาน "{job.name}" ใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            onClick={() => handleDeleteJob(job.id)}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          >
+                                            ลบงาน
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}

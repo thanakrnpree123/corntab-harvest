@@ -14,6 +14,17 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);

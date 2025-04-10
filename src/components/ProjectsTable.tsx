@@ -1,4 +1,3 @@
-
 import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
@@ -321,16 +320,36 @@ export function ProjectsTable({
                                                   >
                                                     Edit
                                                   </button>
-                                                  <button
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      handleDeleteJob(job);
-                                                      setOpenDropdownId(null);
-                                                    }}
-                                                    className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
-                                                  >
-                                                    Delete
-                                                  </button>
+                                                  <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setOpenDropdownId(null);
+                                                        }}
+                                                        className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
+                                                      >
+                                                        Delete
+                                                      </button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                      <AlertDialogHeader>
+                                                        <AlertDialogTitle>ลบงาน</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                          คุณต้องการลบงาน "{job.name}" ใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
+                                                        </AlertDialogDescription>
+                                                      </AlertDialogHeader>
+                                                      <AlertDialogFooter>
+                                                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                          onClick={() => handleDeleteJob(job)}
+                                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                        >
+                                                          ลบงาน
+                                                        </AlertDialogAction>
+                                                      </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                  </AlertDialog>
                                                 </div>
                                               </div>
                                             )}

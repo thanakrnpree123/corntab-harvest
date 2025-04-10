@@ -1,6 +1,7 @@
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -29,14 +30,38 @@ const alertVariants = cva(
 const Alert = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
->(({ className, variant, ...props }, ref) => (
-  <div
-    ref={ref}
-    role="alert"
-    className={cn(alertVariants({ variant }), className)}
-    {...props}
-  />
-))
+>(({ className, variant, ...props }, ref) => {
+  // Determine which icon to display based on variant
+  let Icon;
+  switch (variant) {
+    case "destructive":
+      Icon = AlertCircle;
+      break;
+    case "info":
+      Icon = Info;
+      break;
+    case "success":
+      Icon = CheckCircle;
+      break;
+    case "warning":
+      Icon = AlertTriangle;
+      break;
+    default:
+      Icon = Info;
+  }
+
+  return (
+    <div
+      ref={ref}
+      role="alert"
+      className={cn(alertVariants({ variant }), className)}
+      {...props}
+    >
+      {Icon && <Icon className="h-4 w-4" />}
+      <div className="w-full">{props.children}</div>
+    </div>
+  );
+})
 Alert.displayName = "Alert"
 
 const AlertTitle = React.forwardRef<
@@ -63,4 +88,34 @@ const AlertDescription = React.forwardRef<
 ))
 AlertDescription.displayName = "AlertDescription"
 
-export { Alert, AlertTitle, AlertDescription }
+const AlertActions = React.forwardRef<
+  HTMLDivElement, 
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("mt-3 flex items-center justify-end space-x-2", className)}
+    {...props}
+  />
+))
+AlertActions.displayName = "AlertActions"
+
+const AlertClose = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(({ className, ...props }, ref) => (
+  <button
+    ref={ref}
+    className={cn(
+      "absolute right-2 top-2 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none",
+      className
+    )}
+    {...props}
+  >
+    <X className="h-4 w-4" />
+    <span className="sr-only">Close</span>
+  </button>
+))
+AlertClose.displayName = "AlertClose"
+
+export { Alert, AlertTitle, AlertDescription, AlertActions, AlertClose }
