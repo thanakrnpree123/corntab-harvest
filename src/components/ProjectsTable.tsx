@@ -1,4 +1,3 @@
-
 import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
@@ -91,8 +90,8 @@ export function ProjectsTable({
     setIsDetailSheetOpen(true);
   };
 
-  const handleViewProjectJobList = (job: CronJob) => {
-    navigate(`/jobs/${job.projectId}/${job.id}`);
+  const handleViewProjectJobList = (projectId: string) => {
+    navigate(`/jobs/${projectId}`);
   };
 
   return (
@@ -150,16 +149,7 @@ export function ProjectsTable({
                     <TableCell className="font-medium">
                       <div
                         className="flex items-center gap-2"
-                        onClick={() =>
-                          handleViewProjectJobList({
-                            id: "",
-                            name: "",
-                            schedule: "",
-                            projectId: project.id,
-                            status: "idle" as JobStatus, // Fix here: using a valid JobStatus value
-                            createdAt: "",
-                          })
-                        }
+                        onClick={() => handleViewProjectJobList(project.id)}
                       >
                         <CollapsibleTrigger
                           asChild
