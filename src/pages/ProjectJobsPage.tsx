@@ -61,6 +61,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { StatusBadge } from "@/components/ui/status-badge";
+import dayjs from "dayjs";
 
 export default function ProjectJobsPage() {
   const { projectId } = useParams<{ projectId: string }>();

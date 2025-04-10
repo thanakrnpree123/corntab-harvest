@@ -21,9 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 export interface JobExportImportProps {
   jobs: CronJob[];
   onImport: (jobs: Partial<CronJob>[]) => void;
+  disabled?: boolean; // Add disabled prop
 }
 
-export function JobExportImport({ jobs, onImport }: JobExportImportProps) {
+export function JobExportImport({ jobs, onImport, disabled = false }: JobExportImportProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [importType, setImportType] = useState<"json" | "csv">("json");
   const [jsonInput, setJsonInput] = useState("");
@@ -253,6 +254,7 @@ export function JobExportImport({ jobs, onImport }: JobExportImportProps) {
         variant="outline"
         size="sm"
         onClick={() => handleExport("json")}
+        disabled={disabled}
       >
         <ArrowDownToLine className="mr-2 h-4 w-4" />
         ส่งออก JSON
@@ -262,6 +264,7 @@ export function JobExportImport({ jobs, onImport }: JobExportImportProps) {
         variant="outline"
         size="sm"
         onClick={() => handleExport("csv")}
+        disabled={disabled}
       >
         <ArrowDownToLine className="mr-2 h-4 w-4" />
         ส่งออก CSV

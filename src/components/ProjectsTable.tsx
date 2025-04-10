@@ -1,4 +1,5 @@
-import { Project, CronJob } from "@/lib/types";
+
+import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -155,7 +156,7 @@ export function ProjectsTable({
                             name: "",
                             schedule: "",
                             projectId: project.id,
-                            status: "",
+                            status: "idle" as JobStatus, // Fix here: using a valid JobStatus value
                             createdAt: "",
                           })
                         }
