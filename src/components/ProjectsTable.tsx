@@ -30,7 +30,7 @@ import {
   Pause,
   Copy,
   Edit,
-  EllipsisVertical
+  EllipsisVertical,
 } from "lucide-react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { apiService } from "@/lib/api-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { JobDetails } from "./JobDetails";
 
 interface ProjectsTableProps {
   projects: Project[];
@@ -65,6 +66,8 @@ export function ProjectsTable({
   const [projectJobs, setProjectJobs] = useState<Record<string, CronJob[]>>({});
   const [loadingJobs, setLoadingJobs] = useState<Record<string, boolean>>({});
   const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
 
   const fetchJobsForProject = async (projectId: string) => {
     setLoadingJobs((prev) => ({ ...prev, [projectId]: true }));
@@ -83,6 +86,11 @@ export function ProjectsTable({
   };
 
   const handleViewJobDetails = (job: CronJob) => {
+    setSelectedJob(job);
+    setIsDetailSheetOpen(true);
+  };
+
+  const handleViewProjectJobList = (job: CronJob) => {
     navigate(`/jobs/${job.projectId}/${job.id}`);
   };
 
@@ -92,15 +100,22 @@ export function ProjectsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
-            <TableHead className="hidden md:table-cell w-[35%]">รายละเอียด</TableHead>
-            <TableHead className="hidden md:table-cell w-[15%]">วันที่สร้าง</TableHead>
+            <TableHead className="hidden md:table-cell w-[35%]">
+              รายละเอียด
+            </TableHead>
+            <TableHead className="hidden md:table-cell w-[15%]">
+              วันที่สร้าง
+            </TableHead>
             {/* <TableHead className="text-right w-[20%]">การจัดการ</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {projects.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+              <TableCell
+                colSpan={4}
+                className="text-center py-6 text-muted-foreground"
+              >
                 ไม่พบโปรเจค
               </TableCell>
             </TableRow>
@@ -117,7 +132,10 @@ export function ProjectsTable({
                   key={project.id}
                   open={isOpen}
                   onOpenChange={(open) => {
-                    setOpenProjects((prev) => ({ ...prev, [project.id]: open }));
+                    setOpenProjects((prev) => ({
+                      ...prev,
+                      [project.id]: open,
+                    }));
                     if (open && !projectJobs[project.id]) {
                       fetchJobsForProject(project.id);
                     }
@@ -125,19 +143,48 @@ export function ProjectsTable({
                   }}
                   className="contents" // 👈 ใช้ display: contents เพื่อไม่รบกวน table layout
                 >
-                  <TableRow className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}>
+                  <TableRow
+                    className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}
+                  >
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2" onClick={() => handleViewJobDetails({ id: '', name: '', schedule: '', projectId: project.id, status: '', createdAt: '' })}>
-                        <CollapsibleTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 p-0">
-                            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      <div
+                        className="flex items-center gap-2"
+                        onClick={() =>
+                          handleViewProjectJobList({
+                            id: "",
+                            name: "",
+                            schedule: "",
+                            projectId: project.id,
+                            status: "",
+                            createdAt: "",
+                          })
+                        }
+                      >
+                        <CollapsibleTrigger
+                          asChild
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 p-0"
+                          >
+                            {isOpen ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
                           </Button>
                         </CollapsibleTrigger>
                         {project.name}
                       </div>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell truncate">{project.description || "-"}</TableCell>
-                    <TableCell className="hidden md:table-cell">{dayjs(project.createdAt).format("DD/MM/YYYY")}</TableCell>
+                    <TableCell className="hidden md:table-cell truncate">
+                      {project.description || "-"}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {dayjs(project.createdAt).format("DD/MM/YYYY")}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end items-center gap-2 overflow-auto">
                         {/**add : button */}
@@ -145,25 +192,38 @@ export function ProjectsTable({
                     </TableCell>
                   </TableRow>
 
-                  <CollapsibleContent className="contents"> {/* 👈 ให้ layout ไม่พัง */}
+                  <CollapsibleContent className="contents">
+                    {" "}
+                    {/* 👈 ให้ layout ไม่พัง */}
                     <TableRow>
                       <TableCell colSpan={4} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
-
                             {isLoading ? (
-                              <p className="text-muted-foreground text-sm py-4 text-center">กำลังโหลดรายการงาน...</p>
+                              <p className="text-muted-foreground text-sm py-4 text-center">
+                                กำลังโหลดรายการงาน...
+                              </p>
                             ) : jobs.length === 0 ? (
-                              <p className="text-muted-foreground text-sm py-4 text-center">ไม่พบงานในโปรเจคนี้</p>
+                              <p className="text-muted-foreground text-sm py-4 text-center">
+                                ไม่พบงานในโปรเจคนี้
+                              </p>
                             ) : (
                               <div className="max-h-[400px] overflow-auto">
                                 <Table className="w-full table-fixed">
                                   <TableHeader>
                                     <TableRow>
-                                      <TableHead className="w-[35%] truncate">ชื่องาน</TableHead>
-                                      <TableHead className="hidden md:table-cell w-[25%] truncate">ตารางเวลา</TableHead>
-                                      <TableHead className="w-[15%] truncate">สถานะ</TableHead>
-                                      <TableHead className="text-right w-[25%] truncate">การจัดการ</TableHead>
+                                      <TableHead className="w-[35%] truncate">
+                                        ชื่องาน
+                                      </TableHead>
+                                      <TableHead className="hidden md:table-cell w-[25%] truncate">
+                                        ตารางเวลา
+                                      </TableHead>
+                                      <TableHead className="w-[15%] truncate">
+                                        สถานะ
+                                      </TableHead>
+                                      <TableHead className="text-right w-[25%] truncate">
+                                        การจัดการ
+                                      </TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -171,11 +231,17 @@ export function ProjectsTable({
                                       <TableRow
                                         key={job.id}
                                         className="cursor-pointer hover:bg-muted/40"
-                                        onClick={() => handleViewJobDetails(job)}
+                                        onClick={() =>
+                                          handleViewJobDetails(job)
+                                        }
                                       >
                                         <TableCell>
-                                          <div className="font-medium truncate">{job.name}</div>
-                                          <div className="text-xs text-muted-foreground md:hidden">{job.schedule}</div>
+                                          <div className="font-medium truncate">
+                                            {job.name}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground md:hidden">
+                                            {job.schedule}
+                                          </div>
                                         </TableCell>
                                         <TableCell className="hidden md:table-cell">
                                           <code className="bg-muted text-xs px-1 py-0.5 rounded">
@@ -187,16 +253,26 @@ export function ProjectsTable({
                                             <StatusBadge status={job.status} />
                                           </div>
                                         </TableCell>
-                                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                                        <TableCell
+                                          className="text-right"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
                                           <div className="relative">
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();
-                                                setOpenDropdownId(prev => prev === job.id ? null : job.id);
+                                                setOpenDropdownId((prev) =>
+                                                  prev === job.id
+                                                    ? null
+                                                    : job.id,
+                                                );
                                               }}
                                               className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
                                             >
-                                              <EllipsisVertical color="#000000" strokeWidth={0.75} />
+                                              <EllipsisVertical
+                                                color="#000000"
+                                                strokeWidth={0.75}
+                                              />
                                             </button>
 
                                             {openDropdownId === job.id && (
@@ -227,13 +303,11 @@ export function ProjectsTable({
                                             )}
                                           </div>
                                         </TableCell>
-
                                       </TableRow>
                                     ))}
                                   </TableBody>
                                 </Table>
                               </div>
-
                             )}
                           </div>
                         </div>
@@ -246,6 +320,11 @@ export function ProjectsTable({
           )}
         </TableBody>
       </Table>
+      <JobDetails
+        job={selectedJob}
+        isOpen={isDetailSheetOpen}
+        onClose={() => setIsDetailSheetOpen(false)}
+      />
     </div>
   );
 }
