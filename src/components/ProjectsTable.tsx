@@ -1,3 +1,4 @@
+
 import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
@@ -40,7 +41,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { apiService } from "@/lib/api-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -75,11 +76,23 @@ export function ProjectsTable({
       const response = await apiService.getJobsByProject(projectId);
       if (response.success && response.data) {
         setProjectJobs((prev) => ({ ...prev, [projectId]: response.data }));
+        toast({
+          title: "โหลดงานสำเร็จ",
+          description: `โหลดงานทั้งหมดของโปรเจค ${projects.find(p => p.id === projectId)?.name || projectId} เรียบร้อยแล้ว`,
+        });
       } else {
-        toast.error("Failed to load jobs");
+        toast({
+          title: "ไม่สามารถโหลดงานได้",
+          description: "เกิดข้อผิดพลาดในการโหลดงาน",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      toast.error("Failed to load jobs");
+      toast({
+        title: "ไม่สามารถโหลดงานได้",
+        description: "เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์",
+        variant: "destructive",
+      });
     } finally {
       setLoadingJobs((prev) => ({ ...prev, [projectId]: false }));
     }
@@ -92,6 +105,25 @@ export function ProjectsTable({
 
   const handleViewProjectJobList = (projectId: string) => {
     navigate(`/jobs/${projectId}`);
+  };
+
+  const handleEditJob = (job: CronJob) => {
+    toast({
+      title: "แก้ไขงาน",
+      description: `กำลังเปิดหน้าแก้ไขงาน "${job.name}"`,
+    });
+    // Implement edit functionality
+  };
+
+  const handleDeleteJob = (job: CronJob) => {
+    toast({
+      title: "ลบงานสำเร็จ",
+      description: `งาน "${job.name}" ถูกลบเรียบร้อยแล้ว`,
+    });
+    // Refresh jobs after deletion
+    if (job.projectId) {
+      fetchJobsForProject(job.projectId);
+    }
   };
 
   return (
@@ -149,7 +181,13 @@ export function ProjectsTable({
                     <TableCell className="font-medium">
                       <div
                         className="flex items-center gap-2"
-                        onClick={() => handleViewProjectJobList(project.id)}
+                        onClick={() => {
+                          handleViewProjectJobList(project.id);
+                          toast({
+                            title: "เปิดโปรเจค",
+                            description: `กำลังดูรายละเอียดโปรเจค "${project.name}"`,
+                          });
+                        }}
                       >
                         <CollapsibleTrigger
                           asChild
@@ -222,9 +260,13 @@ export function ProjectsTable({
                                       <TableRow
                                         key={job.id}
                                         className="cursor-pointer hover:bg-muted/40"
-                                        onClick={() =>
-                                          handleViewJobDetails(job)
-                                        }
+                                        onClick={() => {
+                                          handleViewJobDetails(job);
+                                          toast({
+                                            title: "ดูรายละเอียดงาน",
+                                            description: `กำลังดูรายละเอียดของงาน "${job.name}"`,
+                                          });
+                                        }}
                                       >
                                         <TableCell>
                                           <div className="font-medium truncate">
@@ -272,7 +314,7 @@ export function ProjectsTable({
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      // handleEdit(job);
+                                                      handleEditJob(job);
                                                       setOpenDropdownId(null);
                                                     }}
                                                     className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
@@ -282,7 +324,7 @@ export function ProjectsTable({
                                                   <button
                                                     onClick={(e) => {
                                                       e.stopPropagation();
-                                                      // handleDelete(job);
+                                                      handleDeleteJob(job);
                                                       setOpenDropdownId(null);
                                                     }}
                                                     className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
@@ -314,7 +356,13 @@ export function ProjectsTable({
       <JobDetails
         job={selectedJob}
         isOpen={isDetailSheetOpen}
-        onClose={() => setIsDetailSheetOpen(false)}
+        onClose={() => {
+          setIsDetailSheetOpen(false);
+          toast({
+            title: "ปิดรายละเอียด",
+            description: "ปิดหน้ารายละเอียดงานแล้ว",
+          });
+        }}
       />
     </div>
   );

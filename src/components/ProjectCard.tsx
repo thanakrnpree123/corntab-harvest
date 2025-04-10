@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { PlusCircle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 interface ProjectCardProps {
   project: Project;
@@ -29,6 +30,26 @@ export function ProjectCard({
   const handleViewJobs = () => {
     navigate(`/jobs/${project.id}`);
     onViewJobs(project.id);
+    toast({
+      title: "เปิดโปรเจค",
+      description: `กำลังดูรายละเอียดโปรเจค "${project.name}"`,
+    });
+  };
+
+  const handleAddJob = () => {
+    onAddJob(project.id);
+    toast({
+      title: "เพิ่มงานใหม่",
+      description: `กำลังเพิ่มงานใหม่ในโปรเจค "${project.name}"`,
+    });
+  };
+
+  const handleDeleteProject = () => {
+    onDeleteProject(project.id);
+    toast({
+      title: "ลบโปรเจค",
+      description: `โปรเจค "${project.name}" ถูกลบเรียบร้อยแล้ว`,
+    });
   };
 
   return (
@@ -49,7 +70,7 @@ export function ProjectCard({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => onAddJob(project.id)}
+                onClick={handleAddJob}
               >
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Add Job
@@ -73,7 +94,7 @@ export function ProjectCard({
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction 
-                      onClick={() => onDeleteProject(project.id)}
+                      onClick={handleDeleteProject}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       Delete Project

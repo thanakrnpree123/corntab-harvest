@@ -13,6 +13,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);
@@ -36,6 +37,14 @@ export function JobsTable({
   showLastRun = true,
   showNextRun = true,
 }: JobsTableProps) {
+  const handleViewDetails = (job: CronJob) => {
+    onViewDetails(job);
+    toast({
+      title: "ดูรายละเอียดงาน",
+      description: `กำลังดูรายละเอียดของงาน "${job.name}"`,
+    });
+  };
+
   return (
     <div className="overflow-x-auto">
       <Table className="min-w-[600px]">
@@ -128,7 +137,7 @@ export function JobsTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onViewDetails(job)}
+                      onClick={() => handleViewDetails(job)}
                       className="hidden sm:inline-flex"
                     >
                       <ChevronRight className="h-4 w-4" />
@@ -147,7 +156,7 @@ export function JobsTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onViewDetails(job)}
+                      onClick={() => handleViewDetails(job)}
                       className="sm:hidden w-full mt-1"
                     >
                       View Details
