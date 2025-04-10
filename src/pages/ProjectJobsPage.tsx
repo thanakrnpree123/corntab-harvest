@@ -63,6 +63,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/ui/status-badge";
 import dayjs from "dayjs";
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+// Initialize dayjs plugins
+dayjs.extend(relativeTime);
 
 export default function ProjectJobsPage() {
   const { projectId } = useParams<{ projectId: string }>();
