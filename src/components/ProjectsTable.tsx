@@ -47,12 +47,16 @@ import { apiService } from "@/lib/api-service";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { JobDetails } from "./JobDetails";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ProjectBatchActions } from "./ProjectBatchActions";
 
 interface ProjectsTableProps {
   projects: Project[];
   onAddJob: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
   onViewJobs: (projectId: string) => void;
+  onBatchExportProjects?: (projectIds: string[], format: "json" | "csv") => void;
+  onBatchDeleteProjects?: (projectIds: string[]) => void;
   selectedProjectId: string | null;
 }
 
@@ -61,6 +65,8 @@ export function ProjectsTable({
   onAddJob,
   onDeleteProject,
   onViewJobs,
+  onBatchExportProjects,
+  onBatchDeleteProjects,
   selectedProjectId,
 }: ProjectsTableProps) {
   const navigate = useNavigate();
@@ -70,6 +76,7 @@ export function ProjectsTable({
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
 
   useEffect(() => {
     const loadAllProjectJobs = async () => {
@@ -116,6 +123,10 @@ export function ProjectsTable({
     if (projects.length > 0) {
       loadAllProjectJobs();
     }
+  }, [projects]);
+
+  useEffect(() => {
+    setSelectedProjectIds([]);
   }, [projects]);
 
   const fetchJobsForProject = async (projectId: string) => {
@@ -178,11 +189,70 @@ export function ProjectsTable({
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedProjectIds(projects.map(project => project.id));
+    } else {
+      setSelectedProjectIds([]);
+    }
+  };
+
+  const handleSelectProject = (projectId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedProjectIds(prev => [...prev, projectId]);
+    } else {
+      setSelectedProjectIds(prev => prev.filter(id => id !== projectId));
+    }
+  };
+
+  const handleBatchExport = (projectIds: string[], format: "json" | "csv") => {
+    if (onBatchExportProjects) {
+      onBatchExportProjects(projectIds, format);
+      toast({
+        title: "ส่งออกโปรเจค",
+        description: `กำลังส่งออกโปรเจคทั้งหมด ${projectIds.length} โปรเจค`,
+      });
+    }
+  };
+
+  const handleBatchDelete = (projectIds: string[]) => {
+    if (onBatchDeleteProjects) {
+      onBatchDeleteProjects(projectIds);
+      setSelectedProjectIds([]);
+      toast({
+        title: "ลบโปรเจค",
+        description: `ลบโปรเจคทั้งหมด ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
+      });
+    }
+  };
+
   return (
     <div className="w-full overflow-x-auto">
+      {(onBatchExportProjects || onBatchDeleteProjects) && (
+        <div className="mb-4">
+          <ProjectBatchActions
+            projects={projects}
+            selectedProjectIds={selectedProjectIds}
+            onExport={handleBatchExport}
+            onDelete={handleBatchDelete}
+            disabled={projects.length === 0}
+          />
+        </div>
+      )}
+      
       <Table className="w-full">
         <TableHeader>
           <TableRow>
+            {(onBatchExportProjects || onBatchDeleteProjects) && (
+              <TableHead className="w-[40px]">
+                <Checkbox 
+                  checked={projects.length > 0 && selectedProjectIds.length === projects.length} 
+                  onCheckedChange={handleSelectAll}
+                  disabled={projects.length === 0}
+                  aria-label="Select all projects"
+                />
+              </TableHead>
+            )}
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
             <TableHead className="hidden md:table-cell w-[30%]">
               รายละเอียด
@@ -193,14 +263,13 @@ export function ProjectsTable({
             <TableHead className="hidden md:table-cell w-[15%]">
               จำนวนงาน
             </TableHead>
-            {/* <TableHead className="text-right w-[20%]">การจัดการ</TableHead> */}
           </TableRow>
         </TableHeader>
         <TableBody>
           {projects.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={5}
+                colSpan={(onBatchExportProjects || onBatchDeleteProjects) ? 5 : 4}
                 className="text-center py-6 text-muted-foreground"
               >
                 ไม่พบโปรเจค
@@ -233,6 +302,15 @@ export function ProjectsTable({
                   <TableRow
                     className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}
                   >
+                    {(onBatchExportProjects || onBatchDeleteProjects) && (
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox 
+                          checked={selectedProjectIds.includes(project.id)} 
+                          onCheckedChange={(checked) => handleSelectProject(project.id, checked === true)}
+                          aria-label={`Select project ${project.name}`}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="font-medium">
                       <div
                         className="flex items-center gap-2"
@@ -284,16 +362,11 @@ export function ProjectsTable({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end items-center gap-2 overflow-auto">
-                        {/**add : button */}
-                      </div>
-                    </TableCell>
                   </TableRow>
 
                   <CollapsibleContent className="contents">
                     <TableRow>
-                      <TableCell colSpan={5} className="p-0 border-t-0">
+                      <TableCell colSpan={(onBatchExportProjects || onBatchDeleteProjects) ? 5 : 4} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
                             {isLoading ? (

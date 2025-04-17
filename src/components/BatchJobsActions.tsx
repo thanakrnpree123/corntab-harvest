@@ -12,11 +12,22 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { CronJob } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowDownToLine, 
-  ArrowUpFromLine, 
+  Trash2, 
   FileJson, 
   FileText,
   AlertTriangle, 
@@ -24,16 +35,26 @@ import {
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
-export interface JobExportImportProps {
+interface BatchJobsActionsProps {
   jobs: CronJob[];
-  onImport: (jobs: Partial<CronJob>[]) => void;
+  selectedJobIds: string[];
   onExport: (format: "json" | "csv") => void;
+  onImport: (jobs: Partial<CronJob>[]) => void;
+  onDeleteSelected: () => void;
   disabled?: boolean;
 }
 
-export function JobExportImport({ jobs, onImport, onExport, disabled = false }: JobExportImportProps) {
+export function BatchJobsActions({ 
+  jobs, 
+  selectedJobIds, 
+  onExport, 
+  onImport, 
+  onDeleteSelected,
+  disabled = false 
+}: BatchJobsActionsProps) {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importType, setImportType] = useState<"json" | "csv">("json");
@@ -44,8 +65,8 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
   const [fileContent, setFileContent] = useState<string>("");
   const { toast } = useToast();
 
-  const handleExport = (format: "json" | "csv") => {
-    onExport(format);
+  const handleExport = (type: "json" | "csv") => {
+    onExport(type);
     setIsExportDialogOpen(false);
   };
 
@@ -63,9 +84,8 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
       }
       
       let jobsToImport: Partial<CronJob>[] = [];
-      
+
       if (importType === "json") {
-        // Parse JSON input
         const parsedData = JSON.parse(content);
         
         if (!Array.isArray(parsedData)) {
@@ -75,7 +95,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
         
         jobsToImport = parsedData;
       } else {
-        // Parse CSV input
+        // Parse CSV input - simplified version
         const lines = content.split("\n");
         if (lines.length < 2) {
           setImportError("ข้อมูล CSV ต้องมีอย่างน้อย 2 แถว (ส่วนหัวและข้อมูล)");
@@ -87,52 +107,12 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
         for (let i = 1; i < lines.length; i++) {
           if (!lines[i].trim()) continue;
           
-          // Handle quoted CSV values properly
-          const values: string[] = [];
-          let currentValue = "";
-          let insideQuotes = false;
-          
-          for (let j = 0; j < lines[i].length; j++) {
-            const char = lines[i][j];
-            
-            if (char === '"') {
-              if (insideQuotes && j + 1 < lines[i].length && lines[i][j + 1] === '"') {
-                // Handle escaped quotes
-                currentValue += '"';
-                j++; // Skip next quote
-              } else {
-                // Toggle quote state
-                insideQuotes = !insideQuotes;
-              }
-            } else if (char === ',' && !insideQuotes) {
-              // End of value
-              values.push(currentValue);
-              currentValue = "";
-            } else {
-              currentValue += char;
-            }
-          }
-          
-          // Add the last value
-          values.push(currentValue);
-          
+          const values = lines[i].split(",").map(v => v.trim());
           const job: Record<string, any> = {};
           
           headers.forEach((header, index) => {
             if (values[index] !== undefined) {
-              if (header === "useLocalTime") {
-                job[header] = values[index].toLowerCase() === "true";
-              } else if (header === "tags" && values[index]) {
-                job[header] = values[index].split(";").map(tag => tag.trim());
-              } else if (header === "headers" && values[index]) {
-                try {
-                  job[header] = JSON.parse(values[index]);
-                } catch (e) {
-                  job[header] = {};
-                }
-              } else {
-                job[header] = values[index];
-              }
+              job[header] = values[index];
             }
           });
           
@@ -145,42 +125,14 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
         return;
       }
       
-      // Validate imported jobs
-      for (const job of jobsToImport) {
-        if (!job.name) {
-          setImportError("ทุกงานต้องมีชื่อ");
-          return;
-        }
-        
-        if (!job.schedule) {
-          setImportError(`งาน "${job.name}" ไม่มีกำหนดการทำงาน`);
-          return;
-        }
-        
-        if (!job.endpoint) {
-          setImportError(`งาน "${job.name}" ไม่มี endpoint`);
-          return;
-        }
-      }
-      
       onImport(jobsToImport);
       setIsImportDialogOpen(false);
       setJsonInput("");
       setCsvInput("");
       setFileContent("");
       
-      toast({
-        title: "นำเข้าสำเร็จ",
-        description: `นำเข้า ${jobsToImport.length} งานเรียบร้อยแล้ว`,
-      });
     } catch (error) {
       setImportError(`เกิดข้อผิดพลาด: ${(error as Error).message}`);
-      
-      toast({
-        title: "นำเข้าไม่สำเร็จ",
-        description: `เกิดข้อผิดพลาด: ${(error as Error).message}`,
-        variant: "destructive",
-      });
     }
   };
 
@@ -204,13 +156,19 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
+      {selectedJobIds.length > 0 && (
+        <span className="text-sm text-muted-foreground">
+          เลือก {selectedJobIds.length} รายการ
+        </span>
+      )}
+      
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogTrigger asChild>
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             size="sm"
-            disabled={disabled}
+            disabled={selectedJobIds.length === 0 || disabled}
           >
             <ArrowDownToLine className="mr-2 h-4 w-4" />
             ส่งออก
@@ -247,7 +205,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm" disabled={disabled}>
-            <ArrowUpFromLine className="mr-2 h-4 w-4" />
+            <Upload className="mr-2 h-4 w-4" />
             นำเข้า
           </Button>
         </DialogTrigger>
@@ -255,7 +213,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
           <DialogHeader>
             <DialogTitle>นำเข้าข้อมูลงาน</DialogTitle>
             <DialogDescription>
-              นำเข้าข้อมูลงานจากไฟล์ JSON หรือ CSV ที่ส่งออกจากระบบนี้
+              นำเข้าข้อมูลงานจากไฟล์ JSON หรือ CSV
             </DialogDescription>
           </DialogHeader>
           
@@ -347,6 +305,37 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-destructive border-destructive hover:bg-destructive/10"
+            disabled={selectedJobIds.length === 0 || disabled}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            ลบที่เลือก
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ลบงานที่เลือก</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการลบงานที่เลือกทั้งหมด {selectedJobIds.length} งานใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDeleteSelected}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              ลบงาน
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
