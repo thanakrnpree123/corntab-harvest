@@ -12,7 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Play } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -38,6 +38,7 @@ export interface JobsTableProps {
   onToggleStatus: (jobId: string) => React.ReactNode;
   onDeleteJob: (jobId: string) => React.ReactNode;
   onDuplicateJob?: (jobId: string) => React.ReactNode;
+  onTriggerJob?: (jobId: string) => React.ReactNode; // Add new prop for triggering jobs
   onExportJobs?: (jobIds: string[], format: "json" | "csv") => void;
   onImportJobs?: (jobs: Partial<CronJob>[]) => void;
   onBatchDeleteJobs?: (jobIds: string[]) => void;
@@ -51,6 +52,7 @@ export function JobsTable({
   onToggleStatus,
   onDeleteJob,
   onDuplicateJob,
+  onTriggerJob,
   onExportJobs,
   onImportJobs,
   onBatchDeleteJobs,
@@ -239,6 +241,7 @@ export function JobsTable({
                       </Button>
 
                       <div className="flex items-center gap-2">
+                        {onTriggerJob && onTriggerJob(job.id)}
                         {onToggleStatus(job.id)}
                         
                         <div className="hidden sm:block">
