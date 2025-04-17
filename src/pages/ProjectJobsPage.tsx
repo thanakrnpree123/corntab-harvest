@@ -1014,81 +1014,76 @@ export default function ProjectJobsPage() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex justify-end items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleTriggerJob(job.id);
-                                }}
-                                disabled={
-                                  isJobActionInProgress[job.id] ||
-                                  job.status === "running"
-                                }
-                              >
-                                {isJobActionInProgress[job.id] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Play className="h-4 w-4" />
-                                )}
-                              </Button>
-
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleJobStatus(job.id);
-                                }}
-                                disabled={
-                                  isJobActionInProgress[job.id] ||
-                                  job.status === "running"
-                                }
-                              >
-                                {isJobActionInProgress[job.id] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : job.status === "paused" ? (
-                                  <Play className="h-4 w-4" />
-                                ) : (
-                                  <Pause className="h-4 w-4" />
-                                )}
-                              </Button>
-
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
+                                  <Button variant="ghost" size="icon">
                                     <EllipsisVertical className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-[160px]"
+                                >
                                   <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleViewJobDetails(job);
-                                    }}
+                                    onClick={() => toggleJobStatus(job.id)}
+                                    className="flex items-center cursor-pointer"
                                   >
-                                    View Details
+                                    {job.status === "paused" ? (
+                                      <>
+                                        <Play className="mr-2 h-4 w-4" />
+                                        <span>Activate</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Pause className="mr-2 h-4 w-4" />
+                                        <span>Pause</span>
+                                      </>
+                                    )}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDuplicateJob(job.id);
-                                    }}
+                                    onClick={() => handleDuplicateJob(job.id)}
+                                    className="flex items-center cursor-pointer"
                                   >
-                                    <Copy className="h-4 w-4 mr-2" />
-                                    Duplicate
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Duplicate</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteJob(job.id);
-                                    }}
-                                    className="text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem
+                                        onSelect={(e) => e.preventDefault()}
+                                        className="flex items-center cursor-pointer text-destructive focus:text-destructive"
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        <span>Delete</span>
+                                      </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          ยืนยันการลบงาน
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          คุณต้องการลบงาน "{job.name}"
+                                          ใช่หรือไม่?
+                                          การกระทำนี้ไม่สามารถยกเลิกได้
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          ยกเลิก
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() =>
+                                            handleDeleteJob(job.id)
+                                          }
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          ลบงาน
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
