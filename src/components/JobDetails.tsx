@@ -1,3 +1,4 @@
+
 import { CronJob } from "@/lib/types";
 import {
   Sheet,
@@ -18,14 +19,18 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowUpRight, Calendar, Clock } from "lucide-react";
+import { RefetchOptions, QueryObserverResult } from "@tanstack/react-query";
 
 interface JobDetailsProps {
   job: CronJob | null;
   isOpen: boolean;
   onClose: () => void;
+  onUpdate?: (options?: RefetchOptions) => Promise<QueryObserverResult<CronJob[], Error>>;
+  onDelete?: (jobId: string) => void;
+  onTrigger?: (jobId: string) => void;
 }
 
-export function JobDetails({ job, isOpen, onClose }: JobDetailsProps) {
+export function JobDetails({ job, isOpen, onClose, onUpdate, onDelete, onTrigger }: JobDetailsProps) {
   if (!job) return null;
 
   const formatDate = (dateString: string | null) => {
