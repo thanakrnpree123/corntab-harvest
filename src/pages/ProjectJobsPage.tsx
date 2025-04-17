@@ -493,33 +493,85 @@ export default function ProjectJobsPage() {
     sortBy !== "name" || sortOrder !== "asc"
   ].filter(Boolean).length;
 
-  if (isLoadingProject) {
-    return (
-      <PageLayout title="Project Jobs">
-        <div className="flex items-center justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">กำลังโหลดข้อมูลโปรเจค...</span>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  if (!project) {
-    return (
-      <PageLayout title="Project Not Found">
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">ไม่พบโปรเจค</h1>
-          <p className="text-muted-foreground mb-6">
-            ไม่พบโปรเจคที่คุณต้องการหรือไม่มีสิทธิ์เข้าถึง
-          </p>
-          <Button onClick={handleBackToProjects}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            กลับไปหน้าโปรเจค
-          </Button>
-        </div>
-      </PageLayout>
-    );
-  }
+  const handleExportJobs = (format: "json" | "csv") => {
+    const jobsToExport = selectedJobIds.length > 0
+      ? jobs.filter(job => selectedJobIds.includes(job.id))
+      : jobs;
+    
+    const exportableJobs = jobsToExport.map(job => ({
+      name: job.name,
+      description: job.description,
+      schedule: job.schedule,
+      endpoint: job.endpoint,
+      httpMethod: job.httpMethod,
+      timezone: job.timezone,
+      useLocalTime: job.useLocalTime,
+      tags: job.tags,
+      headers: job.headers,
+      body: job.body,
+      emailNotifications: job.emailNotifications,
+      webhookUrl: job.webhookUrl,
+    }));
+    
+    let content: string;
+    let filename: string;
+    let mimeType: string;
+    
+    if (format === "json") {
+      content = JSON.stringify(exportableJobs, null, 2);
+      filename = `jobs-export-${new Date().toISOString().split('T')[0]}.json`;
+      mimeType = "application/json";
+    } else {
+      const headers = [
+        "name",
+        "description",
+        "schedule",
+        "endpoint",
+        "httpMethod",
+        "timezone",
+        "useLocalTime",
+        "tags",
+        "headers",
+        "body",
+        "emailNotifications",
+        "webhookUrl"
+      ].join(",");
+      
+      const rows = exportableJobs.map(job => [
+        `"${(job.name || "").replace(/"/g, '""')}"`,
+        `"${(job.description || "").replace(/"/g, '""')}"`,
+        `"${(job.schedule || "").replace(/"/g, '""')}"`,
+        `"${(job.endpoint || "").replace(/"/g, '""')}"`,
+        `"${(job.httpMethod || "").replace(/"/g, '""')}"`,
+        `"${(job.timezone || "").replace(/"/g, '""')}"`,
+        job.useLocalTime,
+        `"${(Array.isArray(job.tags) ? job.tags.join(";") : "").replace(/"/g, '""')}"`,
+        `"${(typeof job.headers === 'object' ? JSON.stringify(job.headers) : "").replace(/"/g, '""')}"`,
+        `"${(job.body || "").replace(/"/g, '""')}"`,
+        `"${(job.emailNotifications || "").replace(/"/g, '""')}"`,
+        `"${(job.webhookUrl || "").replace(/"/g, '""')}"`,
+      ].join(","));
+      
+      content = [headers, ...rows].join("\n");
+      filename = `jobs-export-${new Date().toISOString().split('T')[0]}.csv`;
+      mimeType = "text/csv";
+    }
+    
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "ส่งออกสำเร็จ",
+      description: `ส่งออกข้อมูล ${exportableJobs.length} งานเรียบร้อยแล้ว`,
+    });
+  };
 
   return (
     <PageLayout title={`${project.name} - Jobs`}>
@@ -657,6 +709,7 @@ export default function ProjectJobsPage() {
               <JobExportImport 
                 jobs={selectedJobs.length > 0 ? selectedJobs : jobs} 
                 onImport={handleImportJobs}
+                onExport={handleExportJobs}
                 disabled={selectedJobIds.length === 0}
               />
             )}
@@ -820,276 +873,3 @@ export default function ProjectJobsPage() {
                                           <AlertDialogAction
                                             onClick={() => handleDeleteJob(job.id)}
                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          >
-                                            ลบงาน
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <p className="text-muted-foreground mb-4">
-                      {searchQuery || statusFilter !== "all" || dateFilter !== "all"
-                        ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
-                        : "ไม่พบงานในโปรเจคนี้"}
-                    </p>
-                    <Button onClick={() => setIsCreateModalOpen(true)}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      สร้างงานแรก
-                    </Button>
-                  </div>
-                )
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      
-      <CreateJobModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-        onCreateJob={handleCreateJob}
-        projects={[project]}
-        selectedProjectId={projectId || ""}
-      />
-      
-      <JobDetails 
-        job={selectedJob} 
-        isOpen={isDetailSheetOpen} 
-        onClose={() => setIsDetailSheetOpen(false)} 
-      />
-    </PageLayout>
-  );
-}
-
-function getMockProject(projectId: string): Project | null {
-  const mockProjects = [
-    {
-      id: "project-1",
-      name: "Marketing Automation",
-      description: "Marketing campaign automation tasks",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "project-2",
-      name: "Data Sync",
-      description: "Database synchronization jobs",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "project-3",
-      name: "Reporting",
-      description: "Automated reporting tasks",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  ];
-  
-  return mockProjects.find(p => p.id === projectId) || null;
-}
-
-function getMockJobs(projectId: string): CronJob[] {
-  const baseJobs = [
-    {
-      id: "job-1",
-      name: "Send Weekly Newsletter",
-      schedule: "0 9 * * 1",
-      endpoint: "https://api.example.com/send-newsletter",
-      httpMethod: "POST",
-      description: "Sends weekly newsletter to subscribers every Monday",
-      status: "idle" as JobStatus,
-      useLocalTime: false,
-      timezone: "UTC",
-      lastRun: new Date(Date.now() - 86400000).toISOString(),
-      nextRun: new Date(Date.now() + 518400000).toISOString(),
-      createdAt: new Date(Date.now() - 2592000000).toISOString(),
-      updatedAt: new Date(Date.now() - 86400000).toISOString(),
-      tags: ["marketing", "email"],
-      successCount: 12,
-      failCount: 1,
-      averageRuntime: 45.2,
-      projectId: "project-1",
-      emailNotifications: "admin@example.com,notify@example.com",
-      webhookUrl: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
-    },
-    {
-      id: "job-2",
-      name: "Database Backup",
-      schedule: "0 0 * * *",
-      endpoint: "https://api.example.com/backup",
-      httpMethod: "GET",
-      description: "Daily database backup at midnight",
-      status: "success" as JobStatus,
-      useLocalTime: true,
-      timezone: "Asia/Bangkok",
-      lastRun: new Date(Date.now() - 3600000).toISOString(),
-      nextRun: new Date(Date.now() + 82800000).toISOString(),
-      createdAt: new Date(Date.now() - 7776000000).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000).toISOString(),
-      tags: ["database", "backup"],
-      successCount: 89,
-      failCount: 3,
-      averageRuntime: 134.7,
-      projectId: "project-2",
-      emailNotifications: null,
-      webhookUrl: null
-    },
-    {
-      id: "job-3",
-      name: "Process Customer Orders",
-      schedule: "*/15 * * * *",
-      endpoint: "https://api.example.com/process-orders",
-      httpMethod: "POST",
-      description: "Process new customer orders every 15 minutes",
-      status: "failed" as JobStatus,
-      useLocalTime: false,
-      timezone: "UTC",
-      lastRun: new Date(Date.now() - 900000).toISOString(),
-      nextRun: new Date(Date.now() + 900000).toISOString(),
-      createdAt: new Date(Date.now() - 1209600000).toISOString(),
-      updatedAt: new Date(Date.now() - 900000).toISOString(),
-      tags: ["orders", "customers", "processing"],
-      successCount: 1240,
-      failCount: 17,
-      averageRuntime: 28.3,
-      projectId: "project-1",
-      emailNotifications: "tech-alerts@example.com",
-      webhookUrl: "https://api.example.com/webhook/orders"
-    },
-    {
-      id: "job-4",
-      name: "Generate Monthly Report",
-      schedule: "0 9 1 * *",
-      endpoint: "https://api.example.com/generate-report",
-      httpMethod: "POST",
-      description: "Generate monthly performance report on the 1st day of each month",
-      status: "paused" as JobStatus,
-      useLocalTime: true,
-      timezone: "America/New_York",
-      lastRun: new Date(Date.now() - 2592000000).toISOString(),
-      nextRun: null,
-      createdAt: new Date(Date.now() - 5184000000).toISOString(),
-      updatedAt: new Date(Date.now() - 1209600000).toISOString(),
-      tags: ["reporting", "monthly"],
-      successCount: 6,
-      failCount: 0,
-      averageRuntime: 326.5,
-      projectId: "project-3",
-      emailNotifications: "management@example.com,reports@example.com",
-      webhookUrl: null
-    },
-    {
-      id: "job-5",
-      name: "Clean Temporary Files",
-      schedule: "0 2 * * *",
-      endpoint: "https://api.example.com/clean-temp",
-      httpMethod: "GET",
-      description: "Clean temporary files every day at 2 AM",
-      status: "running" as JobStatus,
-      useLocalTime: false,
-      timezone: "UTC",
-      lastRun: new Date().toISOString(),
-      nextRun: new Date(Date.now() + 86400000).toISOString(),
-      createdAt: new Date(Date.now() - 864000000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      tags: ["maintenance", "cleanup"],
-      successCount: 29,
-      failCount: 1,
-      averageRuntime: 45.8,
-      projectId: "project-2",
-      emailNotifications: null,
-      webhookUrl: "https://hooks.slack.com/services/AAA/BBB/CCC"
-    }
-  ];
-  
-  return baseJobs.filter(job => job.projectId === projectId);
-}
-
-function createMockJob(jobData: Partial<CronJob>): CronJob {
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  
-  const newJob = {
-    ...jobData,
-    id: `job-${Date.now()}`,
-    status: "idle" as JobStatus,
-    lastRun: null,
-    nextRun: getNextRunTime(jobData.schedule || "0 * * * *"),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    tags: jobData.tags || [],
-    successCount: 0,
-    failCount: 0,
-    averageRuntime: null,
-  };
-  
-  mockJobs.push(newJob);
-  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-  
-  return newJob as CronJob;
-}
-
-function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  const updatedJobs = mockJobs.map((j: CronJob) => 
-    j.id === job.id ? { ...j, status: newStatus } : j
-  );
-  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
-}
-
-function mockDeleteJob(jobId: string) {
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  const updatedJobs = mockJobs.filter((j: CronJob) => j.id !== jobId);
-  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
-}
-
-function mockDuplicateJob(job: CronJob) {
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  
-  const newJob = {
-    ...job,
-    id: `job-${Date.now()}`,
-    name: `${job.name} (copy)`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  mockJobs.push(newJob);
-  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-}
-
-function mockImportJob(job: Partial<CronJob>) {
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  
-  const newJob = {
-    ...job,
-    id: `job-${Date.now()}`,
-    status: "idle" as JobStatus,
-    lastRun: null,
-    nextRun: getNextRunTime(job.schedule || "0 * * * *"),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    tags: job.tags || [],
-    successCount: 0,
-    failCount: 0,
-    averageRuntime: null,
-  };
-  
-  mockJobs.push(newJob);
-  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-}
-
-function getNextRunTime(cronExpression: string): string {
-  const hours = Math.floor(Math.random() * 24) + 1;
-  return new Date(Date.now() + hours * 3600000).toISOString();
-}
