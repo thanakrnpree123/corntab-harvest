@@ -66,6 +66,67 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
+const getMockProject = (id: string): Project => ({
+  id: id,
+  name: `Mock Project ${id}`,
+  description: "This is a mock project for testing purposes.",
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+});
+
+const createMockJob = (overrides: Partial<CronJob> = {}): CronJob => {
+  const id = overrides.id || `mock-job-${Date.now()}`;
+  return {
+    id: id,
+    name: overrides.name || `Mock Job ${id}`,
+    schedule: overrides.schedule || "0 * * * *",
+    endpoint: overrides.endpoint || "https://example.com/api",
+    httpMethod: overrides.httpMethod || "GET",
+    requestBody: overrides.requestBody || "",
+    description: overrides.description || "This is a mock job for testing.",
+    projectId: overrides.projectId || "mock-project-id",
+    status: overrides.status || "idle",
+    useLocalTime: overrides.useLocalTime !== undefined ? overrides.useLocalTime : false,
+    timezone: overrides.timezone || "UTC",
+    lastRun: overrides.lastRun || null,
+    nextRun: overrides.nextRun || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: overrides.tags || [],
+    successCount: overrides.successCount || 0,
+    failCount: overrides.failCount || 0,
+    averageRuntime: overrides.averageRuntime || null,
+    emailNotifications: overrides.emailNotifications || null,
+    webhookUrl: overrides.webhookUrl || null,
+    headers: overrides.headers || {},
+    body: overrides.body || "",
+  };
+};
+
+const getMockJobs = (projectId: string, count: number = 5): CronJob[] => {
+  return Array.from({ length: count }, (_, i) => createMockJob({ projectId: projectId, id: `mock-${i}` }));
+};
+
+const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {
+  console.log(`Mock toggling job ${job.id} to status ${newStatus}`);
+};
+
+const mockDeleteJob = (jobId: string) => {
+  console.log(`Mock deleting job ${jobId}`);
+};
+
+const mockDuplicateJob = (job: CronJob) => {
+  console.log(`Mock duplicating job ${job.id}`);
+};
+
+const mockImportJob = (job: Partial<CronJob>) => {
+  console.log(`Mock importing job ${job.name}`);
+};
+
+const mockTriggerJob = (job: CronJob) => {
+  console.log(`Mock triggering job ${job.id}`);
+};
+
 export default function ProjectJobsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -838,71 +899,4 @@ export default function ProjectJobsPage() {
                                   <div className="text-xs text-muted-foreground">
                                     {dayjs(job.lastRun).format("MMM DD, YYYY - HH:mm")}
                                   </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.lastRun).fromNow()}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">
-                                  Never
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-4 align-middle hidden md:table-cell">
-                              {job.nextRun ? (
-                                <div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.nextRun).format("MMM DD, YYYY - HH:mm")}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.nextRun).fromNow()}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">
-                                  Not scheduled
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                              {isJobActionInProgress[job.id] ? (
-                                <Button variant="ghost" size="icon" disabled>
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                </Button>
-                              ) : (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <EllipsisVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-[160px]">
-                                    <DropdownMenuItem 
-                                      onClick={() => toggleJobStatus(job.id)}
-                                      className="flex items-center cursor-pointer"
-                                    >
-                                      {job.status === "paused" ? (
-                                        <>
-                                          <Play className="mr-2 h-4 w-4" />
-                                          <span>Activate</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Pause className="mr-2 h-4 w-4" />
-                                          <span>Pause</span>
-                                        </>
-                                      )}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDuplicateJob(job.id)}
-                                      className="flex items-center cursor-pointer"
-                                    >
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      <span>Duplicate</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem 
-                                          onSelect={(e) => e.preventDefault()}
-                                          className="
+                                  <div className="text-xs text-muted-
