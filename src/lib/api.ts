@@ -1,3 +1,4 @@
+
 import { ApiResponse, Project, CronJob, User, Role, JobLog, JobStatus } from '@/lib/types';
 
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -430,9 +431,9 @@ export const jobApi = {
         const job = getJobResult.data;
         
         // Create a mock updated job with status changed to running
-        const triggeredJob = {
+        const triggeredJob: CronJob = {
           ...job,
-          status: "running",
+          status: "running" as JobStatus, // Explicitly type as JobStatus
           lastRun: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
