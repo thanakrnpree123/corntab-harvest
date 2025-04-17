@@ -1,4 +1,7 @@
 
+import { useState, useEffect } from "react";
+import { CronJob } from "@/lib/types";
+
 function createMockJob(partial: Partial<CronJob>): CronJob {
   const date = new Date();
   const future = new Date();
@@ -29,3 +32,15 @@ function createMockJob(partial: Partial<CronJob>): CronJob {
     averageRuntime: partial.averageRuntime || null,
   };
 }
+
+const ProjectJobsPage = () => {
+  // This is where your component implementation would go
+  return (
+    <div>
+      <h1>Project Jobs Page</h1>
+      <p>This page will display jobs for a specific project.</p>
+    </div>
+  );
+};
+
+export default ProjectJobsPage;
