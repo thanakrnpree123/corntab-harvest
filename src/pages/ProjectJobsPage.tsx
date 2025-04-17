@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -873,3 +874,120 @@ export default function ProjectJobsPage() {
                                           <AlertDialogAction
                                             onClick={() => handleDeleteJob(job.id)}
                                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          >
+                                            ลบงาน
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <p className="text-muted-foreground mb-4">ยังไม่มีงานในโปรเจคนี้</p>
+                    <Button onClick={() => setIsCreateModalOpen(true)}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      เพิ่มงานใหม่
+                    </Button>
+                  </div>
+                )
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <CreateJobModal 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen}
+        onSubmit={handleCreateJob}
+      />
+
+      {selectedJob && (
+        <JobDetails
+          job={selectedJob}
+          open={isDetailSheetOpen}
+          onOpenChange={setIsDetailSheetOpen}
+          onToggleStatus={() => toggleJobStatus(selectedJob.id)}
+          onDelete={() => handleDeleteJob(selectedJob.id)}
+          onDuplicate={() => handleDuplicateJob(selectedJob.id)}
+        />
+      )}
+    </PageLayout>
+  );
+}
+
+function getMockProject(projectId: string): Project {
+  return {
+    id: projectId,
+    name: "Mock Project",
+    description: "This is a mock project for demonstration purposes.",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    userId: "user1",
+  };
+}
+
+function getMockJobs(projectId: string): CronJob[] {
+  return Array(5).fill(0).map((_, i) => createMockJob({
+    id: `mock-${i}-${Date.now()}`,
+    projectId,
+    name: `Mock Job ${i + 1}`,
+    description: `This is a mock job for demonstration purposes.`,
+    schedule: "* * * * *",
+    endpoint: "https://example.com/api/endpoint",
+    httpMethod: "GET",
+  }));
+}
+
+function createMockJob(partial: Partial<CronJob>): CronJob {
+  const date = new Date();
+  const future = new Date();
+  future.setMinutes(future.getMinutes() + 1);
+  
+  return {
+    id: partial.id || `mock-${Date.now()}`,
+    projectId: partial.projectId || "mock-project",
+    name: partial.name || "Mock Job",
+    description: partial.description || "This is a mock job.",
+    schedule: partial.schedule || "* * * * *",
+    timezone: partial.timezone || "UTC",
+    endpoint: partial.endpoint || "https://example.com/webhook",
+    httpMethod: partial.httpMethod || "GET",
+    headers: partial.headers || {},
+    body: partial.body || "",
+    status: partial.status || "idle",
+    createdAt: partial.createdAt || date.toISOString(),
+    updatedAt: partial.updatedAt || date.toISOString(),
+    lastRun: partial.lastRun || (Math.random() > 0.5 ? new Date(date.getTime() - Math.random() * 10000000).toISOString() : null),
+    nextRun: partial.nextRun || (Math.random() > 0.2 ? future.toISOString() : null),
+    lastStatus: partial.lastStatus || (Math.random() > 0.7 ? "failed" : "success"),
+    tags: partial.tags || [],
+    useLocalTime: partial.useLocalTime || false,
+    emailNotifications: partial.emailNotifications || "",
+    webhookUrl: partial.webhookUrl || "",
+  };
+}
+
+function mockToggleJobStatus(job: CronJob, newStatus: JobStatus): void {
+  console.log(`Mock toggle job status: ${job.name} to ${newStatus}`);
+}
+
+function mockDeleteJob(jobId: string): void {
+  console.log(`Mock delete job: ${jobId}`);
+}
+
+function mockDuplicateJob(job: CronJob): void {
+  console.log(`Mock duplicate job: ${job.name}`);
+}
+
+function mockImportJob(job: Partial<CronJob>): void {
+  console.log(`Mock import job: ${job.name}`);
+}
