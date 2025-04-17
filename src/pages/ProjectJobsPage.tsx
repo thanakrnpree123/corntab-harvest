@@ -8,44 +8,54 @@ import { JobDetails } from "@/components/JobDetails";
 import { JobExportImport } from "@/components/JobExportImport";
 import { CronJob, JobStatus, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { 
-  Card, 
-  CardContent, 
+import {
+  Card,
+  CardContent,
   CardHeader,
   CardTitle,
-  CardDescription
+  CardDescription,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PlusCircle, Loader2, Filter, ArrowLeft, EllipsisVertical, Play, Pause, Copy, Trash2 } from "lucide-react";
+import {
+  PlusCircle,
+  Loader2,
+  Filter,
+  ArrowLeft,
+  EllipsisVertical,
+  Play,
+  Pause,
+  Copy,
+  Trash2,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { 
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -62,7 +72,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/ui/status-badge";
 import dayjs from "dayjs";
-import relativeTime from 'dayjs/plugin/relativeTime';
+import relativeTime from "dayjs/plugin/relativeTime";
 
 dayjs.extend(relativeTime);
 
@@ -86,7 +96,8 @@ const createMockJob = (overrides: Partial<CronJob> = {}): CronJob => {
     description: overrides.description || "This is a mock job for testing.",
     projectId: overrides.projectId || "mock-project-id",
     status: overrides.status || "idle",
-    useLocalTime: overrides.useLocalTime !== undefined ? overrides.useLocalTime : false,
+    useLocalTime:
+      overrides.useLocalTime !== undefined ? overrides.useLocalTime : false,
     timezone: overrides.timezone || "UTC",
     lastRun: overrides.lastRun || null,
     nextRun: overrides.nextRun || null,
@@ -104,7 +115,9 @@ const createMockJob = (overrides: Partial<CronJob> = {}): CronJob => {
 };
 
 const getMockJobs = (projectId: string, count: number = 5): CronJob[] => {
-  return Array.from({ length: count }, (_, i) => createMockJob({ projectId: projectId, id: `mock-${i}` }));
+  return Array.from({ length: count }, (_, i) =>
+    createMockJob({ projectId: projectId, id: `mock-${i}` }),
+  );
 };
 
 const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {
@@ -134,18 +147,22 @@ export default function ProjectJobsPage() {
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isJobActionInProgress, setIsJobActionInProgress] = useState<{[key: string]: boolean}>({});
+  const [isJobActionInProgress, setIsJobActionInProgress] = useState<{
+    [key: string]: boolean;
+  }>({});
   const { toast } = useToast();
-  
+
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("all");
+  const [dateFilter, setDateFilter] = useState<
+    "today" | "week" | "month" | "all"
+  >("all");
 
   const { data: project, isLoading: isLoadingProject } = useQuery({
-    queryKey: ['project', projectId],
+    queryKey: ["project", projectId],
     queryFn: async () => {
       try {
         const response = await apiService.getProject(projectId || "");
@@ -154,7 +171,9 @@ export default function ProjectJobsPage() {
         }
         const projectsResponse = await apiService.getProjects();
         if (projectsResponse.success && projectsResponse.data) {
-          const foundProject = projectsResponse.data.find(p => p.id === projectId);
+          const foundProject = projectsResponse.data.find(
+            (p) => p.id === projectId,
+          );
           if (foundProject) return foundProject;
         }
         return getMockProject(projectId || "");
@@ -163,15 +182,15 @@ export default function ProjectJobsPage() {
         return getMockProject(projectId || "");
       }
     },
-    enabled: !!projectId
+    enabled: !!projectId,
   });
 
-  const { 
-    data: jobs = [], 
-    isLoading: isLoadingJobs, 
-    refetch: refetchJobs 
+  const {
+    data: jobs = [],
+    isLoading: isLoadingJobs,
+    refetch: refetchJobs,
   } = useQuery({
-    queryKey: ['jobs', projectId],
+    queryKey: ["jobs", projectId],
     queryFn: async () => {
       if (!projectId) return [];
 
@@ -186,7 +205,7 @@ export default function ProjectJobsPage() {
         return getMockJobs(projectId);
       }
     },
-    enabled: !!projectId
+    enabled: !!projectId,
   });
 
   const handleCreateJob = (jobData: Partial<CronJob>) => {
@@ -201,8 +220,9 @@ export default function ProjectJobsPage() {
       timezone: jobData.timezone || "UTC",
     };
 
-    apiService.createJob(newJobData as any)
-      .then(response => {
+    apiService
+      .createJob(newJobData as any)
+      .then((response) => {
         if (response.success && response.data) {
           toast({
             title: "สร้างงานสำเร็จ",
@@ -217,14 +237,17 @@ export default function ProjectJobsPage() {
           });
         }
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาด",
           description: `ไม่สามารถสร้างงาน: ${error.message}`,
           variant: "destructive",
         });
-        
-        const mockJob = createMockJob({ ...newJobData, id: `mock-${Date.now()}` });
+
+        const mockJob = createMockJob({
+          ...newJobData,
+          id: `mock-${Date.now()}`,
+        });
         refetchJobs();
         toast({
           title: "สร้างข้อมูลทดสอบแล้ว",
@@ -251,14 +274,15 @@ export default function ProjectJobsPage() {
   };
 
   const toggleJobStatus = (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId);
+    const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
+    setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: true }));
     const newStatus = job.status === "paused" ? "idle" : "paused";
-    
-    apiService.updateJob(jobId, { status: newStatus })
-      .then(response => {
+
+    apiService
+      .updateJob(jobId, { status: newStatus })
+      .then((response) => {
         if (response.success) {
           if (newStatus === "paused") {
             toast({
@@ -280,76 +304,78 @@ export default function ProjectJobsPage() {
             description: `ไม่สามารถอัปเดตสถานะงาน: ${response.error}`,
             variant: "destructive",
           });
-          
+
           mockToggleJobStatus(job, newStatus);
           refetchJobs();
         }
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาด",
           description: `ไม่สามารถอัปเดตสถานะงาน: ${error.message}`,
           variant: "destructive",
         });
-        
-          mockToggleJobStatus(job, newStatus);
-          refetchJobs();
+
+        mockToggleJobStatus(job, newStatus);
+        refetchJobs();
       })
       .finally(() => {
-        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
+        setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
       });
   };
 
   const handleDeleteJob = (jobId: string) => {
-    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
-    const job = jobs.find(j => j.id === jobId);
+    setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: true }));
+    const job = jobs.find((j) => j.id === jobId);
     const jobName = job?.name || "งานนี้";
 
-    apiService.deleteJob(jobId)
-      .then(response => {
+    apiService
+      .deleteJob(jobId)
+      .then((response) => {
         if (response.success) {
           toast({
             title: "ลบงานสำเร็จ",
             description: `ลบงาน "${jobName}" เรียบร้อยแล้ว`,
           });
           refetchJobs();
-          setSelectedJobIds(prev => prev.filter(id => id !== jobId));
+          setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
         } else {
           toast({
             title: "เกิดข้อผิดพลาด",
             description: `ไม่สามารถลบงาน: ${response.error}`,
             variant: "destructive",
           });
-          
+
           mockDeleteJob(jobId);
           refetchJobs();
-          setSelectedJobIds(prev => prev.filter(id => id !== jobId));
+          setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
         }
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาด",
           description: `ไม่สามารถลบงาน: ${error.message}`,
           variant: "destructive",
         });
-        
+
         mockDeleteJob(jobId);
         refetchJobs();
-        setSelectedJobIds(prev => prev.filter(id => id !== jobId));
+        setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
       })
       .finally(() => {
-        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
+        setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
       });
   };
 
   const handleDuplicateJob = (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId);
+    const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
-    
-    apiService.duplicateJob(jobId)
-      .then(response => {
+    setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: true }));
+
+    apiService
+      .duplicateJob(jobId)
+      .then((response) => {
         if (response.success && response.data) {
           toast({
             title: "ทำสำเนาสำเร็จ",
@@ -362,45 +388,46 @@ export default function ProjectJobsPage() {
             description: `ไม่สามารถทำสำเนางาน: ${response.error}`,
             variant: "destructive",
           });
-          
+
           mockDuplicateJob(job);
           refetchJobs();
         }
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาด",
           description: `ไม่สามารถทำสำเนางาน: ${error.message}`,
           variant: "destructive",
         });
-        
+
         mockDuplicateJob(job);
         refetchJobs();
       })
       .finally(() => {
-        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
+        setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
       });
   };
 
   const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
-    const jobsWithProject = importedJobs.map(job => ({
+    const jobsWithProject = importedJobs.map((job) => ({
       ...job,
       projectId: projectId,
       useLocalTime: job.useLocalTime || false,
       timezone: job.timezone || "UTC",
     }));
-    
+
     let successCount = 0;
     let failCount = 0;
-    
+
     toast({
       title: "กำลังนำเข้า",
       description: `กำลังนำเข้างาน ${jobsWithProject.length} รายการ...`,
     });
-    
-    const createPromises = jobsWithProject.map(job => 
-      apiService.createJob(job as any)
-        .then(response => {
+
+    const createPromises = jobsWithProject.map((job) =>
+      apiService
+        .createJob(job as any)
+        .then((response) => {
           if (response.success) successCount++;
           else failCount++;
           return response;
@@ -409,20 +436,20 @@ export default function ProjectJobsPage() {
           mockImportJob(job);
           successCount++;
           return { success: true };
-        })
+        }),
     );
-    
+
     Promise.all(createPromises)
       .then(() => {
         toast({
           title: "นำเข้าเรียบร้อย",
-          description: `นำเข้า ${successCount} งานสำเร็จ${failCount > 0 ? `, ล้มเหลว ${failCount} งาน` : ''}`,
+          description: `นำเข้า ${successCount} งานสำเร็จ${failCount > 0 ? `, ล้มเหลว ${failCount} งาน` : ""}`,
         });
         if (successCount > 0) {
           refetchJobs();
         }
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาดระหว่างการนำเข้า",
           description: error.message,
@@ -438,7 +465,7 @@ export default function ProjectJobsPage() {
     setSortOrder("asc");
     setDateFilter("all");
     setIsFilterOpen(false);
-    
+
     toast({
       title: "ล้างตัวกรอง",
       description: "ล้างตัวกรองทั้งหมดเรียบร้อยแล้ว",
@@ -447,7 +474,7 @@ export default function ProjectJobsPage() {
 
   const toggleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedJobIds(sortedJobs.map(job => job.id));
+      setSelectedJobIds(sortedJobs.map((job) => job.id));
       toast({
         title: "เลือกทั้งหมด",
         description: `เลือกงานทั้งหมด ${sortedJobs.length} รายการเรียบร้อยแล้ว`,
@@ -463,8 +490,8 @@ export default function ProjectJobsPage() {
 
   const toggleSelectJob = (jobId: string, checked: boolean) => {
     if (checked) {
-      setSelectedJobIds(prev => [...prev, jobId]);
-      const job = jobs.find(j => j.id === jobId);
+      setSelectedJobIds((prev) => [...prev, jobId]);
+      const job = jobs.find((j) => j.id === jobId);
       if (job) {
         toast({
           title: "เลือกงาน",
@@ -472,8 +499,8 @@ export default function ProjectJobsPage() {
         });
       }
     } else {
-      setSelectedJobIds(prev => prev.filter(id => id !== jobId));
-      const job = jobs.find(j => j.id === jobId);
+      setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
+      const job = jobs.find((j) => j.id === jobId);
       if (job) {
         toast({
           title: "ยกเลิกการเลือกงาน",
@@ -491,18 +518,19 @@ export default function ProjectJobsPage() {
     });
   };
 
-  const filteredJobs = jobs.filter(job => {
-    const searchMatch = !searchQuery || 
+  const filteredJobs = jobs.filter((job) => {
+    const searchMatch =
+      !searchQuery ||
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.endpoint?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const statusMatch = statusFilter === "all" || job.status === statusFilter;
-    
+
     let dateMatch = true;
     const jobDate = new Date(job.createdAt);
-    
+
     if (dateFilter === "today") {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -516,13 +544,13 @@ export default function ProjectJobsPage() {
       monthAgo.setMonth(monthAgo.getMonth() - 1);
       dateMatch = jobDate >= monthAgo;
     }
-    
+
     return searchMatch && statusMatch && dateMatch;
   });
-  
+
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     let comparison = 0;
-    
+
     switch (sortBy) {
       case "name":
         comparison = a.name.localeCompare(b.name);
@@ -531,37 +559,41 @@ export default function ProjectJobsPage() {
         comparison = a.status.localeCompare(b.status);
         break;
       case "date":
-        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        comparison =
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case "lastRun":
         if (!a.lastRun && !b.lastRun) comparison = 0;
         else if (!a.lastRun) comparison = 1;
         else if (!b.lastRun) comparison = -1;
-        else comparison = new Date(a.lastRun).getTime() - new Date(b.lastRun).getTime();
+        else
+          comparison =
+            new Date(a.lastRun).getTime() - new Date(b.lastRun).getTime();
         break;
       default:
         comparison = 0;
     }
-    
+
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
-  const selectedJobs = jobs.filter(job => selectedJobIds.includes(job.id));
+  const selectedJobs = jobs.filter((job) => selectedJobIds.includes(job.id));
 
   const activeFiltersCount = [
     statusFilter !== "all",
     dateFilter !== "all",
-    sortBy !== "name" || sortOrder !== "asc"
+    sortBy !== "name" || sortOrder !== "asc",
   ].filter(Boolean).length;
 
   const handleTriggerJob = (jobId: string) => {
-    const job = jobs.find(j => j.id === jobId);
+    const job = jobs.find((j) => j.id === jobId);
     if (!job) return;
 
-    setIsJobActionInProgress(prev => ({ ...prev, [jobId]: true }));
-    
-    apiService.triggerJob(jobId)
-      .then(response => {
+    setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: true }));
+
+    apiService
+      .triggerJob(jobId)
+      .then((response) => {
         if (response.success) {
           toast({
             title: "งานถูกเรียกใช้งาน",
@@ -574,44 +606,45 @@ export default function ProjectJobsPage() {
             description: `ไม่สามารถเรียกใช้งาน: ${response.error}`,
             variant: "destructive",
           });
-          
+
           // Mock trigger for development purposes
           mockTriggerJob(job);
           refetchJobs();
         }
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาด",
           description: `ไม่สามารถเรียกใช้งาน: ${error.message}`,
           variant: "destructive",
         });
-        
+
         // Mock trigger for development purposes
         mockTriggerJob(job);
         refetchJobs();
       })
       .finally(() => {
-        setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
+        setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
       });
   };
 
   const handleBatchDeleteJobs = () => {
     if (selectedJobIds.length === 0) return;
-    
-    const jobNames = selectedJobIds.map(id => {
-      const job = jobs.find(j => j.id === id);
+
+    const jobNames = selectedJobIds.map((id) => {
+      const job = jobs.find((j) => j.id === id);
       return job ? job.name : id;
     });
-    
+
     toast({
       title: "กำลังลบงาน",
       description: `กำลังลบงานที่เลือก ${selectedJobIds.length} รายการ...`,
     });
-    
-    const deletePromises = selectedJobIds.map(jobId => 
-      apiService.deleteJob(jobId)
-        .then(response => {
+
+    const deletePromises = selectedJobIds.map((jobId) =>
+      apiService
+        .deleteJob(jobId)
+        .then((response) => {
           if (!response.success) {
             // Mock delete for development purposes
             mockDeleteJob(jobId);
@@ -622,9 +655,9 @@ export default function ProjectJobsPage() {
           // Mock delete for development purposes
           mockDeleteJob(jobId);
           return { success: true };
-        })
+        }),
     );
-    
+
     Promise.all(deletePromises)
       .then(() => {
         toast({
@@ -634,7 +667,7 @@ export default function ProjectJobsPage() {
         setSelectedJobIds([]);
         refetchJobs();
       })
-      .catch(error => {
+      .catch((error) => {
         toast({
           title: "เกิดข้อผิดพลาดระหว่างการลบงาน",
           description: error.message,
@@ -644,61 +677,71 @@ export default function ProjectJobsPage() {
   };
 
   const handleExportJobs = (format: "json" | "csv") => {
-    const jobsToExport = selectedJobIds.length > 0 
-      ? jobs.filter(job => selectedJobIds.includes(job.id)) 
-      : jobs;
-    
-    const fileName = `jobs-export-${new Date().toISOString().split('T')[0]}`;
-    
+    const jobsToExport =
+      selectedJobIds.length > 0
+        ? jobs.filter((job) => selectedJobIds.includes(job.id))
+        : jobs;
+
+    const fileName = `jobs-export-${new Date().toISOString().split("T")[0]}`;
+
     if (format === "json") {
       // Create a JSON file for download
       const jsonData = JSON.stringify(jobsToExport, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
+      const blob = new Blob([jsonData], { type: "application/json" });
       const url = URL.createObjectURL(blob);
-      
+
       // Create download link and trigger click
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${fileName}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "ส่งออกสำเร็จ",
         description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ JSON`,
       });
     } else {
       // For CSV format, create a simple CSV
-      const headers = ["name", "schedule", "endpoint", "httpMethod", "description", "status"];
-      const csvRows = [
-        headers.join(','),
-        ...jobsToExport.map(job => {
-          return headers.map(header => {
-            // Handle special case for strings that might contain commas
-            const field = job[header as keyof CronJob];
-            if (typeof field === 'string' && field.includes(',')) {
-              return `"${field}"`;
-            }
-            return String(field || '');
-          }).join(',');
-        })
+      const headers = [
+        "name",
+        "schedule",
+        "endpoint",
+        "httpMethod",
+        "description",
+        "status",
       ];
-      
-      const csvData = csvRows.join('\n');
-      const blob = new Blob([csvData], { type: 'text/csv' });
+      const csvRows = [
+        headers.join(","),
+        ...jobsToExport.map((job) => {
+          return headers
+            .map((header) => {
+              // Handle special case for strings that might contain commas
+              const field = job[header as keyof CronJob];
+              if (typeof field === "string" && field.includes(",")) {
+                return `"${field}"`;
+              }
+              return String(field || "");
+            })
+            .join(",");
+        }),
+      ];
+
+      const csvData = csvRows.join("\n");
+      const blob = new Blob([csvData], { type: "text/csv" });
       const url = URL.createObjectURL(blob);
-      
+
       // Create download link and trigger click
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${fileName}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "ส่งออกสำเร็จ",
         description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ CSV`,
@@ -707,30 +750,33 @@ export default function ProjectJobsPage() {
   };
 
   return (
-    <PageLayout title={`${project.name} - Jobs`}>
+    <PageLayout title={`${project?.name} - Jobs`}>
       <Breadcrumb className="mb-4">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink onClick={handleBackToProjects} className="cursor-pointer">
+            <BreadcrumbLink
+              onClick={handleBackToProjects}
+              className="cursor-pointer"
+            >
               Projects
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{project.name}</BreadcrumbPage>
+            <BreadcrumbPage>{project?.name}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      
+
       <div className="flex flex-col gap-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">{project.name}</h1>
-            {project.description && (
-              <p className="text-muted-foreground">{project.description}</p>
+            <h1 className="text-2xl font-bold">{project?.name}</h1>
+            {project?.description && (
+              <p className="text-muted-foreground">{project?.description}</p>
             )}
           </div>
-          
+
           <div className="flex gap-2">
             <Button onClick={() => setIsCreateModalOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -749,14 +795,21 @@ export default function ProjectJobsPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                
+
                 <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
                       <Filter className="h-4 w-4" />
                       <span>ตัวกรอง</span>
                       {activeFiltersCount > 0 && (
-                        <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center">
+                        <Badge
+                          variant="secondary"
+                          className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center"
+                        >
                           {activeFiltersCount}
                         </Badge>
                       )}
@@ -766,7 +819,10 @@ export default function ProjectJobsPage() {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <h4 className="font-medium text-sm">สถานะ</h4>
-                        <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as any)}>
+                        <Select
+                          value={statusFilter}
+                          onValueChange={(val) => setStatusFilter(val as any)}
+                        >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="เลือกสถานะ" />
                           </SelectTrigger>
@@ -780,10 +836,13 @@ export default function ProjectJobsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                    
+
                       <div className="space-y-2">
                         <h4 className="font-medium text-sm">วันที่สร้าง</h4>
-                        <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
+                        <Select
+                          value={dateFilter}
+                          onValueChange={(val) => setDateFilter(val as any)}
+                        >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder="เลือกช่วงเวลา" />
                           </SelectTrigger>
@@ -791,13 +850,15 @@ export default function ProjectJobsPage() {
                             <SelectItem value="all">ทั้งหมด</SelectItem>
                             <SelectItem value="today">วันนี้</SelectItem>
                             <SelectItem value="week">7 วันที่ผ่านมา</SelectItem>
-                            <SelectItem value="month">30 วันที่ผ่านมา</SelectItem>
+                            <SelectItem value="month">
+                              30 วันที่ผ่านมา
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
-                    
+
                       <Separator />
-                    
+
                       <div className="space-y-2">
                         <h4 className="font-medium text-sm">เรียงตาม</h4>
                         <div className="flex gap-2">
@@ -812,8 +873,11 @@ export default function ProjectJobsPage() {
                               <SelectItem value="lastRun">รันล่าสุด</SelectItem>
                             </SelectContent>
                           </Select>
-                          
-                          <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as any)}>
+
+                          <Select
+                            value={sortOrder}
+                            onValueChange={(val) => setSortOrder(val as any)}
+                          >
                             <SelectTrigger className="w-[80px]">
                               <SelectValue placeholder="ลำดับ" />
                             </SelectTrigger>
@@ -824,9 +888,9 @@ export default function ProjectJobsPage() {
                           </Select>
                         </div>
                       </div>
-                      
-                      <Button 
-                        className="w-full" 
+
+                      <Button
+                        className="w-full"
                         variant="outline"
                         onClick={handleClearFilters}
                       >
@@ -837,12 +901,12 @@ export default function ProjectJobsPage() {
                 </Popover>
               </div>
             </div>
-            
+
             <div className="flex gap-2 flex-wrap items-center">
               {selectedJobIds.length > 0 && (
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={handleBatchDeleteJobs}
                   className="flex items-center gap-1"
                 >
@@ -850,10 +914,10 @@ export default function ProjectJobsPage() {
                   <span>ลบงานที่เลือก ({selectedJobIds.length})</span>
                 </Button>
               )}
-              
+
               {jobs.length > 0 && (
-                <JobExportImport 
-                  jobs={selectedJobs.length > 0 ? selectedJobs : jobs} 
+                <JobExportImport
+                  jobs={selectedJobs.length > 0 ? selectedJobs : jobs}
                   onImport={handleImportJobs}
                   onExport={handleExportJobs}
                   disabled={selectedJobIds.length === 0}
@@ -867,163 +931,200 @@ export default function ProjectJobsPage() {
               {isLoadingJobs ? (
                 <div className="flex items-center justify-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2 text-muted-foreground">กำลังโหลดงาน...</span>
+                  <span className="ml-2 text-muted-foreground">
+                    กำลังโหลดงาน...
+                  </span>
+                </div>
+              ) : sortedJobs.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-[600px] w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          <Checkbox
+                            checked={
+                              selectedJobIds.length === sortedJobs.length &&
+                              sortedJobs.length > 0
+                            }
+                            onCheckedChange={toggleSelectAll}
+                            className="mr-2"
+                          />
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Name
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
+                          Schedule
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Status
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
+                          Last Run
+                        </th>
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
+                          Next Run
+                        </th>
+                        <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedJobs.map((job) => (
+                        <tr
+                          key={job.id}
+                          className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
+                          onClick={() => handleViewJobDetails(job)}
+                        >
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Checkbox
+                              checked={selectedJobIds.includes(job.id)}
+                              onCheckedChange={(checked) =>
+                                toggleSelectJob(job.id, !!checked)
+                              }
+                            />
+                          </td>
+                          <td className="p-4 align-middle font-medium">
+                            {job.name}
+                          </td>
+                          <td className="p-4 align-middle hidden md:table-cell">
+                            <code className="bg-muted px-1 py-0.5 rounded text-xs">
+                              {job.schedule}
+                            </code>
+                          </td>
+                          <td className="p-4 align-middle">
+                            <StatusBadge status={job.status} />
+                          </td>
+                          <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
+                            {job.lastRun
+                              ? dayjs(job.lastRun).fromNow()
+                              : "Never"}
+                          </td>
+                          <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
+                            {job.nextRun
+                              ? dayjs(job.nextRun).format("DD/MM/YYYY HH:mm")
+                              : "-"}
+                          </td>
+                          <td
+                            className="p-4 align-middle text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex justify-end items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTriggerJob(job.id);
+                                }}
+                                disabled={
+                                  isJobActionInProgress[job.id] ||
+                                  job.status === "running"
+                                }
+                              >
+                                {isJobActionInProgress[job.id] ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Play className="h-4 w-4" />
+                                )}
+                              </Button>
+
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleJobStatus(job.id);
+                                }}
+                                disabled={
+                                  isJobActionInProgress[job.id] ||
+                                  job.status === "running"
+                                }
+                              >
+                                {isJobActionInProgress[job.id] ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : job.status === "paused" ? (
+                                  <Play className="h-4 w-4" />
+                                ) : (
+                                  <Pause className="h-4 w-4" />
+                                )}
+                              </Button>
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <EllipsisVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleViewJobDetails(job);
+                                    }}
+                                  >
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDuplicateJob(job.id);
+                                    }}
+                                  >
+                                    <Copy className="h-4 w-4 mr-2" />
+                                    Duplicate
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteJob(job.id);
+                                    }}
+                                    className="text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                sortedJobs.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-[600px] w-full">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                            <Checkbox 
-                              checked={selectedJobIds.length === sortedJobs.length && sortedJobs.length > 0}
-                              onCheckedChange={toggleSelectAll}
-                              className="mr-2"
-                            />
-                          </th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Name</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Schedule</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Last Run</th>
-                          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">Next Run</th>
-                          <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sortedJobs.map((job) => (
-                          <tr 
-                            key={job.id} 
-                            className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
-                            onClick={() => handleViewJobDetails(job)}
-                          >
-                            <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                              <Checkbox 
-                                checked={selectedJobIds.includes(job.id)}
-                                onCheckedChange={(checked) => toggleSelectJob(job.id, !!checked)}
-                              />
-                            </td>
-                            <td className="p-4 align-middle font-medium">{job.name}</td>
-                            <td className="p-4 align-middle hidden md:table-cell">
-                              <code className="bg-muted px-1 py-0.5 rounded text-xs">{job.schedule}</code>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <StatusBadge status={job.status} />
-                            </td>
-                            <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
-                              {job.lastRun ? dayjs(job.lastRun).fromNow() : 'Never'}
-                            </td>
-                            <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
-                              {job.nextRun ? dayjs(job.nextRun).format('DD/MM/YYYY HH:mm') : '-'}
-                            </td>
-                            <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end items-center gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTriggerJob(job.id);
-                                  }}
-                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Play className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleJobStatus(job.id);
-                                  }}
-                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    job.status === 'paused' ? (
-                                      <Play className="h-4 w-4" />
-                                    ) : (
-                                      <Pause className="h-4 w-4" />
-                                    )
-                                  )}
-                                </Button>
-
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <EllipsisVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleViewJobDetails(job);
-                                      }}
-                                    >
-                                      View Details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDuplicateJob(job.id);
-                                      }}
-                                    >
-                                      <Copy className="h-4 w-4 mr-2" />
-                                      Duplicate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteJob(job.id);
-                                      }}
-                                      className="text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <p className="mb-4 text-muted-foreground">ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา</p>
-                    <Button onClick={() => setIsCreateModalOpen(true)}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      เพิ่มงานใหม่
-                    </Button>
-                  </div>
-                )
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <p className="mb-4 text-muted-foreground">
+                    ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา
+                  </p>
+                  <Button onClick={() => setIsCreateModalOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    เพิ่มงานใหม่
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
-      
-      <CreateJobModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
+
+      <CreateJobModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         onCreateJob={handleCreateJob}
-        projects={[project]} 
-        selectedProjectId={projectId || ''}
+        projects={[project]}
+        selectedProjectId={projectId || ""}
       />
-      
-      <JobDetails 
-        job={selectedJob} 
-        isOpen={isDetailSheetOpen} 
+
+      <JobDetails
+        job={selectedJob}
+        isOpen={isDetailSheetOpen}
         onClose={() => setIsDetailSheetOpen(false)}
         onUpdate={refetchJobs}
         onDelete={handleDeleteJob}

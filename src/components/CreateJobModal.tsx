@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Dialog,
@@ -22,20 +21,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Project } from "@/lib/types";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  X, 
-  Plus, 
-  Mail, 
-  Code, 
-  FileText, 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  X,
+  Plus,
+  Mail,
+  Code,
+  FileText,
   AlertCircle,
-  Loader2 
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -75,19 +69,23 @@ interface KeyValuePair {
   value: string;
 }
 
-export function CreateJobModal({ 
-  isOpen, 
-  onClose, 
-  onCreateJob, 
-  projects, 
-  selectedProjectId 
+export function CreateJobModal({
+  isOpen,
+  onClose,
+  onCreateJob,
+  projects,
+  selectedProjectId,
 }: CreateJobModalProps) {
   const [jobName, setJobName] = useState("");
   const [endpoint, setEndpoint] = useState("");
   const [httpMethod, setHttpMethod] = useState("GET");
-  const [requestBodyType, setRequestBodyType] = useState<"json" | "formdata">("json");
+  const [requestBodyType, setRequestBodyType] = useState<"json" | "formdata">(
+    "json",
+  );
   const [requestBody, setRequestBody] = useState("");
-  const [formDataPairs, setFormDataPairs] = useState<KeyValuePair[]>([{ key: "", value: "" }]);
+  const [formDataPairs, setFormDataPairs] = useState<KeyValuePair[]>([
+    { key: "", value: "" },
+  ]);
   const [schedule, setSchedule] = useState("");
   const [description, setDescription] = useState("");
   const [scheduleType, setScheduleType] = useState("cron");
@@ -99,11 +97,11 @@ export function CreateJobModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailValidation, setEmailValidation] = useState({
     isValid: true,
-    message: ""
+    message: "",
   });
   const [notifyOnSuccess, setNotifyOnSuccess] = useState(true);
   const [notifyOnFailure, setNotifyOnFailure] = useState(true);
-  
+
   const [timezone, setTimezone] = useState(() => {
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -114,7 +112,7 @@ export function CreateJobModal({
 
   const validateJson = (jsonString: string) => {
     if (!jsonString) return true;
-    
+
     try {
       JSON.parse(jsonString);
       setIsJsonValid(true);
@@ -129,27 +127,27 @@ export function CreateJobModal({
     if (!emails) {
       setEmailValidation({
         isValid: false,
-        message: "กรุณาระบุอีเมลอย่างน้อย 1 อีเมล"
+        message: "กรุณาระบุอีเมลอย่างน้อย 1 อีเมล",
       });
       return false;
     }
-    
-    const emailList = emails.split(',').map(email => email.trim());
+
+    const emailList = emails.split(",").map((email) => email.trim());
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    const isValid = emailList.every(email => emailRegex.test(email));
-    
+
+    const isValid = emailList.every((email) => emailRegex.test(email));
+
     if (!isValid) {
       setEmailValidation({
         isValid: false,
-        message: "กรุณาระบุอีเมลให้ถูกต้อง (เช่น example@domain.com)"
+        message: "กรุณาระบุอีเมลให้ถูกต้อง (เช่น example@domain.com)",
       });
       return false;
     }
-    
+
     setEmailValidation({
       isValid: true,
-      message: ""
+      message: "",
     });
     return true;
   };
@@ -164,7 +162,11 @@ export function CreateJobModal({
     setFormDataPairs(updatedPairs);
   };
 
-  const handleUpdateFormDataPair = (index: number, field: 'key' | 'value', newValue: string) => {
+  const handleUpdateFormDataPair = (
+    index: number,
+    field: "key" | "value",
+    newValue: string,
+  ) => {
     const updatedPairs = [...formDataPairs];
     updatedPairs[index][field] = newValue;
     setFormDataPairs(updatedPairs);
@@ -172,7 +174,7 @@ export function CreateJobModal({
 
   const buildFormDataBody = () => {
     const dataObject: Record<string, string> = {};
-    formDataPairs.forEach(pair => {
+    formDataPairs.forEach((pair) => {
       if (pair.key.trim()) {
         dataObject[pair.key] = pair.value;
       }
@@ -191,7 +193,11 @@ export function CreateJobModal({
     }
 
     // Validate JSON if using JSON body type
-    if (httpMethod !== "GET" && requestBodyType === "json" && !validateJson(requestBody)) {
+    if (
+      httpMethod !== "GET" &&
+      requestBodyType === "json" &&
+      !validateJson(requestBody)
+    ) {
       toast({
         title: "JSON ไม่ถูกต้อง",
         description: "กรุณาตรวจสอบรูปแบบ JSON ให้ถูกต้อง",
@@ -204,7 +210,8 @@ export function CreateJobModal({
     if (sendEmailNotifications && !validateEmails(emailRecipients)) {
       toast({
         title: "อีเมลไม่ถูกต้อง",
-        description: emailValidation.message || "กรุณาตรวจสอบรูปแบบอีเมลให้ถูกต้อง",
+        description:
+          emailValidation.message || "กรุณาตรวจสอบรูปแบบอีเมลให้ถูกต้อง",
         variant: "destructive",
       });
       return;
@@ -212,16 +219,21 @@ export function CreateJobModal({
 
     setIsSubmitting(true);
 
-    const finalRequestBody = httpMethod !== "GET" 
-      ? (requestBodyType === "json" ? requestBody : buildFormDataBody())
-      : "";
+    const finalRequestBody =
+      httpMethod !== "GET"
+        ? requestBodyType === "json"
+          ? requestBody
+          : buildFormDataBody()
+        : "";
 
     // สร้างโครงสร้างข้อมูลสำหรับการส่งอีเมล
-    const emailSettings = sendEmailNotifications ? {
-      recipients: emailRecipients.split(',').map(email => email.trim()),
-      onSuccess: notifyOnSuccess,
-      onFailure: notifyOnFailure,
-    } : null;
+    const emailSettings = sendEmailNotifications
+      ? {
+          recipients: emailRecipients.split(",").map((email) => email.trim()),
+          onSuccess: notifyOnSuccess,
+          onFailure: notifyOnFailure,
+        }
+      : null;
 
     const newJob = {
       name: jobName,
@@ -239,23 +251,23 @@ export function CreateJobModal({
 
     try {
       onCreateJob(newJob);
-      
+
       // แสดงการแจ้งเตือนว่ากำลังสร้าง Job
       toast({
         title: "กำลังสร้าง Job",
         description: "กรุณารอสักครู่...",
       });
-      
+
       // จำลองการส่งข้อมูลไปยัง API (ใน production จะถูกแทนที่ด้วยการเรียก API จริง)
       setTimeout(() => {
         resetForm();
         onClose();
-        
+
         toast({
           title: "สร้าง Job เรียบร้อย",
-          description: `"${jobName}" ถูกสร้างเรียบร้อยแล้ว${sendEmailNotifications ? ' และระบบได้ส่งอีเมลแจ้งเตือนแล้ว' : ''}`,
+          description: `"${jobName}" ถูกสร้างเรียบร้อยแล้ว${sendEmailNotifications ? " และระบบได้ส่งอีเมลแจ้งเตือนแล้ว" : ""}`,
         });
-        
+
         setIsSubmitting(false);
       }, 1500);
     } catch (error) {
@@ -285,7 +297,7 @@ export function CreateJobModal({
     setIsJsonValid(true);
     setNotifyOnSuccess(true);
     setNotifyOnFailure(true);
-    setEmailValidation({isValid: true, message: ""});
+    setEmailValidation({ isValid: true, message: "" });
     // Don't reset timezone to preserve user preference
   };
 
@@ -318,8 +330,8 @@ export function CreateJobModal({
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
+                  <SelectItem key={project?.id} value={project?.id}>
+                    {project?.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -365,9 +377,11 @@ export function CreateJobModal({
           {httpMethod !== "GET" && (
             <div className="grid gap-2">
               <Label>Request Body</Label>
-              <Tabs 
-                defaultValue={requestBodyType} 
-                onValueChange={(value) => setRequestBodyType(value as "json" | "formdata")}
+              <Tabs
+                defaultValue={requestBodyType}
+                onValueChange={(value) =>
+                  setRequestBodyType(value as "json" | "formdata")
+                }
                 className="w-full"
               >
                 <TabsList className="mb-2">
@@ -375,12 +389,15 @@ export function CreateJobModal({
                     <Code size={14} />
                     Raw JSON
                   </TabsTrigger>
-                  <TabsTrigger value="formdata" className="flex gap-1 items-center">
+                  <TabsTrigger
+                    value="formdata"
+                    className="flex gap-1 items-center"
+                  >
                     <FileText size={14} />
                     Form Data
                   </TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="json">
                   <div className="space-y-2">
                     <Textarea
@@ -392,7 +409,8 @@ export function CreateJobModal({
                       placeholder='{"key": "value"}'
                       className={cn(
                         "min-h-[120px] font-mono text-sm",
-                        !isJsonValid && "border-red-500 focus-visible:ring-red-500"
+                        !isJsonValid &&
+                          "border-red-500 focus-visible:ring-red-500",
                       )}
                     />
                     {!isJsonValid && (
@@ -413,13 +431,25 @@ export function CreateJobModal({
                         <Input
                           placeholder="Key"
                           value={pair.key}
-                          onChange={(e) => handleUpdateFormDataPair(index, 'key', e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateFormDataPair(
+                              index,
+                              "key",
+                              e.target.value,
+                            )
+                          }
                           className="flex-1"
                         />
                         <Input
                           placeholder="Value"
                           value={pair.value}
-                          onChange={(e) => handleUpdateFormDataPair(index, 'value', e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateFormDataPair(
+                              index,
+                              "value",
+                              e.target.value,
+                            )
+                          }
                           className="flex-1"
                         />
                         <Button
@@ -462,7 +492,8 @@ export function CreateJobModal({
               </SelectContent>
             </Select>
             <div className="text-xs text-muted-foreground mt-1">
-              ตัวอย่าง: {scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
+              ตัวอย่าง:{" "}
+              {scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
             </div>
           </div>
 
@@ -472,20 +503,19 @@ export function CreateJobModal({
               id="schedule"
               value={schedule}
               onChange={(e) => setSchedule(e.target.value)}
-              placeholder={scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
+              placeholder={
+                scheduleExamples[scheduleType as keyof typeof scheduleExamples]
+              }
             />
           </div>
 
           <div className="flex items-center space-x-2 mt-1">
-            <Checkbox 
-              id="use-local-time" 
-              checked={useLocalTime} 
+            <Checkbox
+              id="use-local-time"
+              checked={useLocalTime}
               onCheckedChange={(checked) => setUseLocalTime(checked as boolean)}
             />
-            <Label 
-              htmlFor="use-local-time" 
-              className="text-sm font-normal"
-            >
+            <Label htmlFor="use-local-time" className="text-sm font-normal">
               ใช้เวลาท้องถิ่นแทน UTC
             </Label>
           </div>
@@ -509,13 +539,15 @@ export function CreateJobModal({
           )}
 
           <div className="flex items-center space-x-2 mt-1">
-            <Checkbox 
-              id="send-email" 
-              checked={sendEmailNotifications} 
-              onCheckedChange={(checked) => setSendEmailNotifications(checked as boolean)}
+            <Checkbox
+              id="send-email"
+              checked={sendEmailNotifications}
+              onCheckedChange={(checked) =>
+                setSendEmailNotifications(checked as boolean)
+              }
             />
-            <Label 
-              htmlFor="send-email" 
+            <Label
+              htmlFor="send-email"
               className="text-sm font-normal flex items-center gap-2"
             >
               <Mail className="h-4 w-4" />
@@ -538,46 +570,62 @@ export function CreateJobModal({
                   className={!emailValidation.isValid ? "border-red-500" : ""}
                 />
                 {!emailValidation.isValid && (
-                  <p className="text-xs text-red-500">{emailValidation.message}</p>
+                  <p className="text-xs text-red-500">
+                    {emailValidation.message}
+                  </p>
                 )}
                 <div className="text-xs text-muted-foreground mt-1">
                   คั่นอีเมลหลายอันด้วยเครื่องหมายจุลภาค (,)
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label className="text-sm font-medium">ส่งอีเมลเมื่อ:</Label>
                 <div className="flex flex-col gap-2 mt-1">
                   <div className="flex items-center gap-2">
-                    <Checkbox 
-                      id="notify-success" 
-                      checked={notifyOnSuccess} 
-                      onCheckedChange={(checked) => setNotifyOnSuccess(checked as boolean)}
+                    <Checkbox
+                      id="notify-success"
+                      checked={notifyOnSuccess}
+                      onCheckedChange={(checked) =>
+                        setNotifyOnSuccess(checked as boolean)
+                      }
                     />
-                    <Label htmlFor="notify-success" className="text-sm font-normal">
+                    <Label
+                      htmlFor="notify-success"
+                      className="text-sm font-normal"
+                    >
                       Job ทำงานสำเร็จ
                     </Label>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Checkbox 
-                      id="notify-failure" 
-                      checked={notifyOnFailure} 
-                      onCheckedChange={(checked) => setNotifyOnFailure(checked as boolean)}
+                    <Checkbox
+                      id="notify-failure"
+                      checked={notifyOnFailure}
+                      onCheckedChange={(checked) =>
+                        setNotifyOnFailure(checked as boolean)
+                      }
                     />
-                    <Label htmlFor="notify-failure" className="text-sm font-normal">
+                    <Label
+                      htmlFor="notify-failure"
+                      className="text-sm font-normal"
+                    >
                       Job ทำงานล้มเหลว
                     </Label>
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-end">
-                <EmailPreview 
+                <EmailPreview
                   jobData={{
                     name: jobName || "Job ใหม่",
                     endpoint: endpoint || "https://example.com/api",
-                    schedule: schedule || scheduleExamples[scheduleType as keyof typeof scheduleExamples],
-                    httpMethod: httpMethod
+                    schedule:
+                      schedule ||
+                      scheduleExamples[
+                        scheduleType as keyof typeof scheduleExamples
+                      ],
+                    httpMethod: httpMethod,
                   }}
                   emailRecipients={emailRecipients || "example@email.com"}
                 />
@@ -597,7 +645,11 @@ export function CreateJobModal({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
             ยกเลิก
           </Button>
           <Button onClick={handleCreateJob} disabled={isSubmitting}>
@@ -605,7 +657,9 @@ export function CreateJobModal({
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังสร้าง...
               </>
-            ) : "สร้าง Job"}
+            ) : (
+              "สร้าง Job"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

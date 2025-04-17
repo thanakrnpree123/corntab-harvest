@@ -1,7 +1,6 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -14,13 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CronJob } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ArrowDownToLine, 
-  ArrowUpFromLine, 
-  FileJson, 
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  FileJson,
   FileText,
-  AlertTriangle, 
-  Upload
+  AlertTriangle,
+  Upload,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +32,12 @@ export interface JobExportImportProps {
   disabled?: boolean;
 }
 
-export function JobExportImport({ jobs, onImport, onExport, disabled = false }: JobExportImportProps) {
+export function JobExportImport({
+  jobs,
+  onImport,
+  onExport,
+  disabled = false,
+}: JobExportImportProps) {
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [importType, setImportType] = useState<"json" | "csv">("json");
@@ -53,10 +57,10 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
 
   const handleImport = () => {
     setImportError(null);
-    
+
     try {
       let content = "";
-      
+
       if (inputMethod === "manual") {
         content = importType === "json" ? jsonInput : csvInput;
       } else if (inputMethod === "upload") {
@@ -76,18 +80,18 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
         setImportError(`กรุณาป้อนข้อมูล ${importType.toUpperCase()}`);
         return;
       }
-      
+
       let jobsToImport: Partial<CronJob>[] = [];
-      
+
       if (importType === "json") {
         // Parse JSON input
         const parsedData = JSON.parse(content);
-        
+
         if (!Array.isArray(parsedData)) {
           setImportError("ข้อมูล JSON ต้องเป็นรูปแบบอาร์เรย์");
           return;
         }
-        
+
         jobsToImport = parsedData;
       } else {
         // Parse CSV input
@@ -96,22 +100,26 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
           setImportError("ข้อมูล CSV ต้องมีอย่างน้อย 2 แถว (ส่วนหัวและข้อมูล)");
           return;
         }
-        
-        const headers = lines[0].split(",").map(h => h.trim());
-        
+
+        const headers = lines[0].split(",").map((h) => h.trim());
+
         for (let i = 1; i < lines.length; i++) {
           if (!lines[i].trim()) continue;
-          
+
           // Handle quoted CSV values properly
           const values: string[] = [];
           let currentValue = "";
           let insideQuotes = false;
-          
+
           for (let j = 0; j < lines[i].length; j++) {
             const char = lines[i][j];
-            
+
             if (char === '"') {
-              if (insideQuotes && j + 1 < lines[i].length && lines[i][j + 1] === '"') {
+              if (
+                insideQuotes &&
+                j + 1 < lines[i].length &&
+                lines[i][j + 1] === '"'
+              ) {
                 // Handle escaped quotes
                 currentValue += '"';
                 j++; // Skip next quote
@@ -119,7 +127,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
                 // Toggle quote state
                 insideQuotes = !insideQuotes;
               }
-            } else if (char === ',' && !insideQuotes) {
+            } else if (char === "," && !insideQuotes) {
               // End of value
               values.push(currentValue);
               currentValue = "";
@@ -127,18 +135,18 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
               currentValue += char;
             }
           }
-          
+
           // Add the last value
           values.push(currentValue);
-          
+
           const job: Record<string, any> = {};
-          
+
           headers.forEach((header, index) => {
             if (values[index] !== undefined) {
               if (header === "useLocalTime") {
                 job[header] = values[index].toLowerCase() === "true";
               } else if (header === "tags" && values[index]) {
-                job[header] = values[index].split(";").map(tag => tag.trim());
+                job[header] = values[index].split(";").map((tag) => tag.trim());
               } else if (header === "headers" && values[index]) {
                 try {
                   job[header] = JSON.parse(values[index]);
@@ -150,48 +158,48 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
               }
             }
           });
-          
+
           jobsToImport.push(job as Partial<CronJob>);
         }
       }
-      
+
       if (jobsToImport.length === 0) {
         setImportError("ไม่พบข้อมูลที่จะนำเข้า");
         return;
       }
-      
+
       // Validate imported jobs
       for (const job of jobsToImport) {
         if (!job.name) {
           setImportError("ทุกงานต้องมีชื่อ");
           return;
         }
-        
+
         if (!job.schedule) {
           setImportError(`งาน "${job.name}" ไม่มีกำหนดการทำงาน`);
           return;
         }
-        
+
         if (!job.endpoint) {
           setImportError(`งาน "${job.name}" ไม่มี endpoint`);
           return;
         }
       }
-      
+
       onImport(jobsToImport);
       setIsImportDialogOpen(false);
       setJsonInput("");
       setCsvInput("");
       setFileContent("");
       setUploadedFile(null);
-      
+
       toast({
         title: "นำเข้าสำเร็จ",
         description: `นำเข้า ${jobsToImport.length} งานเรียบร้อยแล้ว`,
       });
     } catch (error) {
       setImportError(`เกิดข้อผิดพลาด: ${(error as Error).message}`);
-      
+
       toast({
         title: "นำเข้าไม่สำเร็จ",
         description: `เกิดข้อผิดพลาด: ${(error as Error).message}`,
@@ -205,17 +213,17 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
     if (!file) return;
 
     setUploadedFile(file);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
       setFileContent(content);
-      
+
       // Auto-detect file type
-      if (file.name.endsWith('.json')) {
-        setImportType('json');
-      } else if (file.name.endsWith('.csv')) {
-        setImportType('csv');
+      if (file.name.endsWith(".json")) {
+        setImportType("json");
+      } else if (file.name.endsWith(".csv")) {
+        setImportType("csv");
       }
     };
     reader.readAsText(file);
@@ -225,11 +233,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
     <div className="flex gap-2">
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={disabled}
-          >
+          <Button variant="outline" size="sm" disabled={disabled}>
             <ArrowDownToLine className="mr-2 h-4 w-4" />
             ส่งออก
           </Button>
@@ -261,10 +265,10 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
           </div>
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" disabled={disabled}>
+          <Button variant="outline" size="sm" disabled={false}>
             <ArrowUpFromLine className="mr-2 h-4 w-4" />
             นำเข้า
           </Button>
@@ -276,15 +280,21 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
               นำเข้าข้อมูลงานจากไฟล์ JSON หรือ CSV ที่ส่งออกจากระบบนี้
             </DialogDescription>
           </DialogHeader>
-          
-          <Tabs defaultValue="manual" onValueChange={(v) => setInputMethod(v as "manual" | "upload")}>
+
+          <Tabs
+            defaultValue="manual"
+            onValueChange={(v) => setInputMethod(v as "manual" | "upload")}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="manual">กรอกด้วยตนเอง</TabsTrigger>
               <TabsTrigger value="upload">อัปโหลดไฟล์</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="manual">
-              <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
+              <Tabs
+                defaultValue="json"
+                onValueChange={(v) => setImportType(v as "json" | "csv")}
+              >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="json">JSON</TabsTrigger>
                   <TabsTrigger value="csv">CSV</TabsTrigger>
@@ -319,7 +329,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
                 </TabsContent>
               </Tabs>
             </TabsContent>
-            
+
             <TabsContent value="upload">
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -333,8 +343,8 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
                       onChange={handleFileUpload}
                       className="flex-1"
                     />
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <Upload className="mr-2 h-4 w-4" />
@@ -346,7 +356,8 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
                       <Alert>
                         <AlertTitle>ไฟล์ที่เลือก</AlertTitle>
                         <AlertDescription>
-                          {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(2)} KB)
+                          {uploadedFile.name} (
+                          {(uploadedFile.size / 1024).toFixed(2)} KB)
                         </AlertDescription>
                       </Alert>
                     </div>
@@ -363,9 +374,12 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
                     </div>
                   )}
                 </div>
-                
+
                 <div className="mt-4">
-                  <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
+                  <Tabs
+                    defaultValue="json"
+                    onValueChange={(v) => setImportType(v as "json" | "csv")}
+                  >
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="json">JSON</TabsTrigger>
                       <TabsTrigger value="csv">CSV</TabsTrigger>
@@ -375,7 +389,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
               </div>
             </TabsContent>
           </Tabs>
-          
+
           {importError && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -383,14 +397,15 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
               <AlertDescription>{importError}</AlertDescription>
             </Alert>
           )}
-          
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsImportDialogOpen(false)}
+            >
               ยกเลิก
             </Button>
-            <Button onClick={handleImport}>
-              นำเข้า
-            </Button>
+            <Button onClick={handleImport}>นำเข้า</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
