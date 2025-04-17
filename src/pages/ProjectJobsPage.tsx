@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -644,34 +643,71 @@ export default function ProjectJobsPage() {
       });
   };
 
-  if (isLoadingProject) {
-    return (
-      <PageLayout title="Project Jobs">
-        <div className="flex items-center justify-center p-8">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">กำลังโหลดข้อมูลโปรเจค...</span>
-        </div>
-      </PageLayout>
-    );
-  }
+  // Add a mock handleExportJobs function to pass to JobExportImport
+  const handleExportJobs = (format: "json" | "csv") => {
+    const jobsToExport = selectedJobIds.length > 0 
+      ? jobs.filter(job => selectedJobIds.includes(job.id)) 
+      : jobs;
+    
+    const fileName = `jobs-export-${new Date().toISOString().split('T')[0]}`;
+    
+    if (format === "json") {
+      // Create a JSON file for download
+      const jsonData = JSON.stringify(jobsToExport, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link and trigger click
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "ส่งออกสำเร็จ",
+        description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ JSON`,
+      });
+    } else {
+      // For CSV format, create a simple CSV
+      const headers = ["name", "schedule", "endpoint", "httpMethod", "description", "status"];
+      const csvRows = [
+        headers.join(','),
+        ...jobsToExport.map(job => {
+          return headers.map(header => {
+            // Handle special case for strings that might contain commas
+            const field = job[header as keyof CronJob];
+            if (typeof field === 'string' && field.includes(',')) {
+              return `"${field}"`;
+            }
+            return String(field || '');
+          }).join(',');
+        })
+      ];
+      
+      const csvData = csvRows.join('\n');
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link and trigger click
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "ส่งออกสำเร็จ",
+        description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ CSV`,
+      });
+    }
+  };
 
-  if (!project) {
-    return (
-      <PageLayout title="Project Not Found">
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">ไม่พบโปรเจค</h1>
-          <p className="text-muted-foreground mb-6">
-            ไม่พบโปรเจคที่คุณต้องการหรือไม่มีสิทธิ์เข้าถึง
-          </p>
-          <Button onClick={handleBackToProjects}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            กลับไปหน้าโปรเจค
-          </Button>
-        </div>
-      </PageLayout>
-    );
-  }
-
+  // Modified render section to include projects and selectedProjectId in CreateJobModal
   return (
     <PageLayout title={`${project.name} - Jobs`}>
       <Breadcrumb className="mb-4">
@@ -821,6 +857,7 @@ export default function ProjectJobsPage() {
                 <JobExportImport 
                   jobs={selectedJobs.length > 0 ? selectedJobs : jobs} 
                   onImport={handleImportJobs}
+                  onExport={handleExportJobs}
                   disabled={selectedJobIds.length === 0}
                 />
               )}
@@ -869,172 +906,4 @@ export default function ProjectJobsPage() {
                               />
                             </td>
                             <td className="p-4 align-middle">
-                              <div className="font-medium">{job.name}</div>
-                              <div className="text-xs text-muted-foreground md:hidden">
-                                {job.schedule}
-                              </div>
-                              <div className="text-xs text-muted-foreground md:hidden">
-                                Last: {job.lastRun 
-                                  ? dayjs(job.lastRun).format("MM/DD HH:mm") 
-                                  : "Never"}
-                              </div>
-                              <div className="text-xs text-muted-foreground md:hidden">
-                                Next: {job.nextRun 
-                                  ? dayjs(job.nextRun).format("MM/DD HH:mm") 
-                                  : "Not scheduled"}
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle hidden md:table-cell">
-                              <code className="bg-muted text-xs px-1 py-0.5 rounded">
-                                {job.schedule}
-                              </code>
-                            </td>
-                            <td className="p-4 align-middle">
-                              <div className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold">
-                                <StatusBadge status={job.status} />
-                              </div>
-                            </td>
-                            <td className="p-4 align-middle hidden md:table-cell">
-                              {job.lastRun ? (
-                                <div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.lastRun).format("MMM DD, YYYY - HH:mm")}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.lastRun).fromNow()}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">Never</span>
-                              )}
-                            </td>
-                            <td className="p-4 align-middle hidden md:table-cell">
-                              {job.nextRun ? (
-                                <div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.nextRun).format("MMM DD, YYYY - HH:mm")}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {dayjs(job.nextRun).fromNow()}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">Not scheduled</span>
-                              )}
-                            </td>
-                            <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end items-center gap-2">
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  className="bg-green-500 hover:bg-green-600"
-                                  onClick={() => handleTriggerJob(job.id)}
-                                  disabled={job.status === "paused" || isJobActionInProgress[job.id]}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Play className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <EllipsisVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem 
-                                      onClick={() => toggleJobStatus(job.id)}
-                                      disabled={isJobActionInProgress[job.id]}
-                                    >
-                                      {job.status === "paused" ? (
-                                        <>
-                                          <Play className="mr-2 h-4 w-4" />
-                                          <span>Resume</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Pause className="mr-2 h-4 w-4" />
-                                          <span>Pause</span>
-                                        </>
-                                      )}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      onClick={() => handleDuplicateJob(job.id)}
-                                      disabled={isJobActionInProgress[job.id]}
-                                    >
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      <span>Duplicate</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem
-                                          className="text-destructive focus:text-destructive"
-                                          onSelect={(e) => e.preventDefault()}
-                                        >
-                                          <Trash2 className="mr-2 h-4 w-4" />
-                                          <span>Delete</span>
-                                        </DropdownMenuItem>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Delete Job</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            Are you sure you want to delete "{job.name}"? This action cannot be undone.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                          <AlertDialogAction 
-                                            onClick={() => handleDeleteJob(job.id)}
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          >
-                                            Delete
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <p className="text-muted-foreground mb-4">
-                      {searchQuery || statusFilter !== "all" || dateFilter !== "all"
-                        ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
-                        : "ไม่พบงานในโปรเจคนี้"}
-                    </p>
-                    <Button onClick={() => setIsCreateModalOpen(true)}>
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      สร้างงานแรก
-                    </Button>
-                  </div>
-                )
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      
-      <CreateJobModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-        onCreateJob={handleCreateJob}
-      />
-      
-      <JobDetails 
-        job={selectedJob} 
-        isOpen={isDetailSheetOpen} 
-        onClose={() => setIsDetailSheetOpen(false)} 
-      />
-    </PageLayout>
-  );
-}
+                              <div className="font-

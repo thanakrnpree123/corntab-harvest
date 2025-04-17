@@ -19,6 +19,7 @@ export const apiService = {
   duplicateJob: (id: string) => jobApi.duplicate(id),
   deleteJob: (id: string) => jobApi.delete(id),
   getJobLogs: (jobId: string) => jobApi.getLogs(jobId),
+  triggerJob: (id: string) => jobApi.trigger(id), // Adding the missing triggerJob method
 
   // User methods
   getUsers: () => userApi.getAll(),
