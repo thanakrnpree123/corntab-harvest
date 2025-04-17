@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog,
@@ -14,9 +14,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Project, CronJob } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownToLine, ArrowUpFromLine, AlertTriangle } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Upload } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 export interface ProjectWithJobs extends Project {
   jobs: CronJob[];
@@ -31,9 +32,12 @@ export interface ProjectExportImportProps {
 export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportImportProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [importType, setImportType] = useState<"json" | "csv">("json");
+  const [importMethod, setImportMethod] = useState<"manual" | "upload">("manual");
   const [jsonInput, setJsonInput] = useState("");
   const [csvInput, setCsvInput] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleExport = (type: "json" | "csv") => {
@@ -156,16 +160,54 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
     setImportError(null);
     
     try {
+      let content = "";
+      
+      // Get content based on import method
+      if (importMethod === "manual") {
+        content = importType === "json" ? jsonInput : csvInput;
+      } else if (importMethod === "upload" && uploadedFile) {
+        const reader = new FileReader();
+        reader.readAsText(uploadedFile);
+        reader.onload = (e) => {
+          const fileContent = e.target?.result as string;
+          processImportContent(fileContent);
+        };
+        return; // Early return to handle async file reading
+      } else {
+        setImportError(importMethod === "upload" ? "กรุณาเลือกไฟล์ที่จะนำเข้า" : "กรุณาป้อนข้อมูล");
+        return;
+      }
+      
+      if (!content.trim()) {
+        setImportError(`กรุณาป้อนข้อมูล ${importType.toUpperCase()}`);
+        return;
+      }
+      
+      processImportContent(content);
+      
+    } catch (error) {
+      setImportError(`เกิดข้อผิดพลาด: ${(error as Error).message}`);
+      
+      toast({
+        title: "นำเข้าไม่สำเร็จ",
+        description: `เกิดข้อผิดพลาด: ${(error as Error).message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const processImportContent = (content: string) => {
+    try {
       let projectsToImport: ProjectWithJobs[] = [];
       
       if (importType === "json") {
         // Parse JSON input
-        if (!jsonInput.trim()) {
+        if (!content.trim()) {
           setImportError("กรุณาป้อนข้อมูล JSON");
           return;
         }
         
-        const parsedData = JSON.parse(jsonInput);
+        const parsedData = JSON.parse(content);
         
         if (!Array.isArray(parsedData)) {
           setImportError("ข้อมูล JSON ต้องเป็นรูปแบบอาร์เรย์");
@@ -332,6 +374,7 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
       setIsDialogOpen(false);
       setJsonInput("");
       setCsvInput("");
+      setUploadedFile(null);
       
       toast({
         title: "นำเข้าสำเร็จ",
@@ -345,6 +388,20 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
         description: `เกิดข้อผิดพลาด: ${(error as Error).message}`,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedFile(file);
+      
+      // Auto-detect file type based on extension
+      if (file.name.endsWith('.json')) {
+        setImportType('json');
+      } else if (file.name.endsWith('.csv')) {
+        setImportType('csv');
+      }
     }
   };
 
@@ -397,13 +454,13 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="import">
+        <Tabs defaultValue="manual" onValueChange={(v) => setImportMethod(v as "manual" | "upload")}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="import">Import</TabsTrigger>
-            {/* <TabsTrigger value="export">Export</TabsTrigger> */}
+            <TabsTrigger value="manual">Manual Input</TabsTrigger>
+            <TabsTrigger value="upload">Upload File</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="import">
+          <TabsContent value="manual">
             <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="json">JSON</TabsTrigger>
@@ -444,51 +501,69 @@ project_id,name,description,schedule,endpoint,httpMethod
                 </div>
               </TabsContent>
             </Tabs>
-            
-            {importError && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>{importError}</AlertDescription>
-              </Alert>
-            )}
-            
-            <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleImport}>
-                Import
-              </Button>
-            </DialogFooter>
           </TabsContent>
           
-          {/* <TabsContent value="export">
+          <TabsContent value="upload">
             <div className="space-y-4 py-4">
-              <p>Select the format to export your projects and their jobs:</p>
-              <div className="flex gap-4 justify-center mt-6">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  onClick={() => handleExport("json")}
-                  className="flex-1"
-                >
-                  <ArrowDownToLine className="mr-2 h-4 w-4" />
-                  Export as JSON
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  onClick={() => handleExport("csv")}
-                  className="flex-1"
-                >
-                  <ArrowDownToLine className="mr-2 h-4 w-4" />
-                  Export as CSV
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="file-upload">Upload File</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    ref={fileInputRef}
+                    id="file-upload"
+                    type="file"
+                    accept=".json,.csv"
+                    onChange={handleFileUpload}
+                    className="flex-1"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Browse
+                  </Button>
+                </div>
+                {uploadedFile && (
+                  <div className="mt-2">
+                    <Alert>
+                      <AlertTitle>File selected</AlertTitle>
+                      <AlertDescription>
+                        {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(2)} KB)
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-4">
+                <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="json">JSON</TabsTrigger>
+                    <TabsTrigger value="csv">CSV</TabsTrigger>
+                  </TabsList>
+                </Tabs>
               </div>
             </div>
-          </TabsContent> */}
+          </TabsContent>
         </Tabs>
+        
+        {importError && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{importError}</AlertDescription>
+          </Alert>
+        )}
+        
+        <DialogFooter className="mt-4">
+          <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleImport}>
+            Import
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog,
@@ -42,6 +42,8 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
   const [csvInput, setCsvInput] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleExport = (format: "json" | "csv") => {
@@ -53,9 +55,22 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
     setImportError(null);
     
     try {
-      let content = inputMethod === "manual" 
-        ? (importType === "json" ? jsonInput : csvInput)
-        : fileContent;
+      let content = "";
+      
+      if (inputMethod === "manual") {
+        content = importType === "json" ? jsonInput : csvInput;
+      } else if (inputMethod === "upload") {
+        if (!uploadedFile) {
+          setImportError("กรุณาอัปโหลดไฟล์");
+          return;
+        }
+        if (fileContent) {
+          content = fileContent;
+        } else {
+          setImportError("ไม่สามารถอ่านเนื้อหาไฟล์ได้");
+          return;
+        }
+      }
 
       if (!content.trim()) {
         setImportError(`กรุณาป้อนข้อมูล ${importType.toUpperCase()}`);
@@ -168,6 +183,7 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
       setJsonInput("");
       setCsvInput("");
       setFileContent("");
+      setUploadedFile(null);
       
       toast({
         title: "นำเข้าสำเร็จ",
@@ -188,6 +204,8 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setUploadedFile(file);
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
@@ -306,13 +324,33 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="file-upload">อัปโหลดไฟล์</Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    accept=".json,.csv"
-                    onChange={handleFileUpload}
-                    className="cursor-pointer"
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      ref={fileInputRef}
+                      id="file-upload"
+                      type="file"
+                      accept=".json,.csv"
+                      onChange={handleFileUpload}
+                      className="flex-1"
+                    />
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      เลือกไฟล์
+                    </Button>
+                  </div>
+                  {uploadedFile && (
+                    <div className="mt-2">
+                      <Alert>
+                        <AlertTitle>ไฟล์ที่เลือก</AlertTitle>
+                        <AlertDescription>
+                          {uploadedFile.name} ({(uploadedFile.size / 1024).toFixed(2)} KB)
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  )}
                   {fileContent && (
                     <div className="mt-4">
                       <Label>ตัวอย่างเนื้อหา</Label>
@@ -324,6 +362,15 @@ export function JobExportImport({ jobs, onImport, onExport, disabled = false }: 
                       </div>
                     </div>
                   )}
+                </div>
+                
+                <div className="mt-4">
+                  <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="json">JSON</TabsTrigger>
+                      <TabsTrigger value="csv">CSV</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
               </div>
             </TabsContent>
