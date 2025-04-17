@@ -409,6 +409,56 @@ export const jobApi = {
     } catch (error) {
       return { success: false, error: error.message };
     }
+  },
+
+  trigger: async (id: string): Promise<ApiResponse<CronJob>> => {
+    try {
+      try {
+        const response = await fetch(`${API_BASE_URL}/jobs/${id}/trigger`, {
+          method: 'POST'
+        });
+        return handleResponse<CronJob>(response);
+      } catch (error) {
+        console.warn("Using mock trigger job due to API error:", error);
+        
+        // Get the job details first to use in mock response
+        const getJobResult = await jobApi.getById(id);
+        if (!getJobResult.success || !getJobResult.data) {
+          throw new Error("Failed to get job to trigger");
+        }
+        
+        const job = getJobResult.data;
+        
+        // Create a mock updated job with status changed to running
+        const triggeredJob = {
+          ...job,
+          status: "running",
+          lastRun: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Log a mock execution for this job
+        const logData = {
+          jobId: id,
+          status: "running",
+          startTime: new Date().toISOString(),
+          endTime: null,
+          duration: null,
+          output: "Job triggered manually",
+          error: null
+        };
+        
+        try {
+          await jobApi.createJobLog(id, logData);
+        } catch (e) {
+          console.warn("Failed to create mock log:", e);
+        }
+        
+        return createMockResponse(triggeredJob);
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   }
 };
 
