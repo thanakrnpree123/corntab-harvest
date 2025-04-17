@@ -905,5 +905,4 @@ export default function ProjectJobsPage() {
                                 onCheckedChange={(checked) => toggleSelectJob(job.id, !!checked)}
                               />
                             </td>
-                            <td className="p-4 align-middle">
-                              <div className="font-
+                            <td className="p-4 align-middle font-medium">{job.name}</td>
