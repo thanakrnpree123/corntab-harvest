@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -899,4 +900,141 @@ export default function ProjectJobsPage() {
                                   <div className="text-xs text-muted-foreground">
                                     {dayjs(job.lastRun).format("MMM DD, YYYY - HH:mm")}
                                   </div>
-                                  <div className="text-xs text-muted-
+                                  <div className="text-xs text-muted-foreground">
+                                    {dayjs(job.lastRun).fromNow()}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Never</span>
+                              )}
+                            </td>
+                            <td className="p-4 align-middle hidden md:table-cell">
+                              {job.nextRun ? (
+                                <div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {dayjs(job.nextRun).format("MMM DD, YYYY - HH:mm")}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {dayjs(job.nextRun).fromNow()}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Not scheduled</span>
+                              )}
+                            </td>
+                            <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex justify-end items-center gap-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="bg-green-500 hover:bg-green-600"
+                                  onClick={() => handleTriggerJob(job.id)}
+                                  disabled={job.status === "paused" || isJobActionInProgress[job.id]}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Play className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <EllipsisVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem 
+                                      onClick={() => toggleJobStatus(job.id)}
+                                      disabled={isJobActionInProgress[job.id]}
+                                    >
+                                      {job.status === "paused" ? (
+                                        <>
+                                          <Play className="mr-2 h-4 w-4" />
+                                          <span>Resume</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Pause className="mr-2 h-4 w-4" />
+                                          <span>Pause</span>
+                                        </>
+                                      )}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => handleDuplicateJob(job.id)}
+                                      disabled={isJobActionInProgress[job.id]}
+                                    >
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      <span>Duplicate</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem
+                                          className="text-destructive focus:text-destructive"
+                                          onSelect={(e) => e.preventDefault()}
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          <span>Delete</span>
+                                        </DropdownMenuItem>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Are you sure you want to delete "{job.name}"? This action cannot be undone.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                          <AlertDialogAction 
+                                            onClick={() => handleDeleteJob(job.id)}
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          >
+                                            Delete
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <p className="text-muted-foreground mb-4">
+                      {searchQuery || statusFilter !== "all" || dateFilter !== "all"
+                        ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
+                        : "ไม่พบงานในโปรเจคนี้"}
+                    </p>
+                    <Button onClick={() => setIsCreateModalOpen(true)}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      สร้างงานแรก
+                    </Button>
+                  </div>
+                )
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      <CreateJobModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onCreateJob={handleCreateJob}
+      />
+      
+      <JobDetails 
+        job={selectedJob} 
+        isOpen={isDetailSheetOpen} 
+        onClose={() => setIsDetailSheetOpen(false)} 
+      />
+    </PageLayout>
+  );
+}
