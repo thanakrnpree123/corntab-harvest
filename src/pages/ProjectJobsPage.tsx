@@ -643,7 +643,6 @@ export default function ProjectJobsPage() {
       });
   };
 
-  // Add a mock handleExportJobs function to pass to JobExportImport
   const handleExportJobs = (format: "json" | "csv") => {
     const jobsToExport = selectedJobIds.length > 0 
       ? jobs.filter(job => selectedJobIds.includes(job.id)) 
@@ -707,7 +706,6 @@ export default function ProjectJobsPage() {
     }
   };
 
-  // Modified render section to include projects and selectedProjectId in CreateJobModal
   return (
     <PageLayout title={`${project.name} - Jobs`}>
       <Breadcrumb className="mb-4">
@@ -906,3 +904,131 @@ export default function ProjectJobsPage() {
                               />
                             </td>
                             <td className="p-4 align-middle font-medium">{job.name}</td>
+                            <td className="p-4 align-middle hidden md:table-cell">
+                              <code className="bg-muted px-1 py-0.5 rounded text-xs">{job.schedule}</code>
+                            </td>
+                            <td className="p-4 align-middle">
+                              <StatusBadge status={job.status} />
+                            </td>
+                            <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
+                              {job.lastRun ? dayjs(job.lastRun).fromNow() : 'Never'}
+                            </td>
+                            <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
+                              {job.nextRun ? dayjs(job.nextRun).format('DD/MM/YYYY HH:mm') : '-'}
+                            </td>
+                            <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex justify-end items-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTriggerJob(job.id);
+                                  }}
+                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Play className="h-4 w-4" />
+                                  )}
+                                </Button>
+                                
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleJobStatus(job.id);
+                                  }}
+                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    job.status === 'paused' ? (
+                                      <Play className="h-4 w-4" />
+                                    ) : (
+                                      <Pause className="h-4 w-4" />
+                                    )
+                                  )}
+                                </Button>
+
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <EllipsisVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewJobDetails(job);
+                                      }}
+                                    >
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDuplicateJob(job.id);
+                                      }}
+                                    >
+                                      <Copy className="h-4 w-4 mr-2" />
+                                      Duplicate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteJob(job.id);
+                                      }}
+                                      className="text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <p className="mb-4 text-muted-foreground">ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา</p>
+                    <Button onClick={() => setIsCreateModalOpen(true)}>
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      เพิ่มงานใหม่
+                    </Button>
+                  </div>
+                )
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      <CreateJobModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+        onCreateJob={handleCreateJob}
+        projects={[project]} 
+        selectedProjectId={projectId || ''}
+      />
+      
+      <JobDetails 
+        job={selectedJob} 
+        isOpen={isDetailSheetOpen} 
+        onClose={() => setIsDetailSheetOpen(false)}
+        onUpdate={refetchJobs}
+        onDelete={handleDeleteJob}
+        onTrigger={handleTriggerJob}
+      />
+    </PageLayout>
+  );
+}
