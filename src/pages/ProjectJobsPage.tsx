@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -209,7 +208,7 @@ export default function ProjectJobsPage() {
           } else {
             toast({
               title: "งานกลับมาทำงาน",
-              description: `${job.name} กลับมาทำงานแล้ว`,
+              description: `${job.name} กลับมาทำ���านแล้ว`,
               variant: "default",
             });
           }
@@ -905,19 +904,18 @@ export default function ProjectJobsPage() {
       </div>
 
       <CreateJobModal 
-        open={isCreateModalOpen} 
-        onOpenChange={setIsCreateModalOpen}
-        onSubmit={handleCreateJob}
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateJob={handleCreateJob}
+        projects={[project]}
+        selectedProjectId={projectId || ""}
       />
 
       {selectedJob && (
         <JobDetails
           job={selectedJob}
-          open={isDetailSheetOpen}
-          onOpenChange={setIsDetailSheetOpen}
-          onToggleStatus={() => toggleJobStatus(selectedJob.id)}
-          onDelete={() => handleDeleteJob(selectedJob.id)}
-          onDuplicate={() => handleDuplicateJob(selectedJob.id)}
+          isOpen={isDetailSheetOpen}
+          onClose={() => setIsDetailSheetOpen(false)}
         />
       )}
     </PageLayout>
@@ -931,7 +929,6 @@ function getMockProject(projectId: string): Project {
     description: "This is a mock project for demonstration purposes.",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    userId: "user1",
   };
 }
 
@@ -973,6 +970,9 @@ function createMockJob(partial: Partial<CronJob>): CronJob {
     useLocalTime: partial.useLocalTime || false,
     emailNotifications: partial.emailNotifications || "",
     webhookUrl: partial.webhookUrl || "",
+    successCount: partial.successCount || 0,
+    failCount: partial.failCount || 0,
+    averageRuntime: partial.averageRuntime || null,
   };
 }
 
