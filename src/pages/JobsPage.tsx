@@ -817,6 +817,63 @@ export default function JobsPage() {
     });
   };
 
+  const handleExportJobs = (format: "json" | "csv") => {
+    // Implementation for exporting jobs
+    const jobsToExport = jobs;
+    const fileName = `jobs-export-${new Date().toISOString().split('T')[0]}`;
+    
+    if (format === 'json') {
+      const jsonData = JSON.stringify(jobsToExport, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "ส่งออกสำเร็จ",
+        description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ JSON`,
+      });
+    } else {
+      // For CSV format
+      const headers = ['name', 'schedule', 'endpoint', 'httpMethod', 'description', 'status'];
+      const csvRows = [
+        headers.join(','),
+        ...jobsToExport.map(job => {
+          return headers.map(header => {
+            const field = job[header as keyof CronJob];
+            if (typeof field === 'string' && field.includes(',')) {
+              return `"${field}"`;
+            }
+            return String(field || '');
+          }).join(',');
+        })
+      ];
+      
+      const csvData = csvRows.join('\n');
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "ส่งออกสำเร็จ",
+        description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ CSV`,
+      });
+    }
+  };
+
   const filteredJobs = jobs.filter(job => {
     const searchMatch = !searchQuery || 
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1136,7 +1193,9 @@ export default function JobsPage() {
                   )}
                   
                   <JobExportImport
+                    jobs={jobs}
                     onImport={handleImportJobs}
+                    onExport={handleExportJobs}
                   />
                 </>
               )}

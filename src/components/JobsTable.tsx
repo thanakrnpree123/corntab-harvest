@@ -12,7 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Play } from "lucide-react";
+import { ChevronRight, Play, Copy } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
