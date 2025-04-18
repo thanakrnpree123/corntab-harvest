@@ -917,4 +917,3 @@ export default function JobsPage() {
       case "lastRun":
         // Handle null values
         if (!a.lastRun && !b.lastRun) comparison = 0;
-        else
