@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, PlusCircle, Loader2, Filter, FolderPlus } from "lucide-react";
+import { Copy, PlusCircle, Loader2, Filter, FolderPlus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -991,7 +991,43 @@ export default function JobsPage() {
                                 </AlertDialog>
                               );
                             }}
-                            onDeleteJob={handleDeleteJob}
+                            onDeleteJob={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="outline" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              return (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{job.name}"?
+                                        This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteJob(jobId)}>
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                            }}
                           />
                         ) : (
                           <div className="flex flex-col items-center justify-center p-8 text-center">
