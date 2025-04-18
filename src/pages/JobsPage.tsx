@@ -262,6 +262,12 @@ export default function JobsPage() {
       });
   };
 
+  // Add this new function to handle viewing project details
+  const handleViewProjectDetails = (project: Project) => {
+    // Set the selected project
+    setSelectedProjectId(project.id);
+  };
+
   const handleCreateJob = (jobData: Partial<CronJob>) => {
     const newJobData = {
       ...jobData,
@@ -640,6 +646,7 @@ export default function JobsPage() {
                 <CardContent className="p-0">
                   <ProjectsTable 
                     projects={projects}
+                    onViewDetails={handleViewProjectDetails}
                     onAddJob={(projectId) => {
                       setSelectedProjectId(projectId);
                       setIsCreateModalOpen(true);
@@ -651,7 +658,7 @@ export default function JobsPage() {
                 </CardContent>
               </Card>
               
-              {/* {selectedProjectId && (
+              {selectedProjectId && (
                 <div className="space-y-4">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
@@ -914,7 +921,7 @@ export default function JobsPage() {
                     </CardContent>
                   </Card>
                 </div>
-              )} */}
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">
@@ -936,321 +943,3 @@ export default function JobsPage() {
         onClose={() => setIsCreateModalOpen(false)} 
         onCreateJob={handleCreateJob}
         projects={projects}
-        selectedProjectId={selectedProjectId}
-      />
-      
-      <ProjectSelector 
-        projects={projects}
-        selectedProjectId={""}
-        onSelectProject={() => {}}
-        onCreateProject={handleCreateProject}
-        isOpen={isCreateProjectModalOpen}
-        onClose={() => setIsCreateProjectModalOpen(false)}
-      />
-      
-      <JobDetails 
-        job={selectedJob} 
-        isOpen={isDetailSheetOpen} 
-        onClose={() => setIsDetailSheetOpen(false)} 
-      />
-    </PageLayout>
-  );
-}
-
-// Mock functions for UI testing
-
-function getMockProjects(): Project[] {
-  return [
-    {
-      id: "project-1",
-      name: "Marketing Automation",
-      description: "Marketing campaign automation tasks",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "project-2",
-      name: "Data Sync",
-      description: "Database synchronization jobs",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      id: "project-3",
-      name: "Reporting",
-      description: "Automated reporting tasks",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-  ];
-}
-
-function getAllMockJobs(): CronJob[] {
-  const allJobs: CronJob[] = [];
-  const projects = getMockProjects();
-  
-  projects.forEach(project => {
-    const projectJobs = getMockJobs(project.id);
-    allJobs.push(...projectJobs);
-  });
-  
-  return allJobs;
-}
-
-function getMockJobs(projectId: string): CronJob[] {
-  const baseJobs = [
-    {
-      id: "job-1",
-      name: "Send Weekly Newsletter",
-      schedule: "0 9 * * 1",
-      endpoint: "https://api.example.com/send-newsletter",
-      httpMethod: "POST",
-      description: "Sends weekly newsletter to subscribers every Monday",
-      status: "idle" as JobStatus,
-      useLocalTime: false,
-      timezone: "UTC",
-      lastRun: new Date(Date.now() - 86400000).toISOString(),
-      nextRun: new Date(Date.now() + 518400000).toISOString(),
-      createdAt: new Date(Date.now() - 2592000000).toISOString(),
-      updatedAt: new Date(Date.now() - 86400000).toISOString(),
-      tags: ["marketing", "email"],
-      successCount: 12,
-      failCount: 1,
-      averageRuntime: 45.2,
-      projectId: "project-1",
-      emailNotifications: "admin@example.com,notify@example.com",
-      webhookUrl: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
-    },
-    {
-      id: "job-2",
-      name: "Database Backup",
-      schedule: "0 0 * * *",
-      endpoint: "https://api.example.com/backup",
-      httpMethod: "GET",
-      description: "Daily database backup at midnight",
-      status: "success" as JobStatus,
-      useLocalTime: true,
-      timezone: "Asia/Bangkok",
-      lastRun: new Date(Date.now() - 3600000).toISOString(),
-      nextRun: new Date(Date.now() + 82800000).toISOString(),
-      createdAt: new Date(Date.now() - 7776000000).toISOString(),
-      updatedAt: new Date(Date.now() - 3600000).toISOString(),
-      tags: ["database", "backup"],
-      successCount: 89,
-      failCount: 3,
-      averageRuntime: 134.7,
-      projectId: "project-2",
-      emailNotifications: null,
-      webhookUrl: null
-    },
-    {
-      id: "job-3",
-      name: "Process Customer Orders",
-      schedule: "*/15 * * * *",
-      endpoint: "https://api.example.com/process-orders",
-      httpMethod: "POST",
-      description: "Process new customer orders every 15 minutes",
-      status: "failed" as JobStatus,
-      useLocalTime: false,
-      timezone: "UTC",
-      lastRun: new Date(Date.now() - 900000).toISOString(),
-      nextRun: new Date(Date.now() + 900000).toISOString(),
-      createdAt: new Date(Date.now() - 1209600000).toISOString(),
-      updatedAt: new Date(Date.now() - 900000).toISOString(),
-      tags: ["orders", "customers", "processing"],
-      successCount: 1240,
-      failCount: 17,
-      averageRuntime: 28.3,
-      projectId: "project-1",
-      emailNotifications: "tech-alerts@example.com",
-      webhookUrl: "https://api.example.com/webhook/orders"
-    },
-    {
-      id: "job-4",
-      name: "Generate Monthly Report",
-      schedule: "0 9 1 * *",
-      endpoint: "https://api.example.com/generate-report",
-      httpMethod: "POST",
-      description: "Generate monthly performance report on the 1st day of each month",
-      status: "paused" as JobStatus,
-      useLocalTime: true,
-      timezone: "America/New_York",
-      lastRun: new Date(Date.now() - 2592000000).toISOString(),
-      nextRun: null,
-      createdAt: new Date(Date.now() - 5184000000).toISOString(),
-      updatedAt: new Date(Date.now() - 1209600000).toISOString(),
-      tags: ["reporting", "monthly"],
-      successCount: 6,
-      failCount: 0,
-      averageRuntime: 326.5,
-      projectId: "project-3",
-      emailNotifications: "management@example.com,reports@example.com",
-      webhookUrl: null
-    },
-    {
-      id: "job-5",
-      name: "Clean Temporary Files",
-      schedule: "0 2 * * *",
-      endpoint: "https://api.example.com/clean-temp",
-      httpMethod: "GET",
-      description: "Clean temporary files every day at 2 AM",
-      status: "running" as JobStatus,
-      useLocalTime: false,
-      timezone: "UTC",
-      lastRun: new Date().toISOString(),
-      nextRun: new Date(Date.now() + 86400000).toISOString(),
-      createdAt: new Date(Date.now() - 864000000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      tags: ["maintenance", "cleanup"],
-      successCount: 29,
-      failCount: 1,
-      averageRuntime: 45.8,
-      projectId: "project-2",
-      emailNotifications: null,
-      webhookUrl: "https://hooks.slack.com/services/AAA/BBB/CCC"
-    }
-  ];
-  
-  // Return only jobs for the selected project
-  return baseJobs.filter(job => job.projectId === projectId);
-}
-
-function createMockJob(jobData: Partial<CronJob>): CronJob {
-  // Store in localStorage for mock persistence
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  
-  const newJob = {
-    ...jobData,
-    id: `job-${Date.now()}`,
-    status: "idle" as JobStatus,
-    lastRun: null,
-    nextRun: getNextRunTime(jobData.schedule || "0 * * * *"),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    tags: jobData.tags || [],
-    successCount: 0,
-    failCount: 0,
-    averageRuntime: null,
-  };
-  
-  mockJobs.push(newJob);
-  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-  
-  return newJob as CronJob;
-}
-
-function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
-  // Update mock job in localStorage
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  const updatedJobs = mockJobs.map((j: CronJob) => 
-    j.id === job.id ? { ...j, status: newStatus } : j
-  );
-  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
-}
-
-function mockDeleteJob(jobId: string) {
-  // Remove mock job from localStorage
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  const updatedJobs = mockJobs.filter((j: CronJob) => j.id !== jobId);
-  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
-}
-
-function mockDeleteProject(projectId: string) {
-  // Remove project and its jobs from localStorage
-  const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
-  const updatedProjects = mockProjects.filter((p: Project) => p.id !== projectId);
-  localStorage.setItem('mockProjects', JSON.stringify(updatedProjects));
-  
-  // Also remove associated jobs
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  const updatedJobs = mockJobs.filter((j: CronJob) => j.projectId !== projectId);
-  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
-}
-
-function mockDuplicateJob(job: CronJob) {
-  // Create duplicate in localStorage
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  
-  const newJob = {
-    ...job,
-    id: `job-${Date.now()}`,
-    name: `${job.name} (copy)`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  mockJobs.push(newJob);
-  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-}
-
-function mockImportJob(job: Partial<CronJob>) {
-  // Add imported job to localStorage
-  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-  
-  const newJob = {
-    ...job,
-    id: `job-${Date.now()}`,
-    status: "idle" as JobStatus,
-    lastRun: null,
-    nextRun: getNextRunTime(job.schedule || "0 * * * *"),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    tags: job.tags || [],
-    successCount: 0,
-    failCount: 0,
-    averageRuntime: null,
-  };
-  
-  mockJobs.push(newJob);
-  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-}
-
-function mockImportProject(projectWithJobs: ProjectWithJobs) {
-  // Add imported project to localStorage
-  const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
-  
-  const newProjectId = `project-${Date.now()}`;
-  const newProject = {
-    id: newProjectId,
-    name: projectWithJobs.name,
-    description: projectWithJobs.description,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  
-  mockProjects.push(newProject);
-  localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
-  
-  // Add jobs for this project
-  if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
-    const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
-    
-    for (const job of projectWithJobs.jobs) {
-      const newJob = {
-        ...job,
-        id: `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        projectId: newProjectId,
-        status: "idle" as JobStatus,
-        lastRun: null,
-        nextRun: getNextRunTime(job.schedule || "0 * * * *"),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        tags: job.tags || [],
-        successCount: 0,
-        failCount: 0,
-        averageRuntime: null,
-      };
-      
-      mockJobs.push(newJob);
-    }
-    
-    localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
-  }
-}
-
-// Helper to calculate next run time based on cron expression
-function getNextRunTime(cronExpression: string): string {
-  // Simple implementation - just add random hours (1-24)
-  const hours = Math.floor(Math.random() * 24) + 1;
-  return new Date(Date.now() + hours * 3600000).toISOString();
-}
