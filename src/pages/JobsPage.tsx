@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -8,6 +9,7 @@ import { JobDetails } from "@/components/JobDetails";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { JobExportImport } from "@/components/JobExportImport";
 import { ProjectExportImport, ProjectWithJobs } from "@/components/ProjectExportImport";
+import { ProjectBatchActions } from "@/components/ProjectBatchActions";
 import { CronJob, JobStatus, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,7 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, PlusCircle, Loader2, Filter, FolderPlus, ArrowDownToLine, Trash2 } from "lucide-react";
+import { Copy, PlusCircle, Loader2, Filter, FolderPlus, ArrowDownToLine, Trash2, FileJson, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -33,118 +35,172 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-interface ProjectBatchActionsProps {
-  projects: Project[];
-  selectedProjectIds: string[];
-  onExport: (projectIds: string[], format: "json" | "csv") => void;
-  onDelete: (projectIds: string[]) => void;
-  disabled?: boolean;
-}
-
-export function ProjectBatchActions({ 
-  projects, 
-  selectedProjectIds, 
-  onExport, 
-  onDelete,
-  disabled = false 
-}: ProjectBatchActionsProps) {
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const { toast } = useToast();
-
-  const handleExport = (format: "json" | "csv") => {
-    if (selectedProjectIds.length === 0) {
-      toast({
-        title: "กรุณาเลือกโปรเจค",
-        description: "โปรดเลือกโปรเจคที่ต้องการส่งออกก่อน",
-        variant: "destructive",
-      });
-      return;
+// Function to convert data to CSV format
+const convertToCSV = (data: any) => {
+  if (!data) return "";
+  
+  // Handle projects export
+  if (data.projects && Array.isArray(data.projects)) {
+    const projects = data.projects;
+    const headers = ["id", "name", "description", "createdAt", "updatedAt"];
+    
+    const projectRows = [
+      "# PROJECTS",
+      headers.join(","),
+      ...projects.map(project => 
+        headers.map(header => {
+          const value = project[header as keyof Project];
+          return typeof value === 'string' && value.includes(',') 
+            ? `"${value}"` 
+            : String(value || '');
+        }).join(",")
+      ),
+      ""  // Empty line between sections
+    ];
+    
+    let jobRows: string[] = [];
+    if (data.jobs && Array.isArray(data.jobs)) {
+      const jobHeaders = ["id", "name", "projectId", "schedule", "endpoint", "httpMethod", "status", "description"];
+      jobRows = [
+        "# JOBS",
+        jobHeaders.join(","),
+        ...data.jobs.map((job: any) => 
+          jobHeaders.map(header => {
+            const value = job[header as keyof CronJob];
+            return typeof value === 'string' && value.includes(',') 
+              ? `"${value}"` 
+              : String(value || '');
+          }).join(",")
+        )
+      ];
     }
     
-    onExport(selectedProjectIds, format);
-    setIsExportDialogOpen(false);
-    
-    toast({
-      title: "ส่งออกโปรเจค",
-      description: `กำลังส่งออก ${selectedProjectIds.length} โปรเจคในรูปแบบ ${format.toUpperCase()}`,
-    });
-  };
+    return [...projectRows, ...jobRows].join("\n");
+  }
+  
+  // Handle jobs-only export
+  if (Array.isArray(data)) {
+    const headers = ["id", "name", "schedule", "endpoint", "httpMethod", "status", "description"];
+    const rows = [
+      headers.join(","),
+      ...data.map(item => 
+        headers.map(header => {
+          const value = item[header as keyof typeof item];
+          return typeof value === 'string' && value.includes(',') 
+            ? `"${value}"` 
+            : String(value || '');
+        }).join(",")
+      )
+    ];
+    return rows.join("\n");
+  }
+  
+  return "";
+};
 
-  return (
-    <div className="flex gap-2">
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-destructive border-destructive hover:bg-destructive/10"
-            disabled={selectedProjectIds.length === 0 || disabled}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            ลบที่เลือก
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ลบโปรเจคที่เลือก</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณต้องการลบโปรเจคที่เลือกทั้งหมด {selectedProjectIds.length} โปรเจคใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบงานทั้งหมดที่อยู่ในโปรเจคด้วย
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => onDelete(selectedProjectIds)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              ลบโปรเจค
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-        <DialogTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm"
-            disabled={selectedProjectIds.length === 0 || disabled}
-          >
-            <ArrowDownToLine className="mr-2 h-4 w-4" />
-            ส่งออก
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>ส่งออกข้อมูลโปรเจค</DialogTitle>
-            <DialogDescription>
-              เลือกรูปแบบไฟล์ที่ต้องการส่งออก {selectedProjectIds.length} โปรเจค
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <Button
-              variant="outline"
-              className="flex flex-col items-center justify-center gap-2 h-auto py-6"
-              onClick={() => handleExport("json")}
-            >
-              <FileJson className="h-8 w-8" />
-              <span>JSON</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="flex flex-col items-center justify-center gap-2 h-auto py-6"
-              onClick={() => handleExport("csv")}
-            >
-              <FileText className="h-8 w-8" />
-              <span>CSV</span>
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+// Mocking functions
+const getMockProjects = (): Project[] => {
+  return Array.from({ length: 5 }, (_, i) => ({
+    id: `mock-project-${i}`,
+    name: `Mock Project ${i}`,
+    description: `This is a mock project for testing purposes ${i}`,
+    createdAt: new Date(new Date().setDate(new Date().getDate() - i)).toISOString(),
+    updatedAt: new Date(new Date().setDate(new Date().getDate() - i)).toISOString(),
+  }));
+};
+
+const getMockJobs = (projectId: string): CronJob[] => {
+  return Array.from({ length: 3 }, (_, i) => ({
+    id: `mock-job-${projectId}-${i}`,
+    name: `Mock Job ${i} for Project ${projectId}`,
+    schedule: "0 0 * * *",
+    endpoint: "https://example.com/api",
+    httpMethod: "GET",
+    requestBody: "",
+    description: `This is a mock job for testing purposes ${i}`,
+    projectId: projectId,
+    status: ["idle", "running", "success", "failed", "paused"][Math.floor(Math.random() * 5)] as JobStatus,
+    useLocalTime: false,
+    timezone: "UTC",
+    lastRun: Math.random() > 0.5 ? new Date(new Date().setHours(new Date().getHours() - Math.floor(Math.random() * 24))).toISOString() : null,
+    nextRun: Math.random() > 0.5 ? new Date(new Date().setHours(new Date().getHours() + Math.floor(Math.random() * 24))).toISOString() : null,
+    createdAt: new Date(new Date().setDate(new Date().getDate() - i)).toISOString(),
+    updatedAt: new Date(new Date().setDate(new Date().getDate() - i)).toISOString(),
+    tags: [],
+    successCount: Math.floor(Math.random() * 10),
+    failCount: Math.floor(Math.random() * 5),
+    averageRuntime: Math.floor(Math.random() * 1000),
+    emailNotifications: null,
+    webhookUrl: null,
+    headers: {},
+    body: "",
+  }));
+};
+
+const getAllMockJobs = (): CronJob[] => {
+  let allJobs: CronJob[] = [];
+  const projects = getMockProjects();
+  
+  projects.forEach(project => {
+    allJobs = [...allJobs, ...getMockJobs(project.id)];
+  });
+  
+  return allJobs;
+};
+
+const createMockJob = (jobData: Partial<CronJob>): CronJob => {
+  return {
+    id: jobData.id || `mock-${Date.now()}`,
+    name: jobData.name || "New Mock Job",
+    schedule: jobData.schedule || "0 * * * *",
+    endpoint: jobData.endpoint || "https://example.com/api",
+    httpMethod: jobData.httpMethod || "GET",
+    requestBody: jobData.requestBody || "",
+    description: jobData.description || "",
+    projectId: jobData.projectId || "mock-project-id",
+    status: jobData.status || "idle",
+    useLocalTime: jobData.useLocalTime || false,
+    timezone: jobData.timezone || "UTC",
+    lastRun: jobData.lastRun || null,
+    nextRun: jobData.nextRun || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: jobData.tags || [],
+    successCount: jobData.successCount || 0,
+    failCount: jobData.failCount || 0,
+    averageRuntime: jobData.averageRuntime || null,
+    emailNotifications: jobData.emailNotifications || null,
+    webhookUrl: jobData.webhookUrl || null,
+    headers: jobData.headers || {},
+    body: jobData.body || "",
+  };
+};
+
+const mockDeleteProject = (projectId: string) => {
+  console.log(`Mock deleting project ${projectId}`);
+};
+
+const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {
+  console.log(`Mock toggling job ${job.id} to status ${newStatus}`);
+};
+
+const mockDeleteJob = (jobId: string) => {
+  console.log(`Mock deleting job ${jobId}`);
+};
+
+const mockDuplicateJob = (job: CronJob) => {
+  console.log(`Mock duplicating job ${job.id}`);
+};
+
+const mockImportJob = (job: Partial<CronJob>) => {
+  console.log(`Mock importing job ${job.name}`);
+};
+
+const mockImportProject = (project: ProjectWithJobs) => {
+  console.log(`Mock importing project ${project.name} with ${project.jobs?.length || 0} jobs`);
+};
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -472,10 +528,10 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-          // If unsuccessful, use mock data
-          mockToggleJobStatus(job, newStatus);
-          refetchJobs();
-          refetchAllJobs();
+        // If unsuccessful, use mock data
+        mockToggleJobStatus(job, newStatus);
+        refetchJobs();
+        refetchAllJobs();
       })
       .finally(() => {
         setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
@@ -939,10 +995,37 @@ export default function JobsPage() {
                           <JobsTable 
                             jobs={sortedJobs} 
                             onViewDetails={handleViewJobDetails} 
-                            onToggleStatus={(jobId) => {
-                              const job = jobs.find(j => j.id === jobId);
-                              if (!job) return null;
-                              
-                              if (isJobActionInProgress[jobId]) {
-                                return <Button variant="outline" size="sm" disabled>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin"
+                            onToggleStatus={toggleJobStatus}
+                            onDeleteJob={handleDeleteJob}
+                            onDuplicateJob={handleDuplicateJob}
+                            isJobActionInProgress={isJobActionInProgress}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-8 text-center">
+                            <p className="mb-4 text-muted-foreground">ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา</p>
+                            <Button onClick={() => setIsCreateModalOpen(true)}>
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              เพิ่มงานใหม่
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <p className="mb-4 text-muted-foreground">ยังไม่มีโปรเจค เริ่มสร้างโปรเจคแรกของคุณเลย</p>
+              <Button onClick={() => setIsCreateProjectModalOpen(true)}>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                สร้างโปรเจคใหม่
+              </Button>
+            </div>
+          )
+        )}
+      </div>
+    </PageLayout>
+  );
+}
