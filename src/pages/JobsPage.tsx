@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -45,6 +46,7 @@ export default function JobsPage() {
   const [isJobActionInProgress, setIsJobActionInProgress] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
   const [isProjectLoading, setIsProjectLoading] = useState(false);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
@@ -704,6 +706,7 @@ export default function JobsPage() {
               projects={projects} 
               jobs={allJobs}
               onImport={handleImportProjects} 
+              onExport={handleExportProjects}
             />
           </div>
         </div>
@@ -916,7 +919,7 @@ export default function JobsPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                            
+                              
                               <div className="space-y-2">
                                 <h4 className="font-medium text-sm">วันที่สร้าง</h4>
                                 <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
@@ -930,3 +933,158 @@ export default function JobsPage() {
                                     <SelectItem value="month">30 วันที่ผ่านมา</SelectItem>
                                   </SelectContent>
                                 </Select>
+                              </div>
+                              
+                              <Separator />
+                              
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">เรียงตาม</h4>
+                                <div className="flex gap-2">
+                                  <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="w-full">
+                                      <SelectValue placeholder="เรียงตาม" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="name">ชื่อ</SelectItem>
+                                      <SelectItem value="status">สถานะ</SelectItem>
+                                      <SelectItem value="date">วันที่สร้าง</SelectItem>
+                                      <SelectItem value="lastRun">รันล่าสุด</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  
+                                  <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as any)}>
+                                    <SelectTrigger className="w-[80px]">
+                                      <SelectValue placeholder="ลำดับ" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="asc">A-Z</SelectItem>
+                                      <SelectItem value="desc">Z-A</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              <Button 
+                                className="w-full" 
+                                variant="outline"
+                                onClick={handleClearFilters}
+                              >
+                                ล้างตัวกรอง
+                              </Button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <p className="mb-4 text-muted-foreground">ไม่พบโปรเจค</p>
+              <Button onClick={() => setIsCreateProjectModalOpen(true)}>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                สร้างโปรเจคแรกของคุณ
+              </Button>
+            </div>
+          )
+        )}
+      </div>
+
+      <CreateJobModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateJob={handleCreateJob}
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+      />
+
+      <JobDetails
+        job={selectedJob}
+        isOpen={isDetailSheetOpen}
+        onClose={() => setIsDetailSheetOpen(false)}
+        onUpdate={refetchJobs}
+        onDelete={handleDeleteJob}
+      />
+    </PageLayout>
+  );
+}
+
+// Missing mock functions that would cause errors
+const getMockProjects = (): Project[] => {
+  return Array.from({ length: 5 }, (_, i) => ({
+    id: `mock-project-${i + 1}`,
+    name: `Mock Project ${i + 1}`,
+    description: `This is a mock project for testing purposes ${i + 1}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }));
+};
+
+const getMockJobs = (projectId: string): CronJob[] => {
+  return Array.from({ length: 3 }, (_, i) => createMockJob({
+    id: `mock-job-${projectId}-${i + 1}`,
+    projectId,
+    name: `Mock Job ${i + 1}`,
+    status: i % 2 === 0 ? "idle" : "paused"
+  }));
+};
+
+const getAllMockJobs = (): CronJob[] => {
+  const projects = getMockProjects();
+  return projects.flatMap(project => getMockJobs(project.id));
+};
+
+const createMockJob = (overrides: Partial<CronJob> = {}): CronJob => {
+  const id = overrides.id || `mock-job-${Date.now()}`;
+  return {
+    id,
+    name: overrides.name || `Mock Job ${id}`,
+    schedule: overrides.schedule || "0 * * * *",
+    endpoint: overrides.endpoint || "https://example.com/api",
+    httpMethod: overrides.httpMethod || "GET",
+    requestBody: overrides.requestBody || "",
+    description: overrides.description || "This is a mock job for testing purposes.",
+    projectId: overrides.projectId || "mock-project-id",
+    status: overrides.status || "idle",
+    useLocalTime: overrides.useLocalTime !== undefined ? overrides.useLocalTime : false,
+    timezone: overrides.timezone || "UTC",
+    lastRun: overrides.lastRun || null,
+    nextRun: overrides.nextRun || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: overrides.tags || [],
+    successCount: overrides.successCount || 0,
+    failCount: overrides.failCount || 0,
+    averageRuntime: overrides.averageRuntime || null,
+    emailNotifications: overrides.emailNotifications || null,
+    webhookUrl: overrides.webhookUrl || null,
+    headers: overrides.headers || {},
+    body: overrides.body || "",
+  };
+};
+
+const mockDeleteProject = (projectId: string) => {
+  console.log(`Mock deleting project ${projectId}`);
+};
+
+const mockImportProject = (project: ProjectWithJobs) => {
+  console.log(`Mock importing project ${project.name}`);
+};
+
+const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {
+  console.log(`Mock toggling job ${job.id} status to ${newStatus}`);
+};
+
+const mockDeleteJob = (jobId: string) => {
+  console.log(`Mock deleting job ${jobId}`);
+};
+
+const mockDuplicateJob = (job: CronJob) => {
+  console.log(`Mock duplicating job ${job.id}`);
+};
+
+const mockImportJob = (job: Partial<CronJob>) => {
+  console.log(`Mock importing job ${job.name}`);
+};
