@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { JobsTable } from "@/components/JobsTable";
@@ -21,8 +21,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-
-// Mock functions for UI testing
 
 function getMockProjects(): Project[] {
   return [
@@ -176,12 +174,10 @@ function getMockJobs(projectId: string): CronJob[] {
     }
   ];
   
-  // Return only jobs for the selected project
   return baseJobs.filter(job => job.projectId === projectId);
 }
 
 function createMockJob(jobData: Partial<CronJob>): CronJob {
-  // Store in localStorage for mock persistence
   const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
   
   const newJob = {
@@ -205,7 +201,6 @@ function createMockJob(jobData: Partial<CronJob>): CronJob {
 }
 
 function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
-  // Update mock job in localStorage
   const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
   const updatedJobs = mockJobs.map((j: CronJob) => 
     j.id === job.id ? { ...j, status: newStatus } : j
@@ -214,26 +209,22 @@ function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
 }
 
 function mockDeleteJob(jobId: string) {
-  // Remove mock job from localStorage
   const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
   const updatedJobs = mockJobs.filter((j: CronJob) => j.id !== jobId);
   localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
 }
 
 function mockDeleteProject(projectId: string) {
-  // Remove project and its jobs from localStorage
   const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
   const updatedProjects = mockProjects.filter((p: Project) => p.id !== projectId);
   localStorage.setItem('mockProjects', JSON.stringify(updatedProjects));
   
-  // Also remove associated jobs
   const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
   const updatedJobs = mockJobs.filter((j: CronJob) => j.projectId !== projectId);
   localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
 }
 
 function mockDuplicateJob(job: CronJob) {
-  // Create duplicate in localStorage
   const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
   
   const newJob = {
@@ -249,7 +240,6 @@ function mockDuplicateJob(job: CronJob) {
 }
 
 function mockImportJob(job: Partial<CronJob>) {
-  // Add imported job to localStorage
   const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
   
   const newJob = {
@@ -271,7 +261,6 @@ function mockImportJob(job: Partial<CronJob>) {
 }
 
 function mockImportProject(projectWithJobs: ProjectWithJobs) {
-  // Add imported project to localStorage
   const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
   
   const newProjectId = `project-${Date.now()}`;
@@ -286,7 +275,6 @@ function mockImportProject(projectWithJobs: ProjectWithJobs) {
   mockProjects.push(newProject);
   localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
   
-  // Add jobs for this project
   if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
     const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
     
@@ -313,15 +301,12 @@ function mockImportProject(projectWithJobs: ProjectWithJobs) {
   }
 }
 
-// Helper to calculate next run time based on cron expression
 function getNextRunTime(cronExpression: string): string {
-  // Simple implementation - just add random hours (1-24)
   const hours = Math.floor(Math.random() * 24) + 1;
   return new Date(Date.now() + hours * 3600000).toISOString();
 }
 
 export default function JobsPage() {
-  // Original state
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
@@ -330,7 +315,6 @@ export default function JobsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isJobActionInProgress, setIsJobActionInProgress] = useState<{[key: string]: boolean}>({});
   
-  // New state for project selection and filtering
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
@@ -342,7 +326,6 @@ export default function JobsPage() {
   const { toast } = useToast();
   const [isProjectLoading, setIsProjectLoading] = useState(false);
 
-  // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -352,7 +335,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockProjects();
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
@@ -363,14 +345,12 @@ export default function JobsPage() {
     }
   });
 
-  // Set first project as selected by default if none is selected
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
       setSelectedProjectId(projects[0].id);
     }
   }, [projects, selectedProjectId]);
 
-  // Fetch jobs based on selected project
   const { 
     data: jobs = [], 
     isLoading: isLoadingJobs, 
@@ -385,7 +365,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockJobs(selectedProjectId);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -395,7 +374,6 @@ export default function JobsPage() {
     enabled: !!selectedProjectId
   });
 
-  // Fetch all jobs for import/export functionality
   const { 
     data: allJobs = [], 
     refetch: refetchAllJobs 
@@ -407,7 +385,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getAllMockJobs();
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -416,7 +393,6 @@ export default function JobsPage() {
     }
   });
 
-  // Handle project selection
   const handleSelectAllProjects = (checked: boolean) => {
     if (checked) {
       setSelectedProjectIds(projects.map(p => p.id));
@@ -433,13 +409,11 @@ export default function JobsPage() {
     }
   };
 
-  // Filter projects based on search
   const filteredProjects = projects.filter(project => 
     project.name.toLowerCase().includes(projectSearchQuery.toLowerCase()) ||
     project.description?.toLowerCase().includes(projectSearchQuery.toLowerCase())
   );
 
-  // Handle batch delete projects
   const handleBatchDeleteProjects = () => {
     if (selectedProjectIds.length === 0) return;
     
@@ -449,7 +423,6 @@ export default function JobsPage() {
     setSelectedProjectIds([]);
   };
 
-  // Clear all filters
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -459,7 +432,6 @@ export default function JobsPage() {
     setIsFilterOpen(false);
   };
 
-  // Active filter count
   const activeFiltersCount = [
     statusFilter !== "all",
     dateFilter !== "all",
@@ -502,7 +474,6 @@ export default function JobsPage() {
             description: "ลบโปรเจคเรียบร้อยแล้ว",
           });
           
-          // Select another project if the current one was deleted
           if (selectedProjectId === projectId) {
             const remainingProjects = projects.filter(p => p.id !== projectId);
             if (remainingProjects.length > 0) {
@@ -521,7 +492,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // Mock delete for demo
           mockDeleteProject(projectId);
           refetchProjects();
           refetchAllJobs();
@@ -534,7 +504,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // Mock delete for demo
         mockDeleteProject(projectId);
         refetchProjects();
         refetchAllJobs();
@@ -577,7 +546,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // Create mock data for demo
         const mockJob = createMockJob({ ...newJobData, id: `mock-${Date.now()}` });
         refetchJobs();
         refetchAllJobs();
@@ -625,7 +593,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockToggleJobStatus(job, newStatus);
           refetchJobs();
           refetchAllJobs();
@@ -638,10 +605,9 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-          // If unsuccessful, use mock data
-          mockToggleJobStatus(job, newStatus);
-          refetchJobs();
-          refetchAllJobs();
+        mockToggleJobStatus(job, newStatus);
+        refetchJobs();
+        refetchAllJobs();
       })
       .finally(() => {
         setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
@@ -667,7 +633,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockDeleteJob(jobId);
           refetchJobs();
           refetchAllJobs();
@@ -680,7 +645,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockDeleteJob(jobId);
         refetchJobs();
         refetchAllJobs();
@@ -712,7 +676,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockDuplicateJob(job);
           refetchJobs();
           refetchAllJobs();
@@ -725,7 +688,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockDuplicateJob(job);
         refetchJobs();
         refetchAllJobs();
@@ -736,7 +698,6 @@ export default function JobsPage() {
   };
 
   const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
-    // Add the current projectId to all imported jobs
     const jobsWithProject = importedJobs.map(job => ({
       ...job,
       projectId: selectedProjectId,
@@ -747,7 +708,6 @@ export default function JobsPage() {
     let successCount = 0;
     let failCount = 0;
     
-    // Create each job one by one
     const createPromises = jobsWithProject.map(job => 
       apiService.createJob(job as any)
         .then(response => {
@@ -756,7 +716,6 @@ export default function JobsPage() {
           return response;
         })
         .catch(() => {
-          // If unsuccessful, use mock data for demo
           mockImportJob(job);
           successCount++;
           return { success: true };
@@ -788,11 +747,9 @@ export default function JobsPage() {
     let failCount = 0;
     let newSelectedProjectId = selectedProjectId;
     
-    // Create each project and its jobs
     const importProjects = async () => {
       for (const projectWithJobs of projectsWithJobs) {
         try {
-          // Create the project
           const projectData = {
             name: projectWithJobs.name,
             description: projectWithJobs.description
@@ -803,12 +760,10 @@ export default function JobsPage() {
           if (projectResponse.success && projectResponse.data) {
             const newProjectId = projectResponse.data.id;
             
-            // If this is the first successful import, select it
             if (successCount === 0) {
               newSelectedProjectId = newProjectId;
             }
             
-            // Create jobs for this project
             if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
               for (const job of projectWithJobs.jobs) {
                 const jobData = {
@@ -820,7 +775,6 @@ export default function JobsPage() {
                   await apiService.createJob(jobData as any);
                 } catch (error) {
                   console.error("Error creating job:", error);
-                  // Create mock job for demo
                   mockImportJob({
                     ...jobData,
                     projectId: newProjectId
@@ -832,22 +786,18 @@ export default function JobsPage() {
             successCount++;
           } else {
             failCount++;
-            // Create mock project for demo
             mockImportProject(projectWithJobs);
           }
         } catch (error) {
           failCount++;
           console.error("Error importing project:", error);
-          // Create mock project for demo
           mockImportProject(projectWithJobs);
         }
       }
       
-      // Refresh data
       await refetchProjects();
       await refetchAllJobs();
       
-      // Set newly selected project
       if (newSelectedProjectId !== selectedProjectId) {
         setSelectedProjectId(newSelectedProjectId);
       }
@@ -866,20 +816,16 @@ export default function JobsPage() {
       });
     });
   };
-  
-  // Filter jobs based on search query and other filters
+
   const filteredJobs = jobs.filter(job => {
-    // 1. Search query filter
     const searchMatch = !searchQuery || 
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.endpoint.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // 2. Status filter
     const statusMatch = statusFilter === "all" || job.status === statusFilter;
     
-    // 3. Date filter
     let dateMatch = true;
     const jobDate = new Date(job.createdAt);
     
@@ -899,8 +845,7 @@ export default function JobsPage() {
     
     return searchMatch && statusMatch && dateMatch;
   });
-  
-  // Sort filtered jobs
+
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     let comparison = 0;
     
@@ -915,5 +860,21 @@ export default function JobsPage() {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case "lastRun":
-        // Handle null values
         if (!a.lastRun && !b.lastRun) comparison = 0;
+        else if (!a.lastRun) comparison = 1;
+        else if (!b.lastRun) comparison = -1;
+        else comparison = new Date(a.lastRun).getTime() - new Date(b.lastRun).getTime();
+        break;
+      default:
+        comparison = 0;
+    }
+    
+    return sortOrder === "asc" ? comparison : -comparison;
+  });
+
+  return (
+    <PageLayout>
+      {/* Component rendering */}
+    </PageLayout>
+  );
+}
