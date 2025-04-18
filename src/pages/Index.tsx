@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -7,38 +6,12 @@ import { apiService } from "@/lib/api-service";
 import { CronJob, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { 
-  Filter, 
-  ChevronRight, 
-  CheckCircle, 
-  AlertTriangle, 
-  Server, 
-  Calendar, 
-  Clock, 
-  Activity 
-} from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import dayjs from "dayjs";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Card, 
-  CardHeader, 
-  CardTitle, 
-  CardContent 
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent
-} from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ChevronRight, CheckCircle, AlertTriangle, Server, Calendar, Clock, Activity } from "lucide-react";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -127,36 +100,6 @@ export default function Index() {
           <div>
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">Overview of your scheduled jobs</p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="ค้นหาโปรเจค..."
-                className="px-2 py-1 text-sm border rounded-md"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            <Select
-              value={selectedProjectId || "all"}
-              onValueChange={(value) => setSelectedProjectId(value === "all" ? null : value)}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="All projects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All projects</SelectItem>
-                {filteredProjects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    {project.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
