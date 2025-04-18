@@ -1,15 +1,9 @@
-
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { CronJob, Project } from "@/lib/types";
-import { StatusBadge } from "@/components/StatusBadge";
-import dayjs from "dayjs";
-import { Activity, AlertTriangle, Calendar, CheckCircle, Clock, Server, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
 import { 
@@ -19,13 +13,17 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Filter, ChevronRight } from "lucide-react";
+import { StatusBadge } from "@/components/StatusBadge";
+import dayjs from "dayjs";
 
 export default function Index() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   
-  // Fetch all projects
   const {
     data: projects = [],
     isLoading: isLoadingProjects,
@@ -46,7 +44,11 @@ export default function Index() {
     },
   });
   
-  // Fetch all jobs
+  const filteredProjects = projects.filter(project => 
+    project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
   const {
     data: allJobs = [],
     isLoading: isLoadingJobs,
@@ -68,12 +70,10 @@ export default function Index() {
     },
   });
   
-  // Filter jobs by selected project
   const jobs = selectedProjectId 
     ? allJobs.filter(job => job.projectId === selectedProjectId)
     : allJobs;
   
-  // Set first job as selected when data loads
   useEffect(() => {
     if (jobs.length > 0 && !selectedJobId) {
       setSelectedJobId(jobs[0].id);
@@ -82,7 +82,6 @@ export default function Index() {
 
   const selectedJob = jobs.find(job => job.id === selectedJobId);
 
-  // Group jobs by status
   const recentJobs = [...jobs].sort((a, b) => 
     new Date(b.lastRun || 0).getTime() - new Date(a.lastRun || 0).getTime()
   ).slice(0, 5);
@@ -90,7 +89,6 @@ export default function Index() {
   const failedJobs = jobs.filter(job => job.status === "failed");
   const pausedJobs = jobs.filter(job => job.status === "paused");
   
-  // Calculate statistics
   const jobStats = {
     total: jobs.length,
     active: jobs.filter(job => job.status !== "paused").length,
@@ -111,8 +109,15 @@ export default function Index() {
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground mr-2">Filter by project:</span>
+              <input
+                type="text"
+                placeholder="ค้นหาโปรเจค..."
+                className="px-2 py-1 text-sm border rounded-md"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
+            
             <Select
               value={selectedProjectId || "all"}
               onValueChange={(value) => setSelectedProjectId(value === "all" ? null : value)}
@@ -122,7 +127,7 @@ export default function Index() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All projects</SelectItem>
-                {projects.map((project) => (
+                {filteredProjects.map((project) => (
                   <SelectItem key={project.id} value={project.id}>
                     {project.name}
                   </SelectItem>
@@ -132,7 +137,6 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Stats cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatsCard title="Total Jobs" value={jobStats.total} />
           <StatsCard title="Active" value={jobStats.active} />
@@ -141,17 +145,19 @@ export default function Index() {
           <StatsCard title="Paused" value={jobStats.paused} color="gray" />
         </div>
 
-        {/* Recent jobs */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="md:col-span-1 space-y-6">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Recent Jobs</CardTitle>
-                <CardDescription>
-                  {selectedProjectId 
-                    ? `Jobs in project: ${projects.find(p => p.id === selectedProjectId)?.name}` 
-                    : "Jobs across all projects"}
-                </CardDescription>
+                <Button 
+                  variant="link" 
+                  className="text-sm"
+                  onClick={() => navigate('/logs')}
+                >
+                  ดูเพิ่มเติม
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs defaultValue="recent">
@@ -242,7 +248,6 @@ export default function Index() {
   );
 }
 
-// Job list item component
 function JobListItem({ job, projectName, isSelected, onSelect }: { 
   job: CronJob; 
   projectName?: string;
@@ -287,7 +292,6 @@ function JobListItem({ job, projectName, isSelected, onSelect }: {
   );
 }
 
-// Stats card component
 function StatsCard({ 
   title,
   value,
@@ -323,7 +327,6 @@ function StatsCard({
   );
 }
 
-// Mock functions for UI testing
 function getMockProjects(): Project[] {
   return [
     {
