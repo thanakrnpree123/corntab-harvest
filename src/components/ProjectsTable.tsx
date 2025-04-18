@@ -431,7 +431,7 @@ export function ProjectsTable({
                                           className="text-right"
                                           onClick={(e) => e.stopPropagation()}
                                         >
-                                          <div className="relative">
+                                          <div className="flex justify-end items-center gap-2">
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();
