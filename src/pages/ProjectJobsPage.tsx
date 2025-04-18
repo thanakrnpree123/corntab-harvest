@@ -1014,6 +1014,21 @@ export default function ProjectJobsPage() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex justify-end items-center gap-2">
+                            <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTriggerJob(job.id);
+                                  }}
+                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Play className="h-4 w-4" />
+                                  )}
+                                </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
@@ -1024,20 +1039,8 @@ export default function ProjectJobsPage() {
                                   align="end"
                                   className="w-[160px]"
                                 >
-                                  <DropdownMenuItem
-                                    onClick={() => handleDuplicateJob(job.id)}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    <span>Edit</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleDuplicateJob(job.id)}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    <span>tigger</span>
-                                  </DropdownMenuItem>
+                                  
+                                 
                                   <DropdownMenuItem
                                     onClick={() => toggleJobStatus(job.id)}
                                     className="flex items-center cursor-pointer"
@@ -1053,6 +1056,13 @@ export default function ProjectJobsPage() {
                                         <span>Pause</span>
                                       </>
                                     )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDuplicateJob(job.id)}
+                                    className="flex items-center cursor-pointer"
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleDuplicateJob(job.id)}
