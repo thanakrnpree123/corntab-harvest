@@ -873,8 +873,305 @@ export default function JobsPage() {
   });
 
   return (
-    <PageLayout>
-      {/* Component rendering */}
+    <PageLayout title="Job Management">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-3">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Projects</h2>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setIsCreateProjectModalOpen(true)}
+                >
+                  <FolderPlus className="h-4 w-4 mr-2" />
+                  New
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Checkbox 
+                      id="select-all-projects" 
+                      checked={selectedProjectIds.length === projects.length && projects.length > 0}
+                      onCheckedChange={handleSelectAllProjects}
+                    />
+                    <label 
+                      htmlFor="select-all-projects" 
+                      className="text-sm cursor-pointer"
+                    >
+                      Select All
+                    </label>
+                  </div>
+                  
+                  {selectedProjectIds.length > 0 && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Projects</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete {selectedProjectIds.length} selected projects? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleBatchDeleteProjects}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+                
+                <Input
+                  placeholder="Search projects..."
+                  value={projectSearchQuery}
+                  onChange={(e) => setProjectSearchQuery(e.target.value)}
+                  className="mb-2"
+                />
+                
+                <div className="max-h-80 overflow-y-auto space-y-2">
+                  {isProjectLoading ? (
+                    <div className="flex justify-center my-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    </div>
+                  ) : filteredProjects.length > 0 ? (
+                    filteredProjects.map(project => (
+                      <div 
+                        key={project.id} 
+                        className={`flex items-center p-2 rounded hover:bg-slate-100 cursor-pointer ${selectedProjectId === project.id ? 'bg-slate-100 font-medium' : ''}`}
+                        onClick={() => setSelectedProjectId(project.id)}
+                      >
+                        <div className="flex items-center gap-2 flex-1">
+                          <Checkbox 
+                            id={`project-${project.id}`}
+                            checked={selectedProjectIds.includes(project.id)}
+                            onCheckedChange={(checked) => {
+                              handleSelectProject(project.id, !!checked);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <span className="truncate">{project.name}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      No projects found
+                    </div>
+                  )}
+                </div>
+                
+                <ProjectExportImport
+                  projects={projects}
+                  selectedProjectIds={selectedProjectIds}
+                  onImportProjects={handleImportProjects}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:col-span-9">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2 sm:gap-0">
+                <h2 className="text-lg font-semibold">Jobs</h2>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-auto">
+                    <Input
+                      placeholder="Search jobs..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  
+                  <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="icon" className="relative">
+                        <Filter className="h-4 w-4" />
+                        {activeFiltersCount > 0 && (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center"
+                          >
+                            {activeFiltersCount}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-medium mb-2">Status</h3>
+                          <Select 
+                            value={statusFilter} 
+                            onValueChange={(val) => setStatusFilter(val as any)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Filter by status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Statuses</SelectItem>
+                              <SelectItem value="idle">Idle</SelectItem>
+                              <SelectItem value="running">Running</SelectItem>
+                              <SelectItem value="success">Success</SelectItem>
+                              <SelectItem value="failed">Failed</SelectItem>
+                              <SelectItem value="paused">Paused</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <h3 className="font-medium mb-2">Created Date</h3>
+                          <Select 
+                            value={dateFilter} 
+                            onValueChange={(val) => setDateFilter(val as any)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Filter by date" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Time</SelectItem>
+                              <SelectItem value="today">Today</SelectItem>
+                              <SelectItem value="week">This Week</SelectItem>
+                              <SelectItem value="month">This Month</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <h3 className="font-medium mb-2">Sort By</h3>
+                          <div className="flex gap-2">
+                            <Select 
+                              value={sortBy} 
+                              onValueChange={setSortBy}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="name">Name</SelectItem>
+                                <SelectItem value="status">Status</SelectItem>
+                                <SelectItem value="date">Creation Date</SelectItem>
+                                <SelectItem value="lastRun">Last Run</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                            >
+                              {sortOrder === "asc" ? "↑" : "↓"}
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between">
+                          <Button variant="ghost" size="sm" onClick={handleClearFilters}>Clear Filters</Button>
+                          <Button size="sm" onClick={() => setIsFilterOpen(false)}>Apply</Button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Button 
+                    variant="default"
+                    onClick={() => setIsCreateModalOpen(true)}
+                    disabled={!selectedProjectId}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add Job
+                  </Button>
+                </div>
+              </div>
+              
+              {selectedProjectId && (
+                <>
+                  <Separator className="my-4" />
+                  
+                  {isLoadingJobs ? (
+                    <div className="flex justify-center my-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                    </div>
+                  ) : (
+                    sortedJobs.length > 0 ? (
+                      <JobsTable 
+                        jobs={sortedJobs}
+                        onToggleStatus={toggleJobStatus}
+                        onDeleteJob={handleDeleteJob}
+                        onDuplicateJob={handleDuplicateJob}
+                        onViewDetails={handleViewJobDetails}
+                        isActionInProgress={isJobActionInProgress}
+                      />
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        {searchQuery || statusFilter !== "all" || dateFilter !== "all" ? (
+                          <>
+                            <p>No jobs match your filters.</p>
+                            <Button variant="link" onClick={handleClearFilters}>Clear filters</Button>
+                          </>
+                        ) : (
+                          <>
+                            <p>No jobs found for this project.</p>
+                            <Button 
+                              variant="link" 
+                              onClick={() => setIsCreateModalOpen(true)}
+                            >
+                              Add your first job
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )
+                  )}
+                  
+                  <JobExportImport
+                    selectedProjectId={selectedProjectId}
+                    onImportJobs={handleImportJobs}
+                  />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
+      {selectedProjectId && (
+        <CreateJobModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreateJob={handleCreateJob}
+          projectId={selectedProjectId}
+        />
+      )}
+      
+      {selectedJob && (
+        <JobDetails
+          job={selectedJob}
+          isOpen={isDetailSheetOpen}
+          onClose={() => {
+            setIsDetailSheetOpen(false);
+            setSelectedJob(null);
+          }}
+          onToggleStatus={() => {
+            toggleJobStatus(selectedJob.id);
+          }}
+          onDeleteJob={() => {
+            handleDeleteJob(selectedJob.id);
+            setIsDetailSheetOpen(false);
+          }}
+        />
+      )}
     </PageLayout>
   );
 }
