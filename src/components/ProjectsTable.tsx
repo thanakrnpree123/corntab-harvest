@@ -1,3 +1,4 @@
+
 import { Project } from "@/lib/types";
 import {
   Table,
@@ -16,15 +17,23 @@ import { ChevronRight } from "lucide-react";
 export interface ProjectsTableProps {
   projects: Project[];
   onViewDetails: (project: Project) => void;
+  onAddJob?: (projectId: string) => void;
+  onDeleteProject?: (projectId: string) => void;
+  onViewJobs?: (projectId: string) => void;
   onSelect?: (projectId: string, checked: boolean) => void;
   selectedIds?: string[];
+  selectedProjectId?: string;
 }
 
 export function ProjectsTable({ 
   projects, 
   onViewDetails, 
+  onAddJob,
+  onDeleteProject,
+  onViewJobs,
   onSelect,
-  selectedIds = [] 
+  selectedIds = [],
+  selectedProjectId
 }: ProjectsTableProps) {
   return (
     <div className="rounded-md border">
@@ -65,7 +74,9 @@ export function ProjectsTable({
             projects.map((project) => (
               <TableRow
                 key={project.id}
-                className="cursor-pointer hover:bg-muted/50"
+                className={`cursor-pointer hover:bg-muted/50 ${
+                  selectedProjectId === project.id ? "bg-muted" : ""
+                }`}
                 onClick={() => onViewDetails(project)}
               >
                 {onSelect && (
@@ -89,15 +100,31 @@ export function ProjectsTable({
                   {dayjs(project.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onViewDetails(project);
-                    }}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex justify-end items-center gap-2">
+                    {onAddJob && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddJob(project.id);
+                        }}
+                      >
+                        Add Job
+                      </Button>
+                    )}
+                    {onViewJobs && (
+                      <Button
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewJobs(project.id);
+                        }}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))
