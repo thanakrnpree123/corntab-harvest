@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -67,44 +68,13 @@ export function ProjectBatchActions({
   };
 
   return (
-    <div className="flex gap-2 items-center flex-wrap">
+    <div className="flex gap-2 items-center">
       {selectedProjectIds.length > 0 && (
         <span className="text-sm text-muted-foreground">
           เลือก {selectedProjectIds.length} โปรเจค
         </span>
       )}
       
-      <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-destructive border-destructive hover:bg-destructive/10"
-            disabled={selectedProjectIds.length === 0 || disabled}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            ลบที่เลือก
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ลบโปรเจคที่เลือก</AlertDialogTitle>
-            <AlertDialogDescription>
-              คุณต้องการลบโปรเจคที่เลือกทั้งหมด {selectedProjectIds.length} โปรเจคใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบงานทั้งหมดที่อยู่ในโปรเจคด้วย
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => onDelete(selectedProjectIds)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              ลบโปรเจค
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogTrigger asChild>
           <Button 
@@ -143,6 +113,37 @@ export function ProjectBatchActions({
           </div>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-destructive border-destructive hover:bg-destructive/10"
+            disabled={selectedProjectIds.length === 0 || disabled}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            ลบที่เลือก
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ลบโปรเจคที่เลือก</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการลบโปรเจคที่เลือกทั้งหมด {selectedProjectIds.length} โปรเจคใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้ และจะลบงานทั้งหมดที่อยู่ในโปรเจคด้วย
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => onDelete(selectedProjectIds)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              ลบโปรเจค
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -155,188 +156,186 @@ export function BatchJobsActions({
   };
 
   return (
-    <div className="flex gap-2 items-center flex-wrap">
+    <div className="flex gap-2 items-center">
       {selectedJobIds.length > 0 && (
         <span className="text-sm text-muted-foreground">
           เลือก {selectedJobIds.length} รายการ
         </span>
       )}
-
-      <div className="flex gap-2 items-center">
-        <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" disabled={disabled}>
-              <Upload className="mr-2 h-4 w-4" />
+      
+      <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+        <DialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm"
+            disabled={selectedJobIds.length === 0 || disabled}
+          >
+            <ArrowDownToLine className="mr-2 h-4 w-4" />
+            ส่งออก
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>ส่งออกข้อมูล</DialogTitle>
+            <DialogDescription>
+              เลือกรูปแบบไฟล์ที่ต้องการส่งออก
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button
+              variant="outline"
+              className="flex flex-col items-center justify-center gap-2 h-auto py-6"
+              onClick={() => handleExport("json")}
+            >
+              <FileJson className="h-8 w-8" />
+              <span>JSON</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="flex flex-col items-center justify-center gap-2 h-auto py-6"
+              onClick={() => handleExport("csv")}
+            >
+              <FileText className="h-8 w-8" />
+              <span>CSV</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" disabled={disabled}>
+            <Upload className="mr-2 h-4 w-4" />
+            นำเข้า
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>นำเข้าข้อมูลงาน</DialogTitle>
+            <DialogDescription>
+              นำเข้าข้อมูลงานจากไฟล์ JSON หรือ CSV
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs defaultValue="manual" onValueChange={(v) => setInputMethod(v as "manual" | "upload")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="manual">กรอกด้วยตนเอง</TabsTrigger>
+              <TabsTrigger value="upload">อัปโหลดไฟล์</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="manual">
+              <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="json">JSON</TabsTrigger>
+                  <TabsTrigger value="csv">CSV</TabsTrigger>
+                </TabsList>
+                <TabsContent value="json">
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="json-input">ข้อมูล JSON</Label>
+                      <Textarea
+                        id="json-input"
+                        placeholder='[{"name": "Job Name", "schedule": "* * * * *", ...}]'
+                        value={jsonInput}
+                        onChange={(e) => setJsonInput(e.target.value)}
+                        rows={10}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="csv">
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="csv-input">ข้อมูล CSV</Label>
+                      <Textarea
+                        id="csv-input"
+                        placeholder="name,schedule,endpoint,..."
+                        value={csvInput}
+                        onChange={(e) => setCsvInput(e.target.value)}
+                        rows={10}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+            
+            <TabsContent value="upload">
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="file-upload">อัปโหลดไฟล์</Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    accept=".json,.csv"
+                    onChange={handleFileUpload}
+                    className="cursor-pointer"
+                  />
+                  {fileContent && (
+                    <div className="mt-4">
+                      <Label>ตัวอย่างเนื้อหา</Label>
+                      <div className="mt-1 p-2 bg-muted rounded-md">
+                        <pre className="text-xs overflow-auto max-h-32">
+                          {fileContent.substring(0, 300)}
+                          {fileContent.length > 300 && "..."}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          {importError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>เกิดข้อผิดพลาด</AlertTitle>
+              <AlertDescription>{importError}</AlertDescription>
+            </Alert>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+              ยกเลิก
+            </Button>
+            <Button onClick={handleImport}>
               นำเข้า
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>นำเข้าข้อมูลงาน</DialogTitle>
-              <DialogDescription>
-                นำเข้าข้อมูลงานจากไฟล์ JSON หรือ CSV
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Tabs defaultValue="manual" onValueChange={(v) => setInputMethod(v as "manual" | "upload")}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="manual">กรอกด้วยตนเอง</TabsTrigger>
-                <TabsTrigger value="upload">อัปโหลดไฟล์</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="manual">
-                <Tabs defaultValue="json" onValueChange={(v) => setImportType(v as "json" | "csv")}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="json">JSON</TabsTrigger>
-                    <TabsTrigger value="csv">CSV</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="json">
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="json-input">ข้อมูล JSON</Label>
-                        <Textarea
-                          id="json-input"
-                          placeholder='[{"name": "Job Name", "schedule": "* * * * *", ...}]'
-                          value={jsonInput}
-                          onChange={(e) => setJsonInput(e.target.value)}
-                          rows={10}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="csv">
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="csv-input">ข้อมูล CSV</Label>
-                        <Textarea
-                          id="csv-input"
-                          placeholder="name,schedule,endpoint,..."
-                          value={csvInput}
-                          onChange={(e) => setCsvInput(e.target.value)}
-                          rows={10}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </TabsContent>
-              
-              <TabsContent value="upload">
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="file-upload">อัปโหลดไฟล์</Label>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      accept=".json,.csv"
-                      onChange={handleFileUpload}
-                      className="cursor-pointer"
-                    />
-                    {fileContent && (
-                      <div className="mt-4">
-                        <Label>ตัวอย่างเนื้อหา</Label>
-                        <div className="mt-1 p-2 bg-muted rounded-md">
-                          <pre className="text-xs overflow-auto max-h-32">
-                            {fileContent.substring(0, 300)}
-                            {fileContent.length > 300 && "..."}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-            
-            {importError && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>เกิดข้อผิดพลาด</AlertTitle>
-                <AlertDescription>{importError}</AlertDescription>
-              </Alert>
-            )}
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
-                ยกเลิก
-              </Button>
-              <Button onClick={handleImport}>
-                นำเข้า
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm"
-              disabled={selectedJobIds.length === 0 || disabled}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-destructive border-destructive hover:bg-destructive/10"
+            disabled={selectedJobIds.length === 0 || disabled}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            ลบที่เลือก
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ลบงานที่เลือก</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการลบงานที่เลือกทั้งหมด {selectedJobIds.length} งานใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={onDeleteSelected}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              <ArrowDownToLine className="mr-2 h-4 w-4" />
-              ส่งออก
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>ส่งออกข้อมูล</DialogTitle>
-              <DialogDescription>
-                เลือกรูปแบบไฟล์ที่ต้องการส่งออก
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
-              <Button
-                variant="outline"
-                className="flex flex-col items-center justify-center gap-2 h-auto py-6"
-                onClick={() => handleExport("json")}
-              >
-                <FileJson className="h-8 w-8" />
-                <span>JSON</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="flex flex-col items-center justify-center gap-2 h-auto py-6"
-                onClick={() => handleExport("csv")}
-              >
-                <FileText className="h-8 w-8" />
-                <span>CSV</span>
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="text-destructive border-destructive hover:bg-destructive/10"
-              disabled={selectedJobIds.length === 0 || disabled}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              ลบที่เลือก
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>ลบงานที่เลือก</AlertDialogTitle>
-              <AlertDialogDescription>
-                คุณต้องการลบงานที่เลือกทั้งหมด {selectedJobIds.length} งานใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={onDeleteSelected}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                ลบงาน
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+              ลบงาน
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
