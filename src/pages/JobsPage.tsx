@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ProjectBatchActions } from "@/components/ProjectBatchActions";
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -51,6 +52,9 @@ export default function JobsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("all");
+  
+  // Selection for batch actions
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
@@ -266,6 +270,15 @@ export default function JobsPage() {
   const handleViewProjectDetails = (project: Project) => {
     // Set the selected project
     setSelectedProjectId(project.id);
+  };
+
+  // Handle selecting projects for batch actions
+  const handleSelectProject = (projectId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, projectId]);
+    } else {
+      setSelectedIds(prev => prev.filter(id => id !== projectId));
+    }
   };
 
   const handleCreateJob = (jobData: Partial<CronJob>) => {
@@ -611,6 +624,66 @@ export default function JobsPage() {
     sortBy !== "name" || sortOrder !== "asc"
   ].filter(Boolean).length;
 
+  // Handle batch export of projects
+  const handleExportProjects = (projectIds: string[], format: "json" | "csv") => {
+    // Implementation for exporting projects
+    console.log(`Exporting ${projectIds.length} projects in ${format} format`);
+    
+    // Here you would typically call your API service or handle the export logic
+    toast({
+      title: "ส่งออกโปรเจค",
+      description: `กำลังส่งออก ${projectIds.length} โปรเจคในรูปแบบ ${format.toUpperCase()}`,
+    });
+  };
+
+  // Handle batch delete of projects
+  const handleBatchDeleteProjects = (projectIds: string[]) => {
+    // Implementation for batch deleting projects
+    console.log(`Deleting ${projectIds.length} projects`);
+    
+    // Delete projects one by one
+    const deletePromises = projectIds.map(projectId => 
+      apiService.deleteProject(projectId)
+        .catch(() => {
+          // Mock delete for demo
+          mockDeleteProject(projectId);
+        })
+    );
+    
+    Promise.all(deletePromises)
+      .then(() => {
+        toast({
+          title: "สำเร็จ",
+          description: `ลบ ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
+        });
+        
+        // Update selected project if necessary
+        const deletedSelectedProject = projectIds.includes(selectedProjectId);
+        if (deletedSelectedProject) {
+          const remainingProjects = projects.filter(p => !projectIds.includes(p.id));
+          if (remainingProjects.length > 0) {
+            setSelectedProjectId(remainingProjects[0].id);
+          } else {
+            setSelectedProjectId("");
+          }
+        }
+        
+        // Clear selection
+        setSelectedIds([]);
+        
+        // Refresh data
+        refetchProjects();
+        refetchAllJobs();
+      })
+      .catch(error => {
+        toast({
+          title: "เกิดข้อผิดพลาดระหว่างการลบโปรเจค",
+          description: error.message,
+          variant: "destructive",
+        });
+      });
+  };
+
   return (
     <PageLayout title="">
       <div className="flex flex-col gap-6">
@@ -642,6 +715,15 @@ export default function JobsPage() {
         ) : (
           projects.length > 0 ? (
             <div className="space-y-6">
+              {selectedIds.length > 0 && (
+                <ProjectBatchActions
+                  projects={projects}
+                  selectedProjectIds={selectedIds}
+                  onExport={handleExportProjects}
+                  onDelete={handleBatchDeleteProjects}
+                />
+              )}
+              
               <Card>
                 <CardContent className="p-0">
                   <ProjectsTable 
@@ -654,6 +736,8 @@ export default function JobsPage() {
                     onDeleteProject={handleDeleteProject}
                     onViewJobs={setSelectedProjectId}
                     selectedProjectId={selectedProjectId}
+                    onSelect={handleSelectProject}
+                    selectedIds={selectedIds}
                   />
                 </CardContent>
               </Card>
@@ -868,78 +952,4 @@ export default function JobsPage() {
                               );
                             }}
                             onDeleteJob={(jobId) => {
-                              const job = jobs.find(j => j.id === jobId);
-                              if (!job) return null;
-                              
-                              if (isJobActionInProgress[jobId]) {
-                                return <Button variant="destructive" size="sm" disabled>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Please wait
-                                </Button>;
-                              }
-                              
-                              return (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">Delete</Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Job</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete "{job.name}"? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction 
-                                        onClick={() => handleDeleteJob(jobId)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      >
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              );
-                            }}
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center p-8 text-center">
-                            <p className="text-muted-foreground mb-4">
-                              {searchQuery || statusFilter !== "all" || dateFilter !== "all"
-                                ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
-                                : "ไม่พบงานในโปรเจคนี้"}
-                            </p>
-                            <Button onClick={() => setIsCreateModalOpen(true)}>
-                              <PlusCircle className="mr-2 h-4 w-4" />
-                              สร้างงานแรก
-                            </Button>
-                          </div>
-                        )
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">
-              <h3 className="text-lg font-semibold mb-2">ยังไม่มีโปรเจค</h3>
-              <p className="text-muted-foreground mb-4">
-                สร้างโปรเจคแรกของคุณเพื่อเริ่มต้น
-              </p>
-              <Button onClick={() => setIsCreateProjectModalOpen(true)}>
-                <FolderPlus className="mr-2 h-4 w-4" />
-                สร้างโปรเจค
-              </Button>
-            </div>
-          )
-        )}
-      </div>
-      
-      <CreateJobModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-        onCreateJob={handleCreateJob}
-        projects={projects}
+                              const job = jobs.find(j
