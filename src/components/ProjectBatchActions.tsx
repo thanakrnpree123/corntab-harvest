@@ -5,6 +5,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -48,22 +49,8 @@ export function ProjectBatchActions({
   const { toast } = useToast();
 
   const handleExport = (format: "json" | "csv") => {
-    if (selectedProjectIds.length === 0) {
-      toast({
-        title: "กรุณาเลือกโปรเจค",
-        description: "โปรดเลือกโปรเจคที่ต้องการส่งออกก่อน",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     onExport(selectedProjectIds, format);
     setIsExportDialogOpen(false);
-    
-    toast({
-      title: "ส่งออกโปรเจค",
-      description: `กำลังส่งออก ${selectedProjectIds.length} โปรเจคในรูปแบบ ${format.toUpperCase()}`,
-    });
   };
 
   return (
