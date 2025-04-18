@@ -431,71 +431,64 @@ export function ProjectsTable({
                                           className="text-right"
                                           onClick={(e) => e.stopPropagation()}
                                         >
-                                          <div className="flex justify-end items-center gap-2">
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setOpenDropdownId((prev) =>
-                                                  prev === job.id
-                                                    ? null
-                                                    : job.id,
-                                                );
-                                              }}
-                                              className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
-                                            >
-                                              <EllipsisVertical
-                                                color="#000000"
-                                                strokeWidth={0.75}
-                                              />
-                                            </button>
+                                          <div className="relative">
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setOpenDropdownId((prev) => (prev === job.id ? null : job.id));
+    }}
+    className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
+  >
+    <EllipsisVertical color="#000000" strokeWidth={0.75} />
+  </button>
 
-                                            {openDropdownId === job.id && (
-                                              <div className="absolute right-0 top-8 bg-white border rounded-md shadow-lg z-50">
-                                                <div className="py-1 w-32">
-                                                  <button
-                                                    onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      handleEditJob(job);
-                                                      setOpenDropdownId(null);
-                                                    }}
-                                                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-                                                  >
-                                                    Edit
-                                                  </button>
-                                                  <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                      <button
-                                                        onClick={(e) => {
-                                                          e.stopPropagation();
-                                                          setOpenDropdownId(null);
-                                                        }}
-                                                        className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
-                                                      >
-                                                        Delete
-                                                      </button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                      <AlertDialogHeader>
-                                                        <AlertDialogTitle>ลบงาน</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                          คุณต้องการลบงาน "{job.name}" ใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
-                                                        </AlertDialogDescription>
-                                                      </AlertDialogHeader>
-                                                      <AlertDialogFooter>
-                                                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                                        <AlertDialogAction
-                                                          onClick={() => handleDeleteJob(job)}
-                                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                                        >
-                                                          ลบงาน
-                                                        </AlertDialogAction>
-                                                      </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                  </AlertDialog>
-                                                </div>
-                                              </div>
-                                            )}
-                                          </div>
+  {openDropdownId === job.id && (
+    <div className="absolute right-0 top-10 bg-white border rounded-md shadow-lg z-[9999] transform translate-y-2">
+      <div className="py-1 w-32">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEditJob(job);
+            setOpenDropdownId(null);
+          }}
+          className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+        >
+          Edit
+        </button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenDropdownId(null);
+              }}
+              className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
+            >
+              Delete
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>ลบงาน</AlertDialogTitle>
+              <AlertDialogDescription>
+                คุณต้องการลบงาน "{job.name}" ใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleDeleteJob(job)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                ลบงาน
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
+  )}
+</div>
                                         </TableCell>
                                       </TableRow>
                                     ))}
