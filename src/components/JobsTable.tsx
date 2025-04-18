@@ -35,14 +35,13 @@ dayjs.extend(relativeTime);
 export interface JobsTableProps {
   jobs: CronJob[];
   onViewDetails: (job: CronJob) => void;
-  onToggleStatus: (jobId: string) => void;
-  onDeleteJob: (jobId: string) => void;
-  onDuplicateJob?: (jobId: string) => void;
-  onTriggerJob?: (jobId: string) => void;
+  onToggleStatus: (jobId: string) => React.ReactNode;
+  onDeleteJob: (jobId: string) => React.ReactNode;
+  onDuplicateJob?: (jobId: string) => React.ReactNode;
+  onTriggerJob?: (jobId: string) => React.ReactNode; // Add new prop for triggering jobs
   onExportJobs?: (jobIds: string[], format: "json" | "csv") => void;
   onImportJobs?: (jobs: Partial<CronJob>[]) => void;
   onBatchDeleteJobs?: (jobIds: string[]) => void;
-  onRefresh?: () => void;
   showLastRun?: boolean;
   showNextRun?: boolean;
 }
@@ -57,7 +56,6 @@ export function JobsTable({
   onExportJobs,
   onImportJobs,
   onBatchDeleteJobs,
-  onRefresh,
   showLastRun = true,
   showNextRun = true,
 }: JobsTableProps) {
@@ -67,6 +65,14 @@ export function JobsTable({
   useEffect(() => {
     setSelectedJobIds([]);
   }, [jobs]);
+
+  const handleViewDetails = (job: CronJob) => {
+    onViewDetails(job);
+    toast({
+      title: "ดูรายละเอียดงาน",
+      description: `กำลังดูรายละเอียดของงาน "${job.name}"`,
+    });
+  };
   
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -228,108 +234,27 @@ export function JobsTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onViewDetails(job)}
+                        onClick={() => handleViewDetails(job)}
                         className="hidden sm:inline-flex"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
 
                       <div className="flex items-center gap-2">
-                        {onTriggerJob && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => onTriggerJob(job.id)}
-                            title="Trigger job"
-                          >
-                            <Play className="h-4 w-4" />
-                          </Button>
-                        )}
-                        
-                        <Button
-                          variant={job.status === "paused" ? "default" : "outline"}
-                          size="icon"
-                          onClick={() => onToggleStatus(job.id)}
-                          title={job.status === "paused" ? "Resume job" : "Pause job"}
-                        >
-                          {job.status === "paused" ? (
-                            <Play className="h-4 w-4" />
-                          ) : (
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              width="16"
-                              height="16"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect x="6" y="4" width="4" height="16" />
-                              <rect x="14" y="4" width="4" height="16" />
-                            </svg>
-                          )}
-                        </Button>
+                        {onTriggerJob && onTriggerJob(job.id)}
+                        {onToggleStatus(job.id)}
                         
                         <div className="hidden sm:block">
-                          {onDuplicateJob && (
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => onDuplicateJob(job.id)}
-                              title="Duplicate job"
-                            >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                width="16"
-                                height="16"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <rect x="8" y="8" width="12" height="12" rx="2" />
-                                <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
-                              </svg>
-                            </Button>
-                          )}
+                          {onDuplicateJob && onDuplicateJob(job.id)}
                         </div>
                         
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onDeleteJob(job.id)}
-                          className="text-destructive"
-                          title="Delete job"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            width="16"
-                            height="16"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-destructive"
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                          </svg>
-                        </Button>
+                        {onDeleteJob(job.id)}
                       </div>
                       
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => onViewDetails(job)}
+                        onClick={() => handleViewDetails(job)}
                         className="sm:hidden w-full mt-1"
                       >
                         View Details
