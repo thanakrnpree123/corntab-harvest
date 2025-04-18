@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 
-interface PageLayoutProps {
+export interface PageLayoutProps {
   children: ReactNode;
   title?: string;
 }

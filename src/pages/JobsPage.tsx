@@ -551,7 +551,7 @@ export default function JobsPage() {
         refetchAllJobs();
         toast({
           title: "สร้างข้อมูลทดสอบแล้ว",
-          description: "เนื่องจาก API ไม่พร้อมใช้งาน จึงสร้างข้อมูลทดสอบให้แทน",
+          description: "เน���่องจาก API ไม่พร้อมใช้งาน จึงสร้างข้อมูลทดสอบให้แทน",
         });
       });
   };
@@ -972,8 +972,8 @@ export default function JobsPage() {
                 
                 <ProjectExportImport
                   projects={projects}
-                  selectedProjectIds={selectedProjectIds}
-                  onImportProjects={handleImportProjects}
+                  jobs={allJobs}
+                  onImport={handleImportProjects}
                 />
               </div>
             </CardContent>
@@ -1136,8 +1136,7 @@ export default function JobsPage() {
                   )}
                   
                   <JobExportImport
-                    selectedProjectId={selectedProjectId}
-                    onImportJobs={handleImportJobs}
+                    onImport={handleImportJobs}
                   />
                 </>
               )}
@@ -1151,7 +1150,8 @@ export default function JobsPage() {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onCreateJob={handleCreateJob}
-          projectId={selectedProjectId}
+          projects={projects}
+          selectedProjectId={selectedProjectId}
         />
       )}
       
@@ -1163,13 +1163,13 @@ export default function JobsPage() {
             setIsDetailSheetOpen(false);
             setSelectedJob(null);
           }}
-          onToggleStatus={() => {
-            toggleJobStatus(selectedJob.id);
-          }}
-          onDeleteJob={() => {
+          onDelete={() => {
             handleDeleteJob(selectedJob.id);
             setIsDetailSheetOpen(false);
           }}
+          onTrigger={selectedJob.id ? () => {
+            // Handle trigger if needed
+          } : undefined}
         />
       )}
     </PageLayout>

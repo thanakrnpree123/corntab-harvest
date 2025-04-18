@@ -35,15 +35,16 @@ dayjs.extend(relativeTime);
 export interface JobsTableProps {
   jobs: CronJob[];
   onViewDetails: (job: CronJob) => void;
-  onToggleStatus: (jobId: string) => React.ReactNode;
-  onDeleteJob: (jobId: string) => React.ReactNode;
-  onDuplicateJob?: (jobId: string) => React.ReactNode;
-  onTriggerJob?: (jobId: string) => React.ReactNode; // Add new prop for triggering jobs
+  onToggleStatus: (jobId: string) => void;
+  onDeleteJob: (jobId: string) => void;
+  onDuplicateJob?: (jobId: string) => void;
+  onTriggerJob?: (jobId: string) => void; // Add new prop for triggering jobs
   onExportJobs?: (jobIds: string[], format: "json" | "csv") => void;
   onImportJobs?: (jobs: Partial<CronJob>[]) => void;
   onBatchDeleteJobs?: (jobIds: string[]) => void;
   showLastRun?: boolean;
   showNextRun?: boolean;
+  isActionInProgress?: {[key: string]: boolean};
 }
 
 export function JobsTable({
@@ -58,6 +59,7 @@ export function JobsTable({
   onBatchDeleteJobs,
   showLastRun = true,
   showNextRun = true,
+  isActionInProgress = {},
 }: JobsTableProps) {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   
@@ -107,6 +109,99 @@ export function JobsTable({
       onBatchDeleteJobs(selectedJobIds);
       setSelectedJobIds([]);
     }
+  };
+
+  // Helper functions to return JSX for action buttons
+  const renderToggleStatus = (jobId: string) => {
+    return (
+      <Button 
+        variant="outline" 
+        size="icon"
+        onClick={() => onToggleStatus(jobId)}
+        disabled={isActionInProgress[jobId]}
+      >
+        {isActionInProgress[jobId] ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <div className="h-2 w-2 rounded-full bg-green-500" />
+        )}
+        <span className="sr-only">Toggle status</span>
+      </Button>
+    );
+  };
+
+  const renderDeleteJob = (jobId: string) => {
+    return (
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="text-destructive hover:text-destructive"
+            disabled={isActionInProgress[jobId]}
+          >
+            {isActionInProgress[jobId] ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            ) : (
+              <span className="text-sm">×</span>
+            )}
+            <span className="sr-only">Delete</span>
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this job and remove it from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => onDeleteJob(jobId)}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  };
+
+  const renderDuplicateJob = (jobId: string) => {
+    if (!onDuplicateJob) return null;
+    
+    return (
+      <Button 
+        variant="outline" 
+        size="icon"
+        onClick={() => onDuplicateJob(jobId)}
+        disabled={isActionInProgress[jobId]}
+      >
+        {isActionInProgress[jobId] ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <Copy className="h-4 w-4" />
+        )}
+        <span className="sr-only">Duplicate</span>
+      </Button>
+    );
+  };
+
+  const renderTriggerJob = (jobId: string) => {
+    if (!onTriggerJob) return null;
+    
+    return (
+      <Button 
+        variant="outline" 
+        size="icon"
+        onClick={() => onTriggerJob(jobId)}
+        disabled={isActionInProgress[jobId]}
+      >
+        {isActionInProgress[jobId] ? (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : (
+          <Play className="h-4 w-4" />
+        )}
+        <span className="sr-only">Run Now</span>
+      </Button>
+    );
   };
 
   return (
@@ -241,14 +336,14 @@ export function JobsTable({
                       </Button>
 
                       <div className="flex items-center gap-2">
-                        {onTriggerJob && onTriggerJob(job.id)}
-                        {onToggleStatus(job.id)}
+                        {onTriggerJob && renderTriggerJob(job.id)}
+                        {renderToggleStatus(job.id)}
                         
                         <div className="hidden sm:block">
-                          {onDuplicateJob && onDuplicateJob(job.id)}
+                          {onDuplicateJob && renderDuplicateJob(job.id)}
                         </div>
                         
-                        {onDeleteJob(job.id)}
+                        {renderDeleteJob(job.id)}
                       </div>
                       
                       <Button
