@@ -55,6 +55,11 @@ interface ProjectsTableProps {
   onDeleteProject: (projectId: string) => void;
   onViewJobs: (projectId: string) => void;
   selectedProjectId: string | null;
+
+  // ✅ ใหม่
+  selectedProjectIdsPops: string[];
+  onSelectProject: (projectId: string, checked: boolean) => void;
+  onSelectAllProjects: (checked: boolean) => void;
 }
 
 export function ProjectsTable({
@@ -63,6 +68,9 @@ export function ProjectsTable({
   onDeleteProject,
   onViewJobs,
   selectedProjectId,
+  selectedProjectIdsPops,
+  onSelectProject,
+  onSelectAllProjects,
 }: ProjectsTableProps) {
   const navigate = useNavigate();
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({});
@@ -76,15 +84,16 @@ export function ProjectsTable({
   useEffect(() => {
     const loadAllProjectJobs = async () => {
       const initialLoadingState: Record<string, boolean> = {};
-      projects.forEach(project => {
+      projects.forEach((project) => {
         initialLoadingState[project.id] = true;
       });
       setLoadingJobs(initialLoadingState);
-      
+
       try {
-        const jobPromises = projects.map(project => 
-          apiService.getJobsByProject(project.id)
-            .then(response => {
+        const jobPromises = projects.map((project) =>
+          apiService
+            .getJobsByProject(project.id)
+            .then((response) => {
               if (response.success && response.data) {
                 return { projectId: project.id, jobs: response.data };
               }
@@ -92,23 +101,22 @@ export function ProjectsTable({
             })
             .catch(() => {
               return { projectId: project.id, jobs: [] };
-            })
+            }),
         );
-        
+
         const results = await Promise.all(jobPromises);
-        
+
         const newProjectJobs: Record<string, CronJob[]> = {};
-        results.forEach(result => {
+        results.forEach((result) => {
           newProjectJobs[result.projectId] = result.jobs;
-          setLoadingJobs(prev => ({ ...prev, [result.projectId]: false }));
+          setLoadingJobs((prev) => ({ ...prev, [result.projectId]: false }));
         });
-        
+
         setProjectJobs(newProjectJobs);
-        
       } catch (error) {
         console.error("Error loading project jobs:", error);
         const resetLoadingState: Record<string, boolean> = {};
-        projects.forEach(project => {
+        projects.forEach((project) => {
           resetLoadingState[project.id] = false;
         });
         setLoadingJobs(resetLoadingState);
@@ -128,7 +136,7 @@ export function ProjectsTable({
     if (projectJobs[projectId] && projectJobs[projectId].length > 0) {
       return;
     }
-    
+
     setLoadingJobs((prev) => ({ ...prev, [projectId]: true }));
     try {
       const response = await apiService.getJobsByProject(projectId);
@@ -136,7 +144,7 @@ export function ProjectsTable({
         setProjectJobs((prev) => ({ ...prev, [projectId]: response.data }));
         toast({
           title: "โหลดงานสำเร็จ",
-          description: `โหลดงานทั้งหมดของโปรเจค ${projects.find(p => p.id === projectId)?.name || projectId} เรียบร้อยแล้ว`,
+          description: `โหลดงานทั้งหมดของโปรเจค ${projects.find((p) => p.id === projectId)?.name || projectId} เรียบร้อยแล้ว`,
         });
       } else {
         toast({
@@ -186,7 +194,7 @@ export function ProjectsTable({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedProjectIds(projects.map(project => project.id));
+      setSelectedProjectIds(projects.map((project) => project.id));
     } else {
       setSelectedProjectIds([]);
     }
@@ -194,40 +202,48 @@ export function ProjectsTable({
 
   const handleSelectProject = (projectId: string, checked: boolean) => {
     if (checked) {
-      setSelectedProjectIds(prev => [...prev, projectId]);
+      setSelectedProjectIds((prev) => [...prev, projectId]);
     } else {
-      setSelectedProjectIds(prev => prev.filter(id => id !== projectId));
+      setSelectedProjectIds((prev) => prev.filter((id) => id !== projectId));
     }
   };
 
   const handleBatchExport = (projectIds: string[], format: "json" | "csv") => {
-    const projectsToExport = projects.filter(p => projectIds.includes(p.id));
+    const projectsToExport = projects.filter((p) => projectIds.includes(p.id));
     let content: string;
     let filename: string;
     let mimeType: string;
 
     if (format === "json") {
       content = JSON.stringify(projectsToExport, null, 2);
-      filename = `projects-export-${new Date().toISOString().split('T')[0]}.json`;
+      filename = `projects-export-${new Date().toISOString().split("T")[0]}.json`;
       mimeType = "application/json";
     } else {
-      const headers = ["id", "name", "description", "createdAt", "updatedAt"].join(",");
-      const rows = projectsToExport.map(project => [
-        project.id,
-        `"${project.name.replace(/"/g, '""')}"`,
-        `"${(project.description || "").replace(/"/g, '""')}"`,
-        project.createdAt,
-        project.updatedAt
-      ].join(","));
-      
+      const headers = [
+        "id",
+        "name",
+        "description",
+        "createdAt",
+        "updatedAt",
+      ].join(",");
+      const rows = projectsToExport.map((project) =>
+        [
+          project.id,
+          `"${project.name.replace(/"/g, '""')}"`,
+          `"${(project.description || "").replace(/"/g, '""')}"`,
+          project.createdAt,
+          project.updatedAt,
+        ].join(","),
+      );
+
       content = [headers, ...rows].join("\n");
-      filename = `projects-export-${new Date().toISOString().split('T')[0]}.csv`;
+      filename = `projects-export-${new Date().toISOString().split("T")[0]}.csv`;
       mimeType = "text/csv";
     }
 
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
@@ -262,7 +278,7 @@ export function ProjectsTable({
 
   return (
     <div className="w-full overflow-x-auto">
-      <div className="mb-4">
+      {/* <div className="mb-4">
         <ProjectBatchActions
           projects={projects}
           selectedProjectIds={selectedProjectIds}
@@ -270,17 +286,19 @@ export function ProjectsTable({
           onDelete={handleBatchDelete}
           disabled={projects.length === 0}
         />
-      </div>
-      
+      </div> */}
+
       <Table className="w-full">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40px]">
-              <Checkbox 
-                checked={projects.length > 0 && selectedProjectIds.length === projects.length}
-                onCheckedChange={handleSelectAll}
+              <Checkbox
+                checked={
+                  projects.length > 0 &&
+                  selectedProjectIdsPops.length === projects.length
+                }
+                onCheckedChange={onSelectAllProjects}
                 disabled={projects.length === 0}
-                aria-label="Select all projects"
               />
             </TableHead>
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
@@ -333,10 +351,11 @@ export function ProjectsTable({
                     className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}
                   >
                     <TableCell onClick={(e) => e.stopPropagation()}>
-                      <Checkbox 
-                        checked={selectedProjectIds.includes(project.id)}
-                        onCheckedChange={(checked) => handleSelectProject(project.id, checked === true)}
-                        aria-label={`Select project ${project.name}`}
+                      <Checkbox
+                        checked={selectedProjectIdsPops.includes(project.id)}
+                        onCheckedChange={(checked) =>
+                          onSelectProject(project.id, checked === true)
+                        }
                       />
                     </TableCell>
                     <TableCell className="font-medium">
@@ -382,9 +401,14 @@ export function ProjectsTable({
                       <div className="flex items-center gap-1.5">
                         <Clipboard className="h-4 w-4 text-muted-foreground" />
                         {isLoading ? (
-                          <span className="text-muted-foreground text-sm">กำลังโหลด...</span>
+                          <span className="text-muted-foreground text-sm">
+                            กำลังโหลด...
+                          </span>
                         ) : (
-                          <Badge variant="outline" className="text-xs font-normal">
+                          <Badge
+                            variant="outline"
+                            className="text-xs font-normal"
+                          >
                             {jobCount} งาน
                           </Badge>
                         )}
@@ -419,9 +443,9 @@ export function ProjectsTable({
                                       <TableHead className="w-[15%] truncate">
                                         สถานะ
                                       </TableHead>
-                                      <TableHead className="text-right w-[25%] truncate">
+                                      {/* <TableHead className="text-right w-[25%] truncate">
                                         การจัดการ
-                                      </TableHead>
+                                      </TableHead> */}
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -455,69 +479,87 @@ export function ProjectsTable({
                                             <StatusBadge status={job.status} />
                                           </div>
                                         </TableCell>
-                                        <TableCell
+                                        {/* <TableCell
                                           className="text-right"
                                           onClick={(e) => e.stopPropagation()}
                                         >
                                           <div className="relative">
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      setOpenDropdownId((prev) => (prev === job.id ? null : job.id));
-    }}
-    className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
-  >
-    <EllipsisVertical color="#000000" strokeWidth={0.75} />
-  </button>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setOpenDropdownId((prev) =>
+                                                  prev === job.id
+                                                    ? null
+                                                    : job.id,
+                                                );
+                                              }}
+                                              className="p-1 hover:bg-gray-100 rounded-full cursor-pointer"
+                                            >
+                                              <EllipsisVertical
+                                                color="#000000"
+                                                strokeWidth={0.75}
+                                              />
+                                            </button>
 
-  {openDropdownId === job.id && (
-    <div className="absolute right-0 top-10 bg-white border rounded-md shadow-lg z-[9999] transform translate-y-2">
-      <div className="py-1 w-32">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEditJob(job);
-            setOpenDropdownId(null);
-          }}
-          className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
-        >
-          Edit
-        </button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenDropdownId(null);
-              }}
-              className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
-            >
-              Delete
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>ลบงาน</AlertDialogTitle>
-              <AlertDialogDescription>
-                คุณต้องการลบงาน "{job.name}" ใช่หรือไม่? การกระทำนี้ไม่สามารถยกเลิกได้
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => handleDeleteJob(job)}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                ลบงาน
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
-  )}
-</div>
-                                        </TableCell>
+                                            {openDropdownId === job.id && (
+                                              <div className="absolute right-0 top-10 bg-white border rounded-md shadow-lg z-[9999] transform translate-y-2">
+                                                <div className="py-1 w-32">
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      handleEditJob(job);
+                                                      setOpenDropdownId(null);
+                                                    }}
+                                                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 text-left"
+                                                  >
+                                                    Edit
+                                                  </button>
+                                                  <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                      <button
+                                                        onClick={(e) => {
+                                                          e.stopPropagation();
+                                                          setOpenDropdownId(
+                                                            null,
+                                                          );
+                                                        }}
+                                                        className="w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 text-left"
+                                                      >
+                                                        Delete
+                                                      </button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                      <AlertDialogHeader>
+                                                        <AlertDialogTitle>
+                                                          ลบงาน
+                                                        </AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                          คุณต้องการลบงาน "
+                                                          {job.name}"
+                                                          ใช่หรือไม่?
+                                                          การกระทำนี้ไม่สามารถยกเลิกได้
+                                                        </AlertDialogDescription>
+                                                      </AlertDialogHeader>
+                                                      <AlertDialogFooter>
+                                                        <AlertDialogCancel>
+                                                          ยกเลิก
+                                                        </AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                          onClick={() =>
+                                                            handleDeleteJob(job)
+                                                          }
+                                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                        >
+                                                          ลบงาน
+                                                        </AlertDialogAction>
+                                                      </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                  </AlertDialog>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </TableCell> */}
                                       </TableRow>
                                     ))}
                                   </TableBody>
