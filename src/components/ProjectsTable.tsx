@@ -41,10 +41,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState, useEffect } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { JobDetails } from "./JobDetails";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -55,8 +54,6 @@ interface ProjectsTableProps {
   onAddJob: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
   onViewJobs: (projectId: string) => void;
-  onBatchExportProjects?: (projectIds: string[], format: "json" | "csv") => void;
-  onBatchDeleteProjects?: (projectIds: string[]) => void;
   selectedProjectId: string | null;
 }
 
@@ -65,8 +62,6 @@ export function ProjectsTable({
   onAddJob,
   onDeleteProject,
   onViewJobs,
-  onBatchExportProjects,
-  onBatchDeleteProjects,
   selectedProjectId,
 }: ProjectsTableProps) {
   const navigate = useNavigate();
@@ -206,53 +201,88 @@ export function ProjectsTable({
   };
 
   const handleBatchExport = (projectIds: string[], format: "json" | "csv") => {
-    if (onBatchExportProjects) {
-      onBatchExportProjects(projectIds, format);
-      toast({
-        title: "ส่งออกโปรเจค",
-        description: `กำลังส่งออกโปรเจคทั้งหมด ${projectIds.length} โปรเจค`,
-      });
+    const projectsToExport = projects.filter(p => projectIds.includes(p.id));
+    let content: string;
+    let filename: string;
+    let mimeType: string;
+
+    if (format === "json") {
+      content = JSON.stringify(projectsToExport, null, 2);
+      filename = `projects-export-${new Date().toISOString().split('T')[0]}.json`;
+      mimeType = "application/json";
+    } else {
+      const headers = ["id", "name", "description", "createdAt", "updatedAt"].join(",");
+      const rows = projectsToExport.map(project => [
+        project.id,
+        `"${project.name.replace(/"/g, '""')}"`,
+        `"${(project.description || "").replace(/"/g, '""')}"`,
+        project.createdAt,
+        project.updatedAt
+      ].join(","));
+      
+      content = [headers, ...rows].join("\n");
+      filename = `projects-export-${new Date().toISOString().split('T')[0]}.csv`;
+      mimeType = "text/csv";
     }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "ส่งออกโปรเจค",
+      description: `ส่งออก ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
+    });
   };
 
-  const handleBatchDelete = (projectIds: string[]) => {
-    if (onBatchDeleteProjects) {
-      onBatchDeleteProjects(projectIds);
+  const handleBatchDelete = async (projectIds: string[]) => {
+    try {
+      for (const projectId of projectIds) {
+        await onDeleteProject(projectId);
+      }
       setSelectedProjectIds([]);
       toast({
-        title: "ลบโปรเจค",
-        description: `ลบโปรเจคทั้งหมด ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
+        title: "ลบโปรเจคเรียบร้อย",
+        description: `ลบ ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
+      });
+    } catch (error) {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถลบโปรเจคได้",
+        variant: "destructive",
       });
     }
   };
 
   return (
     <div className="w-full overflow-x-auto">
-      {(onBatchExportProjects || onBatchDeleteProjects) && (
-        <div className="mb-4">
-          <ProjectBatchActions
-            projects={projects}
-            selectedProjectIds={selectedProjectIds}
-            onExport={handleBatchExport}
-            onDelete={handleBatchDelete}
-            disabled={projects.length === 0}
-          />
-        </div>
-      )}
+      <div className="mb-4">
+        <ProjectBatchActions
+          projects={projects}
+          selectedProjectIds={selectedProjectIds}
+          onExport={handleBatchExport}
+          onDelete={handleBatchDelete}
+          disabled={projects.length === 0}
+        />
+      </div>
       
       <Table className="w-full">
         <TableHeader>
           <TableRow>
-            {(onBatchExportProjects || onBatchDeleteProjects) && (
-              <TableHead className="w-[40px]">
-                <Checkbox 
-                  checked={projects.length > 0 && selectedProjectIds.length === projects.length} 
-                  onCheckedChange={handleSelectAll}
-                  disabled={projects.length === 0}
-                  aria-label="Select all projects"
-                />
-              </TableHead>
-            )}
+            <TableHead className="w-[40px]">
+              <Checkbox 
+                checked={projects.length > 0 && selectedProjectIds.length === projects.length}
+                onCheckedChange={handleSelectAll}
+                disabled={projects.length === 0}
+                aria-label="Select all projects"
+              />
+            </TableHead>
             <TableHead className="w-[30%]">ชื่อโปรเจค</TableHead>
             <TableHead className="hidden md:table-cell w-[30%]">
               รายละเอียด
@@ -269,7 +299,7 @@ export function ProjectsTable({
           {projects.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={(onBatchExportProjects || onBatchDeleteProjects) ? 5 : 4}
+                colSpan={5}
                 className="text-center py-6 text-muted-foreground"
               >
                 ไม่พบโปรเจค
@@ -302,15 +332,13 @@ export function ProjectsTable({
                   <TableRow
                     className={`${isSelected ? "bg-muted/50" : ""} cursor-pointer hover:bg-muted/40 transition-colors`}
                   >
-                    {(onBatchExportProjects || onBatchDeleteProjects) && (
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Checkbox 
-                          checked={selectedProjectIds.includes(project.id)} 
-                          onCheckedChange={(checked) => handleSelectProject(project.id, checked === true)}
-                          aria-label={`Select project ${project.name}`}
-                        />
-                      </TableCell>
-                    )}
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox 
+                        checked={selectedProjectIds.includes(project.id)}
+                        onCheckedChange={(checked) => handleSelectProject(project.id, checked === true)}
+                        aria-label={`Select project ${project.name}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       <div
                         className="flex items-center gap-2"
@@ -366,7 +394,7 @@ export function ProjectsTable({
 
                   <CollapsibleContent className="contents">
                     <TableRow>
-                      <TableCell colSpan={(onBatchExportProjects || onBatchDeleteProjects) ? 5 : 4} className="p-0 border-t-0">
+                      <TableCell colSpan={5} className="p-0 border-t-0">
                         <div className="bg-muted/20 px-4 py-2">
                           <div className="p-2">
                             {isLoading ? (
