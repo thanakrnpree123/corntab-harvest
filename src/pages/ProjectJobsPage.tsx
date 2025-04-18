@@ -160,6 +160,7 @@ export default function ProjectJobsPage() {
   const [dateFilter, setDateFilter] = useState<
     "today" | "week" | "month" | "all"
   >("all");
+  const [selectedProject, setSelectedProject] = useState<string>('all');
 
   const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ["project", projectId],
@@ -818,6 +819,26 @@ export default function ProjectJobsPage() {
                   <PopoverContent className="w-[240px] p-4">
                     <div className="space-y-4">
                       <div className="space-y-2">
+                        <h4 className="font-medium text-sm">โปรเจค</h4>
+                        <Select
+                          value={selectedProject}
+                          onValueChange={setSelectedProject}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="เลือกโปรเจค" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">ทั้งหมด</SelectItem>
+                            {project ? (
+                              <SelectItem key={project.id} value={project.id}>
+                                {project.name}
+                              </SelectItem>
+                            ) : null}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
                         <h4 className="font-medium text-sm">สถานะ</h4>
                         <Select
                           value={statusFilter}
@@ -962,193 +983,4 @@ export default function ProjectJobsPage() {
                         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
                           Last Run
                         </th>
-                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
-                          Next Run
-                        </th>
-                        <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sortedJobs.map((job) => (
-                        <tr
-                          key={job.id}
-                          className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
-                          onClick={() => handleViewJobDetails(job)}
-                        >
-                          <td
-                            className="p-4 align-middle"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Checkbox
-                              checked={selectedJobIds.includes(job.id)}
-                              onCheckedChange={(checked) =>
-                                toggleSelectJob(job.id, !!checked)
-                              }
-                            />
-                          </td>
-                          <td className="p-4 align-middle font-medium">
-                            {job.name}
-                          </td>
-                          <td className="p-4 align-middle hidden md:table-cell">
-                            <code className="bg-muted px-1 py-0.5 rounded text-xs">
-                              {job.schedule}
-                            </code>
-                          </td>
-                          <td className="p-4 align-middle">
-                            <StatusBadge status={job.status} />
-                          </td>
-                          <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
-                            {job.lastRun
-                              ? dayjs(job.lastRun).fromNow()
-                              : "Never"}
-                          </td>
-                          <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
-                            {job.nextRun
-                              ? dayjs(job.nextRun).format("DD/MM/YYYY HH:mm")
-                              : "-"}
-                          </td>
-                          <td
-                            className="p-4 align-middle text-right"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <div className="flex justify-end items-center gap-2">
-                            <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTriggerJob(job.id);
-                                  }}
-                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Play className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <EllipsisVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  className="w-[160px]"
-                                >
-                                  
-                                 
-                                  <DropdownMenuItem
-                                    onClick={() => toggleJobStatus(job.id)}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    {job.status === "paused" ? (
-                                      <>
-                                        <Play className="mr-2 h-4 w-4" />
-                                        <span>Activate</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Pause className="mr-2 h-4 w-4" />
-                                        <span>Pause</span>
-                                      </>
-                                    )}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleDuplicateJob(job.id)}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    <span>Edit</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleDuplicateJob(job.id)}
-                                    className="flex items-center cursor-pointer"
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    <span>Duplicate</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <DropdownMenuItem
-                                        onSelect={(e) => e.preventDefault()}
-                                        className="flex items-center cursor-pointer text-destructive focus:text-destructive"
-                                      >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        <span>Delete</span>
-                                      </DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                          ยืนยันการลบงาน
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          คุณต้องการลบงาน "{job.name}"
-                                          ใช่หรือไม่?
-                                          การกระทำนี้ไม่สามารถยกเลิกได้
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                          ยกเลิก
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          onClick={() =>
-                                            handleDeleteJob(job.id)
-                                          }
-                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                        >
-                                          ลบงาน
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center p-8 text-center">
-                  <p className="mb-4 text-muted-foreground">
-                    ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา
-                  </p>
-                  <Button onClick={() => setIsCreateModalOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    เพิ่มงานใหม่
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <CreateJobModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreateJob={handleCreateJob}
-        projects={[project]}
-        selectedProjectId={projectId || ""}
-      />
-
-      <JobDetails
-        job={selectedJob}
-        isOpen={isDetailSheetOpen}
-        onClose={() => setIsDetailSheetOpen(false)}
-        onUpdate={refetchJobs}
-        onDelete={handleDeleteJob}
-        onTrigger={handleTriggerJob}
-      />
-    </PageLayout>
-  );
-}
+                        <th className

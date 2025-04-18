@@ -1,4 +1,3 @@
-
 import { CronJob } from "@/lib/types";
 import {
   Table,
@@ -44,6 +43,7 @@ export interface JobsTableProps {
   onBatchDeleteJobs?: (jobIds: string[]) => void;
   showLastRun?: boolean;
   showNextRun?: boolean;
+  selectedProject?: string; // Add new prop for project filtering
 }
 
 export function JobsTable({
@@ -58,6 +58,7 @@ export function JobsTable({
   onBatchDeleteJobs,
   showLastRun = true,
   showNextRun = true,
+  selectedProject,
 }: JobsTableProps) {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   
@@ -109,6 +110,46 @@ export function JobsTable({
     }
   };
 
+  // Filter jobs based on selected project
+  const filteredJobs = jobs.filter(job => {
+    if (selectedProject && selectedProject !== 'all') {
+      return job.projectId === selectedProject;
+    }
+    return true;
+  });
+
+  const sortedJobs = [...filteredJobs].sort((a, b) => {
+    let comparison = 0;
+
+    switch (sortBy) {
+      case "name":
+        comparison = a.name.localeCompare(b.name);
+        break;
+      case "status":
+        comparison = a.status.localeCompare(b.status);
+        break;
+      case "date":
+        comparison =
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        break;
+      case "lastRun":
+        if (!a.lastRun && !b.lastRun) comparison = 0;
+        else if (!a.lastRun) comparison = 1;
+        else if (!b.lastRun) comparison = -1;
+        else
+          comparison =
+            new Date(a.lastRun).getTime() - new Date(b.lastRun).getTime();
+        break;
+      default:
+        comparison = 0;
+    }
+
+    return sortOrder === "asc" ? comparison : -comparison;
+  });
+
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   return (
     <div className="space-y-4">
       {(onExportJobs || onImportJobs || onBatchDeleteJobs) && (
@@ -154,7 +195,7 @@ export function JobsTable({
                 </TableCell>
               </TableRow>
             ) : (
-              jobs.map((job) => {
+              sortedJobs.map((job) => {
                 return (
                   <TableRow key={job.id}>
                     {(onExportJobs || onBatchDeleteJobs) && (
