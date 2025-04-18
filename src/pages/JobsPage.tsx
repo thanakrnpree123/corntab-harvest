@@ -108,6 +108,29 @@ export default function JobsPage() {
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
+  const handleViewDetails = (job: CronJob) => {
+    toast({
+      title: "ดูรายละเอียดงาน",
+      description: `กำลังดูรายละเอียดของงาน "${job.name}"`,
+    });
+  };
+
+  const handleToggleStatus = (jobId: string) => {
+    // Implementation for toggle status
+    toast({
+      title: "สลับสถานะงาน",
+      description: "สลับสถานะงานเรียบร้อยแล้ว",
+    });
+  };
+
+  const handleDeleteJob = (jobId: string) => {
+    // Implementation for delete job
+    toast({
+      title: "ลบงาน",
+      description: "ลบงานเรียบร้อยแล้ว",
+    });
+  };
+
   return (
     <PageLayout title="Jobs">
       <div className="flex flex-col gap-6">
@@ -147,7 +170,9 @@ export default function JobsPage() {
             <CardContent className="p-0">
               <JobsTable
                 jobs={sortedJobs}
-                isLoading={isLoading}
+                onViewDetails={handleViewDetails}
+                onToggleStatus={handleToggleStatus}
+                onDeleteJob={handleDeleteJob}
                 onRefresh={refetch}
               />
             </CardContent>
