@@ -35,7 +35,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProjectBatchActions } from "@/components/ProjectBatchActions";
 
-// Mock data functions
 const getMockProjects = () => [];
 const getAllMockJobs = () => [];
 const getMockJobs = (projectId: string) => [];
@@ -58,17 +57,14 @@ export default function JobsPage() {
   const { toast } = useToast();
   const [isProjectLoading, setIsProjectLoading] = useState(false);
   
-  // Filters
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("all");
   
-  // Selection for batch actions
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -78,7 +74,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockProjects();
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
@@ -89,14 +84,12 @@ export default function JobsPage() {
     }
   });
 
-  // Set first project as selected by default if none is selected
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
       setSelectedProjectId(projects[0].id);
     }
   }, [projects, selectedProjectId]);
 
-  // Fetch jobs based on selected project
   const { 
     data: jobs = [], 
     isLoading: isLoadingJobs, 
@@ -111,7 +104,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockJobs(selectedProjectId);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -121,7 +113,6 @@ export default function JobsPage() {
     enabled: !!selectedProjectId
   });
 
-  // Fetch all jobs for import/export functionality
   const { 
     data: allJobs = [], 
     refetch: refetchAllJobs 
@@ -133,7 +124,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getAllMockJobs();
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -142,19 +132,15 @@ export default function JobsPage() {
     }
   });
 
-  // Filter jobs based on search query and other filters
   const filteredJobs = jobs.filter(job => {
-    // 1. Search query filter
     const searchMatch = !searchQuery || 
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.endpoint.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // 2. Status filter
     const statusMatch = statusFilter === "all" || job.status === statusFilter;
     
-    // 3. Date filter
     let dateMatch = true;
     const jobDate = new Date(job.createdAt);
     
@@ -175,7 +161,6 @@ export default function JobsPage() {
     return searchMatch && statusMatch && dateMatch;
   });
   
-  // Sort filtered jobs
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     let comparison = 0;
     
@@ -190,7 +175,6 @@ export default function JobsPage() {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case "lastRun":
-        // Handle null values
         if (!a.lastRun && !b.lastRun) comparison = 0;
         else if (!a.lastRun) comparison = 1;
         else if (!b.lastRun) comparison = -1;
@@ -239,7 +223,6 @@ export default function JobsPage() {
             description: "ลบโปรเจคเรียบร้อยแล้ว",
           });
           
-          // Select another project if the current one was deleted
           if (selectedProjectId === projectId) {
             const remainingProjects = projects.filter(p => p.id !== projectId);
             if (remainingProjects.length > 0) {
@@ -258,7 +241,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // Mock delete for demo
           mockDeleteProject(projectId);
           refetchProjects();
           refetchAllJobs();
@@ -271,20 +253,16 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // Mock delete for demo
         mockDeleteProject(projectId);
         refetchProjects();
         refetchAllJobs();
       });
   };
 
-  // Add this new function to handle viewing project details
   const handleViewProjectDetails = (project: Project) => {
-    // Set the selected project
     setSelectedProjectId(project.id);
   };
 
-  // Handle selecting projects for batch actions
   const handleSelectProject = (projectId: string, checked: boolean) => {
     if (checked) {
       setSelectedIds(prev => [...prev, projectId]);
@@ -329,7 +307,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // Create mock data for demo
         const mockJob = createMockJob({ ...newJobData, id: `mock-${Date.now()}` });
         refetchJobs();
         refetchAllJobs();
@@ -377,7 +354,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockToggleJobStatus(job, newStatus);
           refetchJobs();
           refetchAllJobs();
@@ -390,10 +366,9 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-          // If unsuccessful, use mock data
-          mockToggleJobStatus(job, newStatus);
-          refetchJobs();
-          refetchAllJobs();
+        mockToggleJobStatus(job, newStatus);
+        refetchJobs();
+        refetchAllJobs();
       })
       .finally(() => {
         setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
@@ -419,7 +394,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockDeleteJob(jobId);
           refetchJobs();
           refetchAllJobs();
@@ -432,7 +406,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockDeleteJob(jobId);
         refetchJobs();
         refetchAllJobs();
@@ -464,7 +437,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockDuplicateJob(job);
           refetchJobs();
           refetchAllJobs();
@@ -477,7 +449,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockDuplicateJob(job);
         refetchJobs();
         refetchAllJobs();
@@ -488,7 +459,6 @@ export default function JobsPage() {
   };
 
   const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
-    // Add the current projectId to all imported jobs
     const jobsWithProject = importedJobs.map(job => ({
       ...job,
       projectId: selectedProjectId,
@@ -499,7 +469,6 @@ export default function JobsPage() {
     let successCount = 0;
     let failCount = 0;
     
-    // Create each job one by one
     const createPromises = jobsWithProject.map(job => 
       apiService.createJob(job as any)
         .then(response => {
@@ -508,7 +477,6 @@ export default function JobsPage() {
           return response;
         })
         .catch(() => {
-          // If unsuccessful, use mock data for demo
           mockImportJob(job);
           successCount++;
           return { success: true };
@@ -540,11 +508,9 @@ export default function JobsPage() {
     let failCount = 0;
     let newSelectedProjectId = selectedProjectId;
     
-    // Create each project and its jobs
     const importProjects = async () => {
       for (const projectWithJobs of projectsWithJobs) {
         try {
-          // Create the project
           const projectData = {
             name: projectWithJobs.name,
             description: projectWithJobs.description
@@ -555,12 +521,10 @@ export default function JobsPage() {
           if (projectResponse.success && projectResponse.data) {
             const newProjectId = projectResponse.data.id;
             
-            // If this is the first successful import, select it
             if (successCount === 0) {
               newSelectedProjectId = newProjectId;
             }
             
-            // Create jobs for this project
             if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
               for (const job of projectWithJobs.jobs) {
                 const jobData = {
@@ -572,7 +536,6 @@ export default function JobsPage() {
                   await apiService.createJob(jobData as any);
                 } catch (error) {
                   console.error("Error creating job:", error);
-                  // Create mock job for demo
                   mockImportJob({
                     ...jobData,
                     projectId: newProjectId
@@ -584,22 +547,18 @@ export default function JobsPage() {
             successCount++;
           } else {
             failCount++;
-            // Create mock project for demo
             mockImportProject(projectWithJobs);
           }
         } catch (error) {
           failCount++;
           console.error("Error importing project:", error);
-          // Create mock project for demo
           mockImportProject(projectWithJobs);
         }
       }
       
-      // Refresh data
       await refetchProjects();
       await refetchAllJobs();
       
-      // Set newly selected project
       if (newSelectedProjectId !== selectedProjectId) {
         setSelectedProjectId(newSelectedProjectId);
       }
@@ -618,8 +577,85 @@ export default function JobsPage() {
       });
     });
   };
-  
-  // Clear all filters
+
+  const handleExportJobs = (format: "json" | "csv") => {
+    const exportData = jobs.map(job => ({
+      name: job.name,
+      description: job.description,
+      schedule: job.schedule,
+      endpoint: job.endpoint,
+      httpMethod: job.httpMethod,
+      timezone: job.timezone,
+      useLocalTime: job.useLocalTime,
+      tags: job.tags,
+      headers: job.headers,
+      body: job.body,
+      emailNotifications: job.emailNotifications,
+      webhookUrl: job.webhookUrl,
+    }));
+    
+    let content: string;
+    let filename: string;
+    let mimeType: string;
+    
+    if (format === "json") {
+      content = JSON.stringify(exportData, null, 2);
+      filename = `jobs-export-${new Date().toISOString().split('T')[0]}.json`;
+      mimeType = "application/json";
+    } else {
+      const headers = [
+        "name",
+        "description",
+        "schedule",
+        "endpoint",
+        "httpMethod",
+        "timezone",
+        "useLocalTime",
+        "tags",
+        "headers",
+        "body",
+        "emailNotifications",
+        "webhookUrl"
+      ].join(",");
+      
+      const rows = exportData.map(job => {
+        return [
+          `"${(job.name || "").replace(/"/g, '""')}"`,
+          `"${(job.description || "").replace(/"/g, '""')}"`,
+          `"${(job.schedule || "").replace(/"/g, '""')}"`,
+          `"${(job.endpoint || "").replace(/"/g, '""')}"`,
+          `"${(job.httpMethod || "").replace(/"/g, '""')}"`,
+          `"${(job.timezone || "").replace(/"/g, '""')}"`,
+          job.useLocalTime,
+          `"${(Array.isArray(job.tags) ? job.tags.join(";") : "").replace(/"/g, '""')}"`,
+          `"${(typeof job.headers === 'object' ? JSON.stringify(job.headers) : "").replace(/"/g, '""')}"`,
+          `"${(job.body || "").replace(/"/g, '""')}"`,
+          `"${(job.emailNotifications || "").replace(/"/g, '""')}"`,
+          `"${(job.webhookUrl || "").replace(/"/g, '""')}"`,
+        ].join(",");
+      });
+      
+      content = [headers, ...rows].join("\n");
+      filename = `jobs-export-${new Date().toISOString().split('T')[0]}.csv`;
+      mimeType = "text/csv";
+    }
+    
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "ส่งออกสำเร็จ",
+      description: `ส่งออกข้อมูล ${jobs.length} งานเรียบร้อยแล้ว`,
+    });
+  };
+
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -629,35 +665,27 @@ export default function JobsPage() {
     setIsFilterOpen(false);
   };
 
-  // Active filter count
   const activeFiltersCount = [
     statusFilter !== "all",
     dateFilter !== "all",
     sortBy !== "name" || sortOrder !== "asc"
   ].filter(Boolean).length;
 
-  // Handle batch export of projects
   const handleExportProjects = (projectIds: string[], format: "json" | "csv") => {
-    // Implementation for exporting projects
     console.log(`Exporting ${projectIds.length} projects in ${format} format`);
     
-    // Here you would typically call your API service or handle the export logic
     toast({
       title: "ส่งออกโปรเจค",
       description: `กำลังส่งออก ${projectIds.length} โปรเจคในรูปแบบ ${format.toUpperCase()}`,
     });
   };
 
-  // Handle batch delete of projects
   const handleBatchDeleteProjects = (projectIds: string[]) => {
-    // Implementation for batch deleting projects
     console.log(`Deleting ${projectIds.length} projects`);
     
-    // Delete projects one by one
     const deletePromises = projectIds.map(projectId => 
       apiService.deleteProject(projectId)
         .catch(() => {
-          // Mock delete for demo
           mockDeleteProject(projectId);
         })
     );
@@ -669,7 +697,6 @@ export default function JobsPage() {
           description: `ลบ ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
         });
         
-        // Update selected project if necessary
         const deletedSelectedProject = projectIds.includes(selectedProjectId);
         if (deletedSelectedProject) {
           const remainingProjects = projects.filter(p => !projectIds.includes(p.id));
@@ -680,10 +707,8 @@ export default function JobsPage() {
           }
         }
         
-        // Clear selection
         setSelectedIds([]);
         
-        // Refresh data
         refetchProjects();
         refetchAllJobs();
       })
@@ -860,7 +885,11 @@ export default function JobsPage() {
                     </div>
                     
                     {jobs.length > 0 && (
-                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
+                      <JobExportImport 
+                        jobs={jobs} 
+                        onImport={handleImportJobs}
+                        onExport={handleExportJobs}
+                      />
                     )}
                   </div>
 
@@ -887,7 +916,6 @@ export default function JobsPage() {
                                 </Button>;
                               }
                               
-                              // Determine the action based on current status
                               const action = job.status === "paused" ? "activate" : "pause";
                               const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
                                 <AlertDialog>
