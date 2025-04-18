@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { JobsTable } from "@/components/JobsTable";
 import { ProjectsTable } from "@/components/ProjectsTable";
-import { ProjectBatchActions } from "@/components/ProjectBatchActions";
 import { CreateJobModal } from "@/components/CreateJobModal";
 import { JobDetails } from "@/components/JobDetails";
 import { ProjectSelector } from "@/components/ProjectSelector";
@@ -12,7 +10,6 @@ import { JobExportImport } from "@/components/JobExportImport";
 import { ProjectExportImport, ProjectWithJobs } from "@/components/ProjectExportImport";
 import { CronJob, JobStatus, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Card, 
   CardContent
@@ -42,11 +39,11 @@ export default function JobsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isJobActionInProgress, setIsJobActionInProgress] = useState<{[key: string]: boolean}>({});
   const { toast } = useToast();
   const [isProjectLoading, setIsProjectLoading] = useState(false);
-  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
@@ -54,9 +51,6 @@ export default function JobsPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("all");
-
-  // Add new state for project selection
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
 
   // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
@@ -193,82 +187,6 @@ export default function JobsPage() {
     return sortOrder === "asc" ? comparison : -comparison;
   });
 
-  // Add handler for project selection
-  const handleProjectSelect = (projectId: string) => {
-    setSelectedProjectIds(prev => {
-      if (prev.includes(projectId)) {
-        return prev.filter(id => id !== projectId);
-      }
-      return [...prev, projectId];
-    });
-  };
-
-  const handleSelectAllProjects = () => {
-    if (selectedProjectIds.length === projects.length) {
-      setSelectedProjectIds([]);
-    } else {
-      setSelectedProjectIds(projects.map(p => p.id));
-    }
-  };
-
-  const handleExportProjects = (projectIds: string[], format: "json" | "csv") => {
-    const projectsToExport = projects.filter(p => projectIds.includes(p.id));
-    const jobsToExport = allJobs.filter(j => projectIds.includes(j.projectId));
-
-    // Create export data
-    const exportData = projectsToExport.map(project => ({
-      ...project,
-      jobs: jobsToExport.filter(job => job.projectId === project.id)
-    }));
-
-    // Handle export based on format
-    if (format === "json") {
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `projects-export-${new Date().toISOString().split("T")[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } else {
-      // CSV Export logic
-      const projectRows = projectsToExport.map(p => 
-        `${p.id},${p.name},${p.description || ""}`
-      );
-      
-      const jobRows = jobsToExport.map(j => 
-        `${j.projectId},${j.name},${j.description || ""},${j.schedule}`
-      );
-
-      const csvContent = [
-        "[PROJECTS]",
-        "id,name,description",
-        ...projectRows,
-        "",
-        "[JOBS]",
-        "project_id,name,description,schedule",
-        ...jobRows
-      ].join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `projects-export-${new Date().toISOString().split("T")[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-
-    toast({
-      title: "ส่งออกสำเร็จ",
-      description: `ส่งออก ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
-    });
-  };
-
   const handleCreateProject = (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => {
     apiService.createProject(projectData)
       .then(response => {
@@ -296,39 +214,39 @@ export default function JobsPage() {
       });
   };
 
-  const handleDeleteProject = (projectIds: string[]) => {
-    Promise.all(projectIds.map(projectId => apiService.deleteProject(projectId)))
-      .then(responses => {
-        const successfulDeletes = responses.filter(response => response.success).length;
-        const failedDeletes = projectIds.length - successfulDeletes;
-  
-        if (successfulDeletes > 0) {
+  const handleDeleteProject = (projectId: string) => {
+    apiService.deleteProject(projectId)
+      .then(response => {
+        if (response.success) {
           toast({
             title: "สำเร็จ",
-            description: `ลบ ${successfulDeletes} โปรเจคเรียบร้อยแล้ว`,
+            description: "ลบโปรเจคเรียบร้อยแล้ว",
           });
-        }
-  
-        if (failedDeletes > 0) {
+          
+          // Select another project if the current one was deleted
+          if (selectedProjectId === projectId) {
+            const remainingProjects = projects.filter(p => p.id !== projectId);
+            if (remainingProjects.length > 0) {
+              setSelectedProjectId(remainingProjects[0].id);
+            } else {
+              setSelectedProjectId("");
+            }
+          }
+          
+          refetchProjects();
+          refetchAllJobs();
+        } else {
           toast({
             title: "เกิดข้อผิดพลาด",
-            description: `ไม่สามารถลบ ${failedDeletes} โปรเจค`,
+            description: `ไม่สามารถลบโปรเจค: ${response.error}`,
             variant: "destructive",
           });
+          
+          // Mock delete for demo
+          mockDeleteProject(projectId);
+          refetchProjects();
+          refetchAllJobs();
         }
-  
-        // Select another project if the current one was deleted
-        if (selectedProjectIds.includes(selectedProjectId)) {
-          const remainingProjects = projects.filter(p => !projectIds.includes(p.id));
-          if (remainingProjects.length > 0) {
-            setSelectedProjectId(remainingProjects[0].id);
-          } else {
-            setSelectedProjectId("");
-          }
-        }
-  
-        refetchProjects();
-        refetchAllJobs();
       })
       .catch(error => {
         toast({
@@ -336,9 +254,9 @@ export default function JobsPage() {
           description: `ไม่สามารถลบโปรเจค: ${error.message}`,
           variant: "destructive",
         });
-  
+        
         // Mock delete for demo
-        projectIds.forEach(projectId => mockDeleteProject(projectId));
+        mockDeleteProject(projectId);
         refetchProjects();
         refetchAllJobs();
       });
@@ -706,7 +624,6 @@ export default function JobsPage() {
               projects={projects} 
               jobs={allJobs}
               onImport={handleImportProjects} 
-              onExport={handleExportProjects}
             />
           </div>
         </div>
@@ -719,165 +636,22 @@ export default function JobsPage() {
         ) : (
           projects.length > 0 ? (
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-4 w-full">
-                  <Input
-                    className="max-w-[300px]"
-                    placeholder="ค้นหาโปรเจค..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex items-center gap-1">
-                        <Filter className="h-4 w-4" />
-                        <span>ตัวกรอง</span>
-                        {activeFiltersCount > 0 && (
-                          <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center">
-                            {activeFiltersCount}
-                          </Badge>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[240px] p-4">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-sm">สถานะ</h4>
-                          <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as any)}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="เลือกสถานะ" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">ทั้งหมด</SelectItem>
-                              <SelectItem value="idle">ว่าง</SelectItem>
-                              <SelectItem value="running">กำลังทำงาน</SelectItem>
-                              <SelectItem value="success">สำเร็จ</SelectItem>
-                              <SelectItem value="failed">ล้มเหลว</SelectItem>
-                              <SelectItem value="paused">หยุดชั่วคราว</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-sm">วันที่สร้าง</h4>
-                          <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="เลือกช่วงเวลา" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">ทั้งหมด</SelectItem>
-                              <SelectItem value="today">วันนี้</SelectItem>
-                              <SelectItem value="week">7 วันที่ผ่านมา</SelectItem>
-                              <SelectItem value="month">30 วันที่ผ่านมา</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      
-                        <Separator />
-                      
-                        <div className="space-y-2">
-                          <h4 className="font-medium text-sm">เรียงตาม</h4>
-                          <div className="flex gap-2">
-                            <Select value={sortBy} onValueChange={setSortBy}>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="เรียงตาม" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="name">ชื่อ</SelectItem>
-                                <SelectItem value="status">สถานะ</SelectItem>
-                                <SelectItem value="date">วันที่สร้าง</SelectItem>
-                                <SelectItem value="lastRun">รันล่าสุด</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            
-                            <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as any)}>
-                              <SelectTrigger className="w-[80px]">
-                                <SelectValue placeholder="ลำดับ" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="asc">A-Z</SelectItem>
-                                <SelectItem value="desc">Z-A</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          className="w-full" 
-                          variant="outline"
-                          onClick={handleClearFilters}
-                        >
-                          ล้างตัวกรอง
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <ProjectBatchActions
-                  projects={projects}
-                  selectedProjectIds={selectedProjectIds}
-                  onExport={handleExportProjects}
-                  onDelete={handleDeleteProject}
-                  disabled={isProjectLoading}
-                />
-              </div>
-
               <Card>
                 <CardContent className="p-0">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="p-4 text-left">
-                          <Checkbox
-                            checked={selectedProjectIds.length === projects.length}
-                            onCheckedChange={handleSelectAllProjects}
-                          />
-                        </th>
-                        <th className="p-4 text-left font-medium">Name</th>
-                        <th className="p-4 text-left font-medium">Description</th>
-                        <th className="p-4 text-left font-medium">Jobs</th>
-                        <th className="p-4 text-left font-medium">Created</th>
-                        <th className="p-4 text-left font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {projects.map((project) => (
-                        <tr key={project.id} className="border-b">
-                          <td className="p-4">
-                            <Checkbox
-                              checked={selectedProjectIds.includes(project.id)}
-                              onCheckedChange={() => handleProjectSelect(project.id)}
-                            />
-                          </td>
-                          <td className="p-4">{project.name}</td>
-                          <td className="p-4">{project.description}</td>
-                          <td className="p-4">
-                            {allJobs.filter(j => j.projectId === project.id).length}
-                          </td>
-                          <td className="p-4">
-                            {new Date(project.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setSelectedProjectId(project.id)}
-                              >
-                                View Jobs
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <ProjectsTable 
+                    projects={projects}
+                    onAddJob={(projectId) => {
+                      setSelectedProjectId(projectId);
+                      setIsCreateModalOpen(true);
+                    }}
+                    onDeleteProject={handleDeleteProject}
+                    onViewJobs={setSelectedProjectId}
+                    selectedProjectId={selectedProjectId}
+                  />
                 </CardContent>
               </Card>
-
-              {selectedProjectId && (
+              
+              {/* {selectedProjectId && (
                 <div className="space-y-4">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
@@ -919,7 +693,7 @@ export default function JobsPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              
+                            
                               <div className="space-y-2">
                                 <h4 className="font-medium text-sm">วันที่สร้าง</h4>
                                 <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
@@ -934,9 +708,9 @@ export default function JobsPage() {
                                   </SelectContent>
                                 </Select>
                               </div>
-                              
+                            
                               <Separator />
-                              
+                            
                               <div className="space-y-2">
                                 <h4 className="font-medium text-sm">เรียงตาม</h4>
                                 <div className="flex gap-2">
@@ -975,116 +749,508 @@ export default function JobsPage() {
                           </PopoverContent>
                         </Popover>
                       </div>
+                      
+                      <Button onClick={() => setIsCreateModalOpen(true)}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        เพิ่มงาน
+                      </Button>
                     </div>
+                    
+                    {jobs.length > 0 && (
+                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
+                    )}
                   </div>
+
+                  <Card>
+                    <CardContent className="p-0">
+                      {isLoadingJobs ? (
+                        <div className="flex items-center justify-center p-8">
+                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                          <span className="ml-2 text-muted-foreground">กำลังโหลดงาน...</span>
+                        </div>
+                      ) : (
+                        sortedJobs.length > 0 ? (
+                          <JobsTable 
+                            jobs={sortedJobs} 
+                            onViewDetails={handleViewJobDetails} 
+                            onToggleStatus={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="outline" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              // Determine the action based on current status
+                              const action = job.status === "paused" ? "activate" : "pause";
+                              const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant={action === "pause" ? "outline" : "default"} 
+                                      size="sm"
+                                    >
+                                      {action === "pause" ? "Pause" : "Activate"}
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        {action === "pause" ? "Pause Job" : "Activate Job"}
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {action === "pause" 
+                                          ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.` 
+                                          : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={onConfirm}>
+                                        {action === "pause" ? "Pause" : "Activate"}
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                              
+                              return (
+                                <ActionDialog 
+                                  onConfirm={() => toggleJobStatus(jobId)} 
+                                />
+                              );
+                            }}
+                            onDuplicateJob={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="outline" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              return (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Duplicate
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Duplicate Job</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to duplicate "{job.name}"?
+                                        A new job will be created with the same settings.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDuplicateJob(jobId)}>
+                                        Duplicate
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                            }}
+                            onDeleteJob={(jobId) => {
+                              const job = jobs.find(j => j.id === jobId);
+                              if (!job) return null;
+                              
+                              if (isJobActionInProgress[jobId]) {
+                                return <Button variant="destructive" size="sm" disabled>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Please wait
+                                </Button>;
+                              }
+                              
+                              return (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">Delete</Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to delete "{job.name}"? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteJob(jobId)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              );
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-8 text-center">
+                            <p className="text-muted-foreground mb-4">
+                              {searchQuery || statusFilter !== "all" || dateFilter !== "all"
+                                ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
+                                : "ไม่พบงานในโปรเจคนี้"}
+                            </p>
+                            <Button onClick={() => setIsCreateModalOpen(true)}>
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              สร้างงานแรก
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <p className="mb-4 text-muted-foreground">ไม่พบโปรเจค</p>
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-2">ยังไม่มีโปรเจค</h3>
+              <p className="text-muted-foreground mb-4">
+                สร้างโปรเจคแรกของคุณเพื่อเริ่มต้น
+              </p>
               <Button onClick={() => setIsCreateProjectModalOpen(true)}>
                 <FolderPlus className="mr-2 h-4 w-4" />
-                สร้างโปรเจคแรกของคุณ
+                สร้างโปรเจค
               </Button>
             </div>
           )
         )}
       </div>
-
-      <CreateJobModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+      
+      <CreateJobModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
         onCreateJob={handleCreateJob}
         projects={projects}
         selectedProjectId={selectedProjectId}
       />
-
-      <JobDetails
-        job={selectedJob}
-        isOpen={isDetailSheetOpen}
-        onClose={() => setIsDetailSheetOpen(false)}
-        onUpdate={refetchJobs}
-        onDelete={handleDeleteJob}
+      
+      <ProjectSelector 
+        projects={projects}
+        selectedProjectId={""}
+        onSelectProject={() => {}}
+        onCreateProject={handleCreateProject}
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
+      />
+      
+      <JobDetails 
+        job={selectedJob} 
+        isOpen={isDetailSheetOpen} 
+        onClose={() => setIsDetailSheetOpen(false)} 
       />
     </PageLayout>
   );
 }
 
-// Missing mock functions that would cause errors
-const getMockProjects = (): Project[] => {
-  return Array.from({ length: 5 }, (_, i) => ({
-    id: `mock-project-${i + 1}`,
-    name: `Mock Project ${i + 1}`,
-    description: `This is a mock project for testing purposes ${i + 1}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }));
-};
+// Mock functions for UI testing
 
-const getMockJobs = (projectId: string): CronJob[] => {
-  return Array.from({ length: 3 }, (_, i) => createMockJob({
-    id: `mock-job-${projectId}-${i + 1}`,
-    projectId,
-    name: `Mock Job ${i + 1}`,
-    status: i % 2 === 0 ? "idle" : "paused"
-  }));
-};
+function getMockProjects(): Project[] {
+  return [
+    {
+      id: "project-1",
+      name: "Marketing Automation",
+      description: "Marketing campaign automation tasks",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "project-2",
+      name: "Data Sync",
+      description: "Database synchronization jobs",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "project-3",
+      name: "Reporting",
+      description: "Automated reporting tasks",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  ];
+}
 
-const getAllMockJobs = (): CronJob[] => {
+function getAllMockJobs(): CronJob[] {
+  const allJobs: CronJob[] = [];
   const projects = getMockProjects();
-  return projects.flatMap(project => getMockJobs(project.id));
-};
+  
+  projects.forEach(project => {
+    const projectJobs = getMockJobs(project.id);
+    allJobs.push(...projectJobs);
+  });
+  
+  return allJobs;
+}
 
-const createMockJob = (overrides: Partial<CronJob> = {}): CronJob => {
-  const id = overrides.id || `mock-job-${Date.now()}`;
-  return {
-    id,
-    name: overrides.name || `Mock Job ${id}`,
-    schedule: overrides.schedule || "0 * * * *",
-    endpoint: overrides.endpoint || "https://example.com/api",
-    httpMethod: overrides.httpMethod || "GET",
-    requestBody: overrides.requestBody || "",
-    description: overrides.description || "This is a mock job for testing purposes.",
-    projectId: overrides.projectId || "mock-project-id",
-    status: overrides.status || "idle",
-    useLocalTime: overrides.useLocalTime !== undefined ? overrides.useLocalTime : false,
-    timezone: overrides.timezone || "UTC",
-    lastRun: overrides.lastRun || null,
-    nextRun: overrides.nextRun || null,
+function getMockJobs(projectId: string): CronJob[] {
+  const baseJobs = [
+    {
+      id: "job-1",
+      name: "Send Weekly Newsletter",
+      schedule: "0 9 * * 1",
+      endpoint: "https://api.example.com/send-newsletter",
+      httpMethod: "POST",
+      description: "Sends weekly newsletter to subscribers every Monday",
+      status: "idle" as JobStatus,
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date(Date.now() - 86400000).toISOString(),
+      nextRun: new Date(Date.now() + 518400000).toISOString(),
+      createdAt: new Date(Date.now() - 2592000000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      tags: ["marketing", "email"],
+      successCount: 12,
+      failCount: 1,
+      averageRuntime: 45.2,
+      projectId: "project-1",
+      emailNotifications: "admin@example.com,notify@example.com",
+      webhookUrl: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+    },
+    {
+      id: "job-2",
+      name: "Database Backup",
+      schedule: "0 0 * * *",
+      endpoint: "https://api.example.com/backup",
+      httpMethod: "GET",
+      description: "Daily database backup at midnight",
+      status: "success" as JobStatus,
+      useLocalTime: true,
+      timezone: "Asia/Bangkok",
+      lastRun: new Date(Date.now() - 3600000).toISOString(),
+      nextRun: new Date(Date.now() + 82800000).toISOString(),
+      createdAt: new Date(Date.now() - 7776000000).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+      tags: ["database", "backup"],
+      successCount: 89,
+      failCount: 3,
+      averageRuntime: 134.7,
+      projectId: "project-2",
+      emailNotifications: null,
+      webhookUrl: null
+    },
+    {
+      id: "job-3",
+      name: "Process Customer Orders",
+      schedule: "*/15 * * * *",
+      endpoint: "https://api.example.com/process-orders",
+      httpMethod: "POST",
+      description: "Process new customer orders every 15 minutes",
+      status: "failed" as JobStatus,
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date(Date.now() - 900000).toISOString(),
+      nextRun: new Date(Date.now() + 900000).toISOString(),
+      createdAt: new Date(Date.now() - 1209600000).toISOString(),
+      updatedAt: new Date(Date.now() - 900000).toISOString(),
+      tags: ["orders", "customers", "processing"],
+      successCount: 1240,
+      failCount: 17,
+      averageRuntime: 28.3,
+      projectId: "project-1",
+      emailNotifications: "tech-alerts@example.com",
+      webhookUrl: "https://api.example.com/webhook/orders"
+    },
+    {
+      id: "job-4",
+      name: "Generate Monthly Report",
+      schedule: "0 9 1 * *",
+      endpoint: "https://api.example.com/generate-report",
+      httpMethod: "POST",
+      description: "Generate monthly performance report on the 1st day of each month",
+      status: "paused" as JobStatus,
+      useLocalTime: true,
+      timezone: "America/New_York",
+      lastRun: new Date(Date.now() - 2592000000).toISOString(),
+      nextRun: null,
+      createdAt: new Date(Date.now() - 5184000000).toISOString(),
+      updatedAt: new Date(Date.now() - 1209600000).toISOString(),
+      tags: ["reporting", "monthly"],
+      successCount: 6,
+      failCount: 0,
+      averageRuntime: 326.5,
+      projectId: "project-3",
+      emailNotifications: "management@example.com,reports@example.com",
+      webhookUrl: null
+    },
+    {
+      id: "job-5",
+      name: "Clean Temporary Files",
+      schedule: "0 2 * * *",
+      endpoint: "https://api.example.com/clean-temp",
+      httpMethod: "GET",
+      description: "Clean temporary files every day at 2 AM",
+      status: "running" as JobStatus,
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date().toISOString(),
+      nextRun: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 864000000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: ["maintenance", "cleanup"],
+      successCount: 29,
+      failCount: 1,
+      averageRuntime: 45.8,
+      projectId: "project-2",
+      emailNotifications: null,
+      webhookUrl: "https://hooks.slack.com/services/AAA/BBB/CCC"
+    }
+  ];
+  
+  // Return only jobs for the selected project
+  return baseJobs.filter(job => job.projectId === projectId);
+}
+
+function createMockJob(jobData: Partial<CronJob>): CronJob {
+  // Store in localStorage for mock persistence
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  
+  const newJob = {
+    ...jobData,
+    id: `job-${Date.now()}`,
+    status: "idle" as JobStatus,
+    lastRun: null,
+    nextRun: getNextRunTime(jobData.schedule || "0 * * * *"),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    tags: overrides.tags || [],
-    successCount: overrides.successCount || 0,
-    failCount: overrides.failCount || 0,
-    averageRuntime: overrides.averageRuntime || null,
-    emailNotifications: overrides.emailNotifications || null,
-    webhookUrl: overrides.webhookUrl || null,
-    headers: overrides.headers || {},
-    body: overrides.body || "",
+    tags: jobData.tags || [],
+    successCount: 0,
+    failCount: 0,
+    averageRuntime: null,
   };
-};
+  
+  mockJobs.push(newJob);
+  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+  
+  return newJob as CronJob;
+}
 
-const mockDeleteProject = (projectId: string) => {
-  console.log(`Mock deleting project ${projectId}`);
-};
+function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
+  // Update mock job in localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  const updatedJobs = mockJobs.map((j: CronJob) => 
+    j.id === job.id ? { ...j, status: newStatus } : j
+  );
+  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
+}
 
-const mockImportProject = (project: ProjectWithJobs) => {
-  console.log(`Mock importing project ${project.name}`);
-};
+function mockDeleteJob(jobId: string) {
+  // Remove mock job from localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  const updatedJobs = mockJobs.filter((j: CronJob) => j.id !== jobId);
+  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
+}
 
-const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {
-  console.log(`Mock toggling job ${job.id} status to ${newStatus}`);
-};
+function mockDeleteProject(projectId: string) {
+  // Remove project and its jobs from localStorage
+  const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+  const updatedProjects = mockProjects.filter((p: Project) => p.id !== projectId);
+  localStorage.setItem('mockProjects', JSON.stringify(updatedProjects));
+  
+  // Also remove associated jobs
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  const updatedJobs = mockJobs.filter((j: CronJob) => j.projectId !== projectId);
+  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
+}
 
-const mockDeleteJob = (jobId: string) => {
-  console.log(`Mock deleting job ${jobId}`);
-};
+function mockDuplicateJob(job: CronJob) {
+  // Create duplicate in localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  
+  const newJob = {
+    ...job,
+    id: `job-${Date.now()}`,
+    name: `${job.name} (copy)`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  mockJobs.push(newJob);
+  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+}
 
-const mockDuplicateJob = (job: CronJob) => {
-  console.log(`Mock duplicating job ${job.id}`);
-};
+function mockImportJob(job: Partial<CronJob>) {
+  // Add imported job to localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  
+  const newJob = {
+    ...job,
+    id: `job-${Date.now()}`,
+    status: "idle" as JobStatus,
+    lastRun: null,
+    nextRun: getNextRunTime(job.schedule || "0 * * * *"),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: job.tags || [],
+    successCount: 0,
+    failCount: 0,
+    averageRuntime: null,
+  };
+  
+  mockJobs.push(newJob);
+  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+}
 
-const mockImportJob = (job: Partial<CronJob>) => {
-  console.log(`Mock importing job ${job.name}`);
-};
+function mockImportProject(projectWithJobs: ProjectWithJobs) {
+  // Add imported project to localStorage
+  const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+  
+  const newProjectId = `project-${Date.now()}`;
+  const newProject = {
+    id: newProjectId,
+    name: projectWithJobs.name,
+    description: projectWithJobs.description,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  mockProjects.push(newProject);
+  localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
+  
+  // Add jobs for this project
+  if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
+    const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+    
+    for (const job of projectWithJobs.jobs) {
+      const newJob = {
+        ...job,
+        id: `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        projectId: newProjectId,
+        status: "idle" as JobStatus,
+        lastRun: null,
+        nextRun: getNextRunTime(job.schedule || "0 * * * *"),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        tags: job.tags || [],
+        successCount: 0,
+        failCount: 0,
+        averageRuntime: null,
+      };
+      
+      mockJobs.push(newJob);
+    }
+    
+    localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+  }
+}
+
+// Helper to calculate next run time based on cron expression
+function getNextRunTime(cronExpression: string): string {
+  // Simple implementation - just add random hours (1-24)
+  const hours = Math.floor(Math.random() * 24) + 1;
+  return new Date(Date.now() + hours * 3600000).toISOString();
+}
