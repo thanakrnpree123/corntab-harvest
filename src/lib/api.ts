@@ -33,14 +33,14 @@ export const projectApi = {
         const mockProjects: Project[] = [
           {
             id: "1",
-            name: "API Services",
+            name: "ACCP",
             description: "API monitoring and management",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           },
           {
             id: "2",
-            name: "Data Processing",
+            name: "HSEC",
             description: "Background data processing tasks",
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -62,7 +62,7 @@ export const projectApi = {
         console.warn("Using mock project due to API error:", error);
         const mockProject: Project = {
           id,
-          name: id === "1" ? "API Services" : "Data Processing",
+          name: id === "1" ? "ACCP" : "HSEC",
           description: id === "1" ? "API monitoring and management" : "Background data processing tasks",
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -156,11 +156,11 @@ export const jobApi = {
         const statuses: JobStatus[] = ["idle", "running", "success", "failed", "paused"];
         const methods = ["GET", "POST", "PUT", "DELETE"];
         
-        for (let i = 1; i <= 10; i++) {
+        for (let i = 1; i <= 1; i++) {
           const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
           mockJobs.push({
             id: `job-${i}`,
-            name: `Job ${i}`,
+            name: projectId === "1"?`accp-batch` : `hsec-irs-batch`,
             schedule: "0 */6 * * *",
             endpoint: `https://api.example.com/endpoint-${i}`,
             httpMethod: methods[i % methods.length],
