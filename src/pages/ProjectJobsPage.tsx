@@ -1025,6 +1025,20 @@ export default function ProjectJobsPage() {
                                   className="w-[160px]"
                                 >
                                   <DropdownMenuItem
+                                    onClick={() => handleDuplicateJob(job.id)}
+                                    className="flex items-center cursor-pointer"
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDuplicateJob(job.id)}
+                                    className="flex items-center cursor-pointer"
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>tigger</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
                                     onClick={() => toggleJobStatus(job.id)}
                                     className="flex items-center cursor-pointer"
                                   >
