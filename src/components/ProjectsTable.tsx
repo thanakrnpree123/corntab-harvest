@@ -262,7 +262,7 @@ export function ProjectsTable({
 
   return (
     <div className="w-full overflow-x-auto">
-      <div className="mb-4">
+      <div className="flex items-center justify-between mb-4">
         <ProjectBatchActions
           projects={projects}
           selectedProjectIds={selectedProjectIds}
