@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,9 +14,31 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Filter, ChevronRight } from "lucide-react";
+import { 
+  Filter, 
+  ChevronRight, 
+  CheckCircle, 
+  AlertTriangle, 
+  Server, 
+  Calendar, 
+  Clock, 
+  Activity 
+} from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import dayjs from "dayjs";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Card, 
+  CardHeader, 
+  CardTitle, 
+  CardContent 
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent
+} from "@/components/ui/tabs";
 
 export default function Index() {
   const navigate = useNavigate();
