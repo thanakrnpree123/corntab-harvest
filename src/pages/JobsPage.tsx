@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { JobsTable } from "@/components/JobsTable";
@@ -30,9 +31,36 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Filter, PlusCircle, Loader2, FolderPlus } from "lucide-react";
+import { 
+  Filter, 
+  PlusCircle, 
+  Loader2, 
+  FolderPlus, 
+  Copy 
+} from "lucide-react";
+
+// Define the missing ProjectWithJobs interface
+interface ProjectWithJobs {
+  id?: string;
+  name: string;
+  description?: string;
+  jobs?: Partial<CronJob>[];
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -117,6 +145,80 @@ export default function JobsPage() {
       }
     }
   });
+
+  // Create the sortedJobs derived state
+  const sortedJobs = useMemo(() => {
+    return jobs
+      .filter(job => {
+        // Apply search filter
+        if (searchQuery && !job.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false;
+        }
+        
+        // Apply status filter
+        if (statusFilter !== "all" && job.status !== statusFilter) {
+          return false;
+        }
+        
+        // Apply date filter
+        if (dateFilter !== "all") {
+          const jobDate = new Date(job.createdAt);
+          const now = new Date();
+          
+          switch (dateFilter) {
+            case "today":
+              if (jobDate.getDate() !== now.getDate() || 
+                  jobDate.getMonth() !== now.getMonth() || 
+                  jobDate.getFullYear() !== now.getFullYear()) {
+                return false;
+              }
+              break;
+            case "week":
+              const oneWeekAgo = new Date();
+              oneWeekAgo.setDate(now.getDate() - 7);
+              if (jobDate < oneWeekAgo) {
+                return false;
+              }
+              break;
+            case "month":
+              const oneMonthAgo = new Date();
+              oneMonthAgo.setDate(now.getDate() - 30);
+              if (jobDate < oneMonthAgo) {
+                return false;
+              }
+              break;
+          }
+        }
+        
+        return true;
+      })
+      .sort((a, b) => {
+        // Apply sorting
+        let comparison = 0;
+        
+        switch (sortBy) {
+          case "name":
+            comparison = a.name.localeCompare(b.name);
+            break;
+          case "status":
+            comparison = a.status.localeCompare(b.status);
+            break;
+          case "date":
+            comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            break;
+          case "lastRun":
+            if (!a.lastRun && !b.lastRun) comparison = 0;
+            else if (!a.lastRun) comparison = 1;
+            else if (!b.lastRun) comparison = -1;
+            else comparison = new Date(a.lastRun).getTime() - new Date(b.lastRun).getTime();
+            break;
+          default:
+            comparison = a.name.localeCompare(b.name);
+        }
+        
+        return sortOrder === "asc" ? comparison : -comparison;
+      });
+  }, [jobs, searchQuery, statusFilter, dateFilter, sortBy, sortOrder]);
 
   const handleSelectProject = (projectId: string, checked: boolean) => {
     if (checked) {
@@ -809,7 +911,16 @@ export default function JobsPage() {
                     </div>
                     
                     {jobs.length > 0 && (
-                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
+                      <JobExportImport 
+                        jobs={jobs} 
+                        onImport={handleImportJobs} 
+                        onExport={(format) => {
+                          toast({
+                            title: "ส่งออกงาน",
+                            description: `กำลังส่งออกงานในรูปแบบ ${format}`,
+                          });
+                        }} 
+                      />
                     )}
                   </div>
 
