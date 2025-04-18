@@ -1,3 +1,4 @@
+
 import { CronJob } from "@/lib/types";
 import {
   Table,
@@ -43,7 +44,6 @@ export interface JobsTableProps {
   onBatchDeleteJobs?: (jobIds: string[]) => void;
   showLastRun?: boolean;
   showNextRun?: boolean;
-  isJobActionInProgress?: {[key: string]: boolean}; // Add the missing property
 }
 
 export function JobsTable({
