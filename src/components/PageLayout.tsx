@@ -2,9 +2,9 @@
 import { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 
-export interface PageLayoutProps {
+interface PageLayoutProps {
   children: ReactNode;
-  title?: string;
+  title: string;
 }
 
 export function PageLayout({ children, title }: PageLayoutProps) {
@@ -14,7 +14,7 @@ export function PageLayout({ children, title }: PageLayoutProps) {
       
       <main className="flex-1 container py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6">
-          {title && <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>}
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           {children}
         </div>
       </main>
