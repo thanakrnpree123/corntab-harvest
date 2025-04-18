@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -37,11 +36,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// Function to convert data to CSV format
 const convertToCSV = (data: any) => {
   if (!data) return "";
   
-  // Handle projects export
   if (data.projects && Array.isArray(data.projects)) {
     const projects = data.projects;
     const headers = ["id", "name", "description", "createdAt", "updatedAt"];
@@ -80,7 +77,6 @@ const convertToCSV = (data: any) => {
     return [...projectRows, ...jobRows].join("\n");
   }
   
-  // Handle jobs-only export
   if (Array.isArray(data)) {
     const headers = ["id", "name", "schedule", "endpoint", "httpMethod", "status", "description"];
     const rows = [
@@ -100,7 +96,6 @@ const convertToCSV = (data: any) => {
   return "";
 };
 
-// Mocking functions
 const getMockProjects = (): Project[] => {
   return Array.from({ length: 5 }, (_, i) => ({
     id: `mock-project-${i}`,
@@ -213,7 +208,6 @@ export default function JobsPage() {
   const { toast } = useToast();
   const [isProjectLoading, setIsProjectLoading] = useState(false);
   
-  // Filters
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -221,7 +215,6 @@ export default function JobsPage() {
   const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("all");
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
 
-  // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -231,7 +224,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockProjects();
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
@@ -242,14 +234,12 @@ export default function JobsPage() {
     }
   });
 
-  // Set first project as selected by default if none is selected
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
       setSelectedProjectId(projects[0].id);
     }
   }, [projects, selectedProjectId]);
 
-  // Fetch jobs based on selected project
   const { 
     data: jobs = [], 
     isLoading: isLoadingJobs, 
@@ -264,7 +254,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockJobs(selectedProjectId);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -274,7 +263,6 @@ export default function JobsPage() {
     enabled: !!selectedProjectId
   });
 
-  // Fetch all jobs for import/export functionality
   const { 
     data: allJobs = [], 
     refetch: refetchAllJobs 
@@ -286,7 +274,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getAllMockJobs();
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -295,19 +282,15 @@ export default function JobsPage() {
     }
   });
 
-  // Filter jobs based on search query and other filters
   const filteredJobs = jobs.filter(job => {
-    // 1. Search query filter
     const searchMatch = !searchQuery || 
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.endpoint.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // 2. Status filter
     const statusMatch = statusFilter === "all" || job.status === statusFilter;
     
-    // 3. Date filter
     let dateMatch = true;
     const jobDate = new Date(job.createdAt);
     
@@ -327,8 +310,7 @@ export default function JobsPage() {
     
     return searchMatch && statusMatch && dateMatch;
   });
-  
-  // Sort filtered jobs
+
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     let comparison = 0;
     
@@ -343,7 +325,6 @@ export default function JobsPage() {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case "lastRun":
-        // Handle null values
         if (!a.lastRun && !b.lastRun) comparison = 0;
         else if (!a.lastRun) comparison = 1;
         else if (!b.lastRun) comparison = -1;
@@ -392,7 +373,6 @@ export default function JobsPage() {
             description: "ลบโปรเจคเรียบร้อยแล้ว",
           });
           
-          // Select another project if the current one was deleted
           if (selectedProjectId === projectId) {
             const remainingProjects = projects.filter(p => p.id !== projectId);
             if (remainingProjects.length > 0) {
@@ -411,7 +391,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // Mock delete for demo
           mockDeleteProject(projectId);
           refetchProjects();
           refetchAllJobs();
@@ -424,7 +403,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // Mock delete for demo
         mockDeleteProject(projectId);
         refetchProjects();
         refetchAllJobs();
@@ -467,7 +445,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // Create mock data for demo
         const mockJob = createMockJob({ ...newJobData, id: `mock-${Date.now()}` });
         refetchJobs();
         refetchAllJobs();
@@ -515,7 +492,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockToggleJobStatus(job, newStatus);
           refetchJobs();
           refetchAllJobs();
@@ -528,7 +504,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockToggleJobStatus(job, newStatus);
         refetchJobs();
         refetchAllJobs();
@@ -557,7 +532,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockDeleteJob(jobId);
           refetchJobs();
           refetchAllJobs();
@@ -570,7 +544,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockDeleteJob(jobId);
         refetchJobs();
         refetchAllJobs();
@@ -602,7 +575,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
-          // If unsuccessful, use mock data
           mockDuplicateJob(job);
           refetchJobs();
           refetchAllJobs();
@@ -615,7 +587,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        // If unsuccessful, use mock data
         mockDuplicateJob(job);
         refetchJobs();
         refetchAllJobs();
@@ -626,7 +597,6 @@ export default function JobsPage() {
   };
 
   const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
-    // Add the current projectId to all imported jobs
     const jobsWithProject = importedJobs.map(job => ({
       ...job,
       projectId: selectedProjectId,
@@ -637,7 +607,6 @@ export default function JobsPage() {
     let successCount = 0;
     let failCount = 0;
     
-    // Create each job one by one
     const createPromises = jobsWithProject.map(job => 
       apiService.createJob(job as any)
         .then(response => {
@@ -646,7 +615,6 @@ export default function JobsPage() {
           return response;
         })
         .catch(() => {
-          // If unsuccessful, use mock data for demo
           mockImportJob(job);
           successCount++;
           return { success: true };
@@ -678,11 +646,9 @@ export default function JobsPage() {
     let failCount = 0;
     let newSelectedProjectId = selectedProjectId;
     
-    // Create each project and its jobs
     const importProjects = async () => {
       for (const projectWithJobs of projectsWithJobs) {
         try {
-          // Create the project
           const projectData = {
             name: projectWithJobs.name,
             description: projectWithJobs.description
@@ -693,12 +659,10 @@ export default function JobsPage() {
           if (projectResponse.success && projectResponse.data) {
             const newProjectId = projectResponse.data.id;
             
-            // If this is the first successful import, select it
             if (successCount === 0) {
               newSelectedProjectId = newProjectId;
             }
             
-            // Create jobs for this project
             if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
               for (const job of projectWithJobs.jobs) {
                 const jobData = {
@@ -710,7 +674,6 @@ export default function JobsPage() {
                   await apiService.createJob(jobData as any);
                 } catch (error) {
                   console.error("Error creating job:", error);
-                  // Create mock job for demo
                   mockImportJob({
                     ...jobData,
                     projectId: newProjectId
@@ -722,22 +685,18 @@ export default function JobsPage() {
             successCount++;
           } else {
             failCount++;
-            // Create mock project for demo
             mockImportProject(projectWithJobs);
           }
         } catch (error) {
           failCount++;
           console.error("Error importing project:", error);
-          // Create mock project for demo
           mockImportProject(projectWithJobs);
         }
       }
       
-      // Refresh data
       await refetchProjects();
       await refetchAllJobs();
       
-      // Set newly selected project
       if (newSelectedProjectId !== selectedProjectId) {
         setSelectedProjectId(newSelectedProjectId);
       }
@@ -756,8 +715,7 @@ export default function JobsPage() {
       });
     });
   };
-  
-  // Clear all filters
+
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -767,7 +725,6 @@ export default function JobsPage() {
     setIsFilterOpen(false);
   };
 
-  // Active filter count
   const activeFiltersCount = [
     statusFilter !== "all",
     dateFilter !== "all",
@@ -807,7 +764,6 @@ export default function JobsPage() {
                   jobs: jobsToExport
                 };
                 
-                // Create and download file
                 const blob = new Blob(
                   [format === 'json' ? JSON.stringify(data, null, 2) : convertToCSV(data)], 
                   { type: format === 'json' ? 'application/json' : 'text/csv' }
@@ -979,7 +935,30 @@ export default function JobsPage() {
                     </div>
                     
                     {jobs.length > 0 && (
-                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
+                      <JobExportImport 
+                        jobs={jobs} 
+                        onImport={handleImportJobs}
+                        onExport={(format) => {
+                          const data = format === 'json' ? JSON.stringify(jobs, null, 2) : convertToCSV(jobs);
+                          const blob = new Blob(
+                            [data], 
+                            { type: format === 'json' ? 'application/json' : 'text/csv' }
+                          );
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `jobs-export.${format}`;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "ส่งออกงาน",
+                            description: `ส่งออก ${jobs.length} งานเรียบร้อยแล้ว`,
+                          });
+                        }}
+                      />
                     )}
                   </div>
 
@@ -995,9 +974,18 @@ export default function JobsPage() {
                           <JobsTable 
                             jobs={sortedJobs} 
                             onViewDetails={handleViewJobDetails} 
-                            onToggleStatus={toggleJobStatus}
-                            onDeleteJob={handleDeleteJob}
-                            onDuplicateJob={handleDuplicateJob}
+                            onToggleStatus={(jobId) => {
+                              toggleJobStatus(jobId);
+                              return null;
+                            }}
+                            onDeleteJob={(jobId) => {
+                              handleDeleteJob(jobId);
+                              return null;
+                            }}
+                            onDuplicateJob={(jobId) => {
+                              handleDuplicateJob(jobId);
+                              return null;
+                            }}
                             isJobActionInProgress={isJobActionInProgress}
                           />
                         ) : (
