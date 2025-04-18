@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, PlusCircle, Loader2, Filter, FolderPlus, Trash2 } from "lucide-react";
+import { Copy, PlusCircle, Loader2, Filter, FolderPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -33,18 +33,6 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ProjectBatchActions } from "@/components/ProjectBatchActions";
-
-const getMockProjects = () => [];
-const getAllMockJobs = () => [];
-const getMockJobs = (projectId: string) => [];
-const createMockJob = (jobData: Partial<CronJob>) => ({});
-const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {};
-const mockDeleteJob = (jobId: string) => {};
-const mockDuplicateJob = (job: CronJob) => {};
-const mockImportJob = (job: Partial<CronJob>) => {};
-const mockDeleteProject = (projectId: string) => {};
-const mockImportProject = (projectWithJobs: ProjectWithJobs) => {};
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -57,14 +45,14 @@ export default function JobsPage() {
   const { toast } = useToast();
   const [isProjectLoading, setIsProjectLoading] = useState(false);
   
+  // Filters
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("all");
-  
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -74,6 +62,7 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
+        // If not successful, use mock data
         return getMockProjects();
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
@@ -84,12 +73,14 @@ export default function JobsPage() {
     }
   });
 
+  // Set first project as selected by default if none is selected
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
       setSelectedProjectId(projects[0].id);
     }
   }, [projects, selectedProjectId]);
 
+  // Fetch jobs based on selected project
   const { 
     data: jobs = [], 
     isLoading: isLoadingJobs, 
@@ -104,6 +95,7 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
+        // If not successful, use mock data
         return getMockJobs(selectedProjectId);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -113,6 +105,7 @@ export default function JobsPage() {
     enabled: !!selectedProjectId
   });
 
+  // Fetch all jobs for import/export functionality
   const { 
     data: allJobs = [], 
     refetch: refetchAllJobs 
@@ -124,6 +117,7 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
+        // If not successful, use mock data
         return getAllMockJobs();
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -132,15 +126,19 @@ export default function JobsPage() {
     }
   });
 
+  // Filter jobs based on search query and other filters
   const filteredJobs = jobs.filter(job => {
+    // 1. Search query filter
     const searchMatch = !searchQuery || 
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.endpoint.toLowerCase().includes(searchQuery.toLowerCase());
     
+    // 2. Status filter
     const statusMatch = statusFilter === "all" || job.status === statusFilter;
     
+    // 3. Date filter
     let dateMatch = true;
     const jobDate = new Date(job.createdAt);
     
@@ -161,6 +159,7 @@ export default function JobsPage() {
     return searchMatch && statusMatch && dateMatch;
   });
   
+  // Sort filtered jobs
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     let comparison = 0;
     
@@ -175,6 +174,7 @@ export default function JobsPage() {
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case "lastRun":
+        // Handle null values
         if (!a.lastRun && !b.lastRun) comparison = 0;
         else if (!a.lastRun) comparison = 1;
         else if (!b.lastRun) comparison = -1;
@@ -223,6 +223,7 @@ export default function JobsPage() {
             description: "ลบโปรเจคเรียบร้อยแล้ว",
           });
           
+          // Select another project if the current one was deleted
           if (selectedProjectId === projectId) {
             const remainingProjects = projects.filter(p => p.id !== projectId);
             if (remainingProjects.length > 0) {
@@ -241,6 +242,7 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
+          // Mock delete for demo
           mockDeleteProject(projectId);
           refetchProjects();
           refetchAllJobs();
@@ -253,22 +255,11 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
+        // Mock delete for demo
         mockDeleteProject(projectId);
         refetchProjects();
         refetchAllJobs();
       });
-  };
-
-  const handleViewProjectDetails = (project: Project) => {
-    setSelectedProjectId(project.id);
-  };
-
-  const handleSelectProject = (projectId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, projectId]);
-    } else {
-      setSelectedIds(prev => prev.filter(id => id !== projectId));
-    }
   };
 
   const handleCreateJob = (jobData: Partial<CronJob>) => {
@@ -307,6 +298,7 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
+        // Create mock data for demo
         const mockJob = createMockJob({ ...newJobData, id: `mock-${Date.now()}` });
         refetchJobs();
         refetchAllJobs();
@@ -354,6 +346,7 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
+          // If unsuccessful, use mock data
           mockToggleJobStatus(job, newStatus);
           refetchJobs();
           refetchAllJobs();
@@ -366,9 +359,10 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
-        mockToggleJobStatus(job, newStatus);
-        refetchJobs();
-        refetchAllJobs();
+          // If unsuccessful, use mock data
+          mockToggleJobStatus(job, newStatus);
+          refetchJobs();
+          refetchAllJobs();
       })
       .finally(() => {
         setIsJobActionInProgress(prev => ({ ...prev, [jobId]: false }));
@@ -394,6 +388,7 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
+          // If unsuccessful, use mock data
           mockDeleteJob(jobId);
           refetchJobs();
           refetchAllJobs();
@@ -406,6 +401,7 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
+        // If unsuccessful, use mock data
         mockDeleteJob(jobId);
         refetchJobs();
         refetchAllJobs();
@@ -437,6 +433,7 @@ export default function JobsPage() {
             variant: "destructive",
           });
           
+          // If unsuccessful, use mock data
           mockDuplicateJob(job);
           refetchJobs();
           refetchAllJobs();
@@ -449,6 +446,7 @@ export default function JobsPage() {
           variant: "destructive",
         });
         
+        // If unsuccessful, use mock data
         mockDuplicateJob(job);
         refetchJobs();
         refetchAllJobs();
@@ -459,6 +457,7 @@ export default function JobsPage() {
   };
 
   const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
+    // Add the current projectId to all imported jobs
     const jobsWithProject = importedJobs.map(job => ({
       ...job,
       projectId: selectedProjectId,
@@ -469,6 +468,7 @@ export default function JobsPage() {
     let successCount = 0;
     let failCount = 0;
     
+    // Create each job one by one
     const createPromises = jobsWithProject.map(job => 
       apiService.createJob(job as any)
         .then(response => {
@@ -477,6 +477,7 @@ export default function JobsPage() {
           return response;
         })
         .catch(() => {
+          // If unsuccessful, use mock data for demo
           mockImportJob(job);
           successCount++;
           return { success: true };
@@ -508,9 +509,11 @@ export default function JobsPage() {
     let failCount = 0;
     let newSelectedProjectId = selectedProjectId;
     
+    // Create each project and its jobs
     const importProjects = async () => {
       for (const projectWithJobs of projectsWithJobs) {
         try {
+          // Create the project
           const projectData = {
             name: projectWithJobs.name,
             description: projectWithJobs.description
@@ -521,10 +524,12 @@ export default function JobsPage() {
           if (projectResponse.success && projectResponse.data) {
             const newProjectId = projectResponse.data.id;
             
+            // If this is the first successful import, select it
             if (successCount === 0) {
               newSelectedProjectId = newProjectId;
             }
             
+            // Create jobs for this project
             if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
               for (const job of projectWithJobs.jobs) {
                 const jobData = {
@@ -536,6 +541,7 @@ export default function JobsPage() {
                   await apiService.createJob(jobData as any);
                 } catch (error) {
                   console.error("Error creating job:", error);
+                  // Create mock job for demo
                   mockImportJob({
                     ...jobData,
                     projectId: newProjectId
@@ -547,18 +553,22 @@ export default function JobsPage() {
             successCount++;
           } else {
             failCount++;
+            // Create mock project for demo
             mockImportProject(projectWithJobs);
           }
         } catch (error) {
           failCount++;
           console.error("Error importing project:", error);
+          // Create mock project for demo
           mockImportProject(projectWithJobs);
         }
       }
       
+      // Refresh data
       await refetchProjects();
       await refetchAllJobs();
       
+      // Set newly selected project
       if (newSelectedProjectId !== selectedProjectId) {
         setSelectedProjectId(newSelectedProjectId);
       }
@@ -577,85 +587,8 @@ export default function JobsPage() {
       });
     });
   };
-
-  const handleExportJobs = (format: "json" | "csv") => {
-    const exportData = jobs.map(job => ({
-      name: job.name,
-      description: job.description,
-      schedule: job.schedule,
-      endpoint: job.endpoint,
-      httpMethod: job.httpMethod,
-      timezone: job.timezone,
-      useLocalTime: job.useLocalTime,
-      tags: job.tags,
-      headers: job.headers,
-      body: job.body,
-      emailNotifications: job.emailNotifications,
-      webhookUrl: job.webhookUrl,
-    }));
-    
-    let content: string;
-    let filename: string;
-    let mimeType: string;
-    
-    if (format === "json") {
-      content = JSON.stringify(exportData, null, 2);
-      filename = `jobs-export-${new Date().toISOString().split('T')[0]}.json`;
-      mimeType = "application/json";
-    } else {
-      const headers = [
-        "name",
-        "description",
-        "schedule",
-        "endpoint",
-        "httpMethod",
-        "timezone",
-        "useLocalTime",
-        "tags",
-        "headers",
-        "body",
-        "emailNotifications",
-        "webhookUrl"
-      ].join(",");
-      
-      const rows = exportData.map(job => {
-        return [
-          `"${(job.name || "").replace(/"/g, '""')}"`,
-          `"${(job.description || "").replace(/"/g, '""')}"`,
-          `"${(job.schedule || "").replace(/"/g, '""')}"`,
-          `"${(job.endpoint || "").replace(/"/g, '""')}"`,
-          `"${(job.httpMethod || "").replace(/"/g, '""')}"`,
-          `"${(job.timezone || "").replace(/"/g, '""')}"`,
-          job.useLocalTime,
-          `"${(Array.isArray(job.tags) ? job.tags.join(";") : "").replace(/"/g, '""')}"`,
-          `"${(typeof job.headers === 'object' ? JSON.stringify(job.headers) : "").replace(/"/g, '""')}"`,
-          `"${(job.body || "").replace(/"/g, '""')}"`,
-          `"${(job.emailNotifications || "").replace(/"/g, '""')}"`,
-          `"${(job.webhookUrl || "").replace(/"/g, '""')}"`,
-        ].join(",");
-      });
-      
-      content = [headers, ...rows].join("\n");
-      filename = `jobs-export-${new Date().toISOString().split('T')[0]}.csv`;
-      mimeType = "text/csv";
-    }
-    
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "ส่งออกสำเร็จ",
-      description: `ส่งออกข้อมูล ${jobs.length} งานเรียบร้อยแล้ว`,
-    });
-  };
-
+  
+  // Clear all filters
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -665,61 +598,12 @@ export default function JobsPage() {
     setIsFilterOpen(false);
   };
 
+  // Active filter count
   const activeFiltersCount = [
     statusFilter !== "all",
     dateFilter !== "all",
     sortBy !== "name" || sortOrder !== "asc"
   ].filter(Boolean).length;
-
-  const handleExportProjects = (projectIds: string[], format: "json" | "csv") => {
-    console.log(`Exporting ${projectIds.length} projects in ${format} format`);
-    
-    toast({
-      title: "ส่งออกโปรเจค",
-      description: `กำลังส่งออก ${projectIds.length} โปรเจคในรูปแบบ ${format.toUpperCase()}`,
-    });
-  };
-
-  const handleBatchDeleteProjects = (projectIds: string[]) => {
-    console.log(`Deleting ${projectIds.length} projects`);
-    
-    const deletePromises = projectIds.map(projectId => 
-      apiService.deleteProject(projectId)
-        .catch(() => {
-          mockDeleteProject(projectId);
-        })
-    );
-    
-    Promise.all(deletePromises)
-      .then(() => {
-        toast({
-          title: "สำเร็จ",
-          description: `ลบ ${projectIds.length} โปรเจคเรียบร้อยแล้ว`,
-        });
-        
-        const deletedSelectedProject = projectIds.includes(selectedProjectId);
-        if (deletedSelectedProject) {
-          const remainingProjects = projects.filter(p => !projectIds.includes(p.id));
-          if (remainingProjects.length > 0) {
-            setSelectedProjectId(remainingProjects[0].id);
-          } else {
-            setSelectedProjectId("");
-          }
-        }
-        
-        setSelectedIds([]);
-        
-        refetchProjects();
-        refetchAllJobs();
-      })
-      .catch(error => {
-        toast({
-          title: "เกิดข้อผิดพลาดระหว่างการลบโปรเจค",
-          description: error.message,
-          variant: "destructive",
-        });
-      });
-  };
 
   return (
     <PageLayout title="">
@@ -752,20 +636,10 @@ export default function JobsPage() {
         ) : (
           projects.length > 0 ? (
             <div className="space-y-6">
-              {selectedIds.length > 0 && (
-                <ProjectBatchActions
-                  projects={projects}
-                  selectedProjectIds={selectedIds}
-                  onExport={handleExportProjects}
-                  onDelete={handleBatchDeleteProjects}
-                />
-              )}
-              
               <Card>
                 <CardContent className="p-0">
                   <ProjectsTable 
                     projects={projects}
-                    onViewDetails={handleViewProjectDetails}
                     onAddJob={(projectId) => {
                       setSelectedProjectId(projectId);
                       setIsCreateModalOpen(true);
@@ -773,13 +647,11 @@ export default function JobsPage() {
                     onDeleteProject={handleDeleteProject}
                     onViewJobs={setSelectedProjectId}
                     selectedProjectId={selectedProjectId}
-                    onSelect={handleSelectProject}
-                    selectedIds={selectedIds}
                   />
                 </CardContent>
               </Card>
               
-              {selectedProjectId && (
+              {/* {selectedProjectId && (
                 <div className="space-y-4">
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
@@ -885,11 +757,7 @@ export default function JobsPage() {
                     </div>
                     
                     {jobs.length > 0 && (
-                      <JobExportImport 
-                        jobs={jobs} 
-                        onImport={handleImportJobs}
-                        onExport={handleExportJobs}
-                      />
+                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
                     )}
                   </div>
 
@@ -916,6 +784,7 @@ export default function JobsPage() {
                                 </Button>;
                               }
                               
+                              // Determine the action based on current status
                               const action = job.status === "paused" ? "activate" : "pause";
                               const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
                                 <AlertDialog>
@@ -996,7 +865,7 @@ export default function JobsPage() {
                               if (!job) return null;
                               
                               if (isJobActionInProgress[jobId]) {
-                                return <Button variant="outline" size="sm" disabled>
+                                return <Button variant="destructive" size="sm" disabled>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                   Please wait
                                 </Button>;
@@ -1005,22 +874,21 @@ export default function JobsPage() {
                               return (
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </Button>
+                                    <Button variant="destructive" size="sm">Delete</Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
                                       <AlertDialogTitle>Delete Job</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete "{job.name}"?
-                                        This action cannot be undone.
+                                        Are you sure you want to delete "{job.name}"? This action cannot be undone.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteJob(jobId)}>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteJob(jobId)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
                                         Delete
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
@@ -1031,10 +899,14 @@ export default function JobsPage() {
                           />
                         ) : (
                           <div className="flex flex-col items-center justify-center p-8 text-center">
-                            <p className="mb-4 text-muted-foreground">ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา</p>
+                            <p className="text-muted-foreground mb-4">
+                              {searchQuery || statusFilter !== "all" || dateFilter !== "all"
+                                ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา" 
+                                : "ไม่พบงานในโปรเจคนี้"}
+                            </p>
                             <Button onClick={() => setIsCreateModalOpen(true)}>
                               <PlusCircle className="mr-2 h-4 w-4" />
-                              เพิ่มงานใหม่
+                              สร้างงานแรก
                             </Button>
                           </div>
                         )
@@ -1042,35 +914,343 @@ export default function JobsPage() {
                     </CardContent>
                   </Card>
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <p className="mb-4 text-muted-foreground">ยังไม่มีโปรเจค กรุณาสร้างโปรเจคเพื่อเริ่มต้นใช้งาน</p>
+            <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">
+              <h3 className="text-lg font-semibold mb-2">ยังไม่มีโปรเจค</h3>
+              <p className="text-muted-foreground mb-4">
+                สร้างโปรเจคแรกของคุณเพื่อเริ่มต้น
+              </p>
               <Button onClick={() => setIsCreateProjectModalOpen(true)}>
                 <FolderPlus className="mr-2 h-4 w-4" />
-                สร้างโปรเจคใหม่
+                สร้างโปรเจค
               </Button>
             </div>
           )
         )}
       </div>
-
-      <CreateJobModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+      
+      <CreateJobModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
         onCreateJob={handleCreateJob}
         projects={projects}
         selectedProjectId={selectedProjectId}
       />
-
-      <JobDetails
-        job={selectedJob}
-        isOpen={isDetailSheetOpen}
-        onClose={() => setIsDetailSheetOpen(false)}
-        onUpdate={refetchJobs}
-        onDelete={handleDeleteJob}
+      
+      <ProjectSelector 
+        projects={projects}
+        selectedProjectId={""}
+        onSelectProject={() => {}}
+        onCreateProject={handleCreateProject}
+        isOpen={isCreateProjectModalOpen}
+        onClose={() => setIsCreateProjectModalOpen(false)}
+      />
+      
+      <JobDetails 
+        job={selectedJob} 
+        isOpen={isDetailSheetOpen} 
+        onClose={() => setIsDetailSheetOpen(false)} 
       />
     </PageLayout>
   );
+}
+
+// Mock functions for UI testing
+
+function getMockProjects(): Project[] {
+  return [
+    {
+      id: "project-1",
+      name: "Marketing Automation",
+      description: "Marketing campaign automation tasks",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "project-2",
+      name: "Data Sync",
+      description: "Database synchronization jobs",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "project-3",
+      name: "Reporting",
+      description: "Automated reporting tasks",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+  ];
+}
+
+function getAllMockJobs(): CronJob[] {
+  const allJobs: CronJob[] = [];
+  const projects = getMockProjects();
+  
+  projects.forEach(project => {
+    const projectJobs = getMockJobs(project.id);
+    allJobs.push(...projectJobs);
+  });
+  
+  return allJobs;
+}
+
+function getMockJobs(projectId: string): CronJob[] {
+  const baseJobs = [
+    {
+      id: "job-1",
+      name: "Send Weekly Newsletter",
+      schedule: "0 9 * * 1",
+      endpoint: "https://api.example.com/send-newsletter",
+      httpMethod: "POST",
+      description: "Sends weekly newsletter to subscribers every Monday",
+      status: "idle" as JobStatus,
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date(Date.now() - 86400000).toISOString(),
+      nextRun: new Date(Date.now() + 518400000).toISOString(),
+      createdAt: new Date(Date.now() - 2592000000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString(),
+      tags: ["marketing", "email"],
+      successCount: 12,
+      failCount: 1,
+      averageRuntime: 45.2,
+      projectId: "project-1",
+      emailNotifications: "admin@example.com,notify@example.com",
+      webhookUrl: "https://hooks.slack.com/services/XXX/YYY/ZZZ"
+    },
+    {
+      id: "job-2",
+      name: "Database Backup",
+      schedule: "0 0 * * *",
+      endpoint: "https://api.example.com/backup",
+      httpMethod: "GET",
+      description: "Daily database backup at midnight",
+      status: "success" as JobStatus,
+      useLocalTime: true,
+      timezone: "Asia/Bangkok",
+      lastRun: new Date(Date.now() - 3600000).toISOString(),
+      nextRun: new Date(Date.now() + 82800000).toISOString(),
+      createdAt: new Date(Date.now() - 7776000000).toISOString(),
+      updatedAt: new Date(Date.now() - 3600000).toISOString(),
+      tags: ["database", "backup"],
+      successCount: 89,
+      failCount: 3,
+      averageRuntime: 134.7,
+      projectId: "project-2",
+      emailNotifications: null,
+      webhookUrl: null
+    },
+    {
+      id: "job-3",
+      name: "Process Customer Orders",
+      schedule: "*/15 * * * *",
+      endpoint: "https://api.example.com/process-orders",
+      httpMethod: "POST",
+      description: "Process new customer orders every 15 minutes",
+      status: "failed" as JobStatus,
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date(Date.now() - 900000).toISOString(),
+      nextRun: new Date(Date.now() + 900000).toISOString(),
+      createdAt: new Date(Date.now() - 1209600000).toISOString(),
+      updatedAt: new Date(Date.now() - 900000).toISOString(),
+      tags: ["orders", "customers", "processing"],
+      successCount: 1240,
+      failCount: 17,
+      averageRuntime: 28.3,
+      projectId: "project-1",
+      emailNotifications: "tech-alerts@example.com",
+      webhookUrl: "https://api.example.com/webhook/orders"
+    },
+    {
+      id: "job-4",
+      name: "Generate Monthly Report",
+      schedule: "0 9 1 * *",
+      endpoint: "https://api.example.com/generate-report",
+      httpMethod: "POST",
+      description: "Generate monthly performance report on the 1st day of each month",
+      status: "paused" as JobStatus,
+      useLocalTime: true,
+      timezone: "America/New_York",
+      lastRun: new Date(Date.now() - 2592000000).toISOString(),
+      nextRun: null,
+      createdAt: new Date(Date.now() - 5184000000).toISOString(),
+      updatedAt: new Date(Date.now() - 1209600000).toISOString(),
+      tags: ["reporting", "monthly"],
+      successCount: 6,
+      failCount: 0,
+      averageRuntime: 326.5,
+      projectId: "project-3",
+      emailNotifications: "management@example.com,reports@example.com",
+      webhookUrl: null
+    },
+    {
+      id: "job-5",
+      name: "Clean Temporary Files",
+      schedule: "0 2 * * *",
+      endpoint: "https://api.example.com/clean-temp",
+      httpMethod: "GET",
+      description: "Clean temporary files every day at 2 AM",
+      status: "running" as JobStatus,
+      useLocalTime: false,
+      timezone: "UTC",
+      lastRun: new Date().toISOString(),
+      nextRun: new Date(Date.now() + 86400000).toISOString(),
+      createdAt: new Date(Date.now() - 864000000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: ["maintenance", "cleanup"],
+      successCount: 29,
+      failCount: 1,
+      averageRuntime: 45.8,
+      projectId: "project-2",
+      emailNotifications: null,
+      webhookUrl: "https://hooks.slack.com/services/AAA/BBB/CCC"
+    }
+  ];
+  
+  // Return only jobs for the selected project
+  return baseJobs.filter(job => job.projectId === projectId);
+}
+
+function createMockJob(jobData: Partial<CronJob>): CronJob {
+  // Store in localStorage for mock persistence
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  
+  const newJob = {
+    ...jobData,
+    id: `job-${Date.now()}`,
+    status: "idle" as JobStatus,
+    lastRun: null,
+    nextRun: getNextRunTime(jobData.schedule || "0 * * * *"),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: jobData.tags || [],
+    successCount: 0,
+    failCount: 0,
+    averageRuntime: null,
+  };
+  
+  mockJobs.push(newJob);
+  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+  
+  return newJob as CronJob;
+}
+
+function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
+  // Update mock job in localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  const updatedJobs = mockJobs.map((j: CronJob) => 
+    j.id === job.id ? { ...j, status: newStatus } : j
+  );
+  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
+}
+
+function mockDeleteJob(jobId: string) {
+  // Remove mock job from localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  const updatedJobs = mockJobs.filter((j: CronJob) => j.id !== jobId);
+  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
+}
+
+function mockDeleteProject(projectId: string) {
+  // Remove project and its jobs from localStorage
+  const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+  const updatedProjects = mockProjects.filter((p: Project) => p.id !== projectId);
+  localStorage.setItem('mockProjects', JSON.stringify(updatedProjects));
+  
+  // Also remove associated jobs
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  const updatedJobs = mockJobs.filter((j: CronJob) => j.projectId !== projectId);
+  localStorage.setItem('mockJobs', JSON.stringify(updatedJobs));
+}
+
+function mockDuplicateJob(job: CronJob) {
+  // Create duplicate in localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  
+  const newJob = {
+    ...job,
+    id: `job-${Date.now()}`,
+    name: `${job.name} (copy)`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  mockJobs.push(newJob);
+  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+}
+
+function mockImportJob(job: Partial<CronJob>) {
+  // Add imported job to localStorage
+  const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+  
+  const newJob = {
+    ...job,
+    id: `job-${Date.now()}`,
+    status: "idle" as JobStatus,
+    lastRun: null,
+    nextRun: getNextRunTime(job.schedule || "0 * * * *"),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: job.tags || [],
+    successCount: 0,
+    failCount: 0,
+    averageRuntime: null,
+  };
+  
+  mockJobs.push(newJob);
+  localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+}
+
+function mockImportProject(projectWithJobs: ProjectWithJobs) {
+  // Add imported project to localStorage
+  const mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+  
+  const newProjectId = `project-${Date.now()}`;
+  const newProject = {
+    id: newProjectId,
+    name: projectWithJobs.name,
+    description: projectWithJobs.description,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  mockProjects.push(newProject);
+  localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
+  
+  // Add jobs for this project
+  if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
+    const mockJobs = JSON.parse(localStorage.getItem('mockJobs') || '[]');
+    
+    for (const job of projectWithJobs.jobs) {
+      const newJob = {
+        ...job,
+        id: `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        projectId: newProjectId,
+        status: "idle" as JobStatus,
+        lastRun: null,
+        nextRun: getNextRunTime(job.schedule || "0 * * * *"),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        tags: job.tags || [],
+        successCount: 0,
+        failCount: 0,
+        averageRuntime: null,
+      };
+      
+      mockJobs.push(newJob);
+    }
+    
+    localStorage.setItem('mockJobs', JSON.stringify(mockJobs));
+  }
+}
+
+// Helper to calculate next run time based on cron expression
+function getNextRunTime(cronExpression: string): string {
+  // Simple implementation - just add random hours (1-24)
+  const hours = Math.floor(Math.random() * 24) + 1;
+  return new Date(Date.now() + hours * 3600000).toISOString();
 }
