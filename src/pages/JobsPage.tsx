@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -64,7 +65,7 @@ export default function JobsPage() {
     queryFn: async () => {
       try {
         if (selectedProjectId === "all") {
-          const response = await apiService.getAllJobs();
+          const response = await apiService.getJobs(); // Changed from getAllJobs to getJobs
           if (response.success && response.data) {
             return response.data;
           }
