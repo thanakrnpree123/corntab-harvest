@@ -1,4 +1,3 @@
-
 import { Project, CronJob, JobStatus } from "@/lib/types";
 import {
   Table,
@@ -42,7 +41,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useState, useEffect, Dispatch, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
 import { Badge } from "@/components/ui/badge";
@@ -52,13 +51,10 @@ import { ProjectBatchActions } from "./ProjectBatchActions";
 
 interface ProjectsTableProps {
   projects: Project[];
-  onAddJob?: (projectId: string) => void;
+  onAddJob: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
   onViewJobs: (projectId: string) => void;
   selectedProjectId: string | null;
-  selectedProjectIds: string[];
-  setSelectedProjectIds: Dispatch<SetStateAction<string[]>>;
-  isLoading?: boolean;
 }
 
 export function ProjectsTable({
@@ -67,9 +63,6 @@ export function ProjectsTable({
   onDeleteProject,
   onViewJobs,
   selectedProjectId,
-  selectedProjectIds,
-  setSelectedProjectIds,
-  isLoading = false,
 }: ProjectsTableProps) {
   const navigate = useNavigate();
   const [openProjects, setOpenProjects] = useState<Record<string, boolean>>({});
@@ -78,6 +71,7 @@ export function ProjectsTable({
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
 
   useEffect(() => {
     const loadAllProjectJobs = async () => {
@@ -124,6 +118,10 @@ export function ProjectsTable({
     if (projects.length > 0) {
       loadAllProjectJobs();
     }
+  }, [projects]);
+
+  useEffect(() => {
+    setSelectedProjectIds([]);
   }, [projects]);
 
   const fetchJobsForProject = async (projectId: string) => {

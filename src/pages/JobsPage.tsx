@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -10,9 +9,10 @@ import { CreateProjectModal } from "@/components/CreateProjectModal";
 import { apiService } from "@/lib/api-service";
 import { Project } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProjectExportImport } from "@/components/ProjectExportImport";
+import { Trash2 } from "lucide-react";
 
 export default function JobsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -27,21 +27,12 @@ export default function JobsPage() {
     queryKey: ["projects"],
     queryFn: () => apiService.getProjects().then((res) => res.data),
   });
-  
-  const handleSelectProject = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      setSelectedProject(project);
-    }
+  const handleSelectProject = (project: Project) => {
+    setSelectedProject(project);
   };
-  
   const handleImportProjects = (projects: Partial<Project>[]) => {
-    // Handle individual project creation since createProjects doesn't exist
-    const createPromises = projects.map(project => 
-      apiService.createProject(project as any)
-    );
-    
-    Promise.all(createPromises)
+    apiService
+      .createProjects(projects as any)
       .then(() => {
         refetch();
       })
@@ -49,7 +40,6 @@ export default function JobsPage() {
         console.error(err);
       });
   };
-  
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const { toast } = useToast();
 
@@ -184,40 +174,36 @@ export default function JobsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <div className="flex items-center gap-2">
-                <ProjectSelector 
-                  projects={projects} 
-                  onSelectProject={handleSelectProject}
-                />
-                
+              <ProjectSelector 
+                projects={projects} 
+                onSelectProject={handleSelectProject}
+              />
+              <ProjectExportImport
+                projects={selectedProjects.length > 0 ? selectedProjects : projects}
+                onImport={handleImportProjects}
+                onExport={handleExportProjects}
+                disabled={selectedProjectIds.length === 0}
+              />
+            </div>
+
+            <div className="flex gap-2 flex-wrap items-center">
+              {selectedProjectIds.length > 0 && (
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={handleBatchDeleteProjects}
                   className="flex items-center gap-1"
-                  disabled={selectedProjectIds.length === 0}
                 >
                   <Trash2 className="h-4 w-4" />
-                  <span>ลบ</span>
+                  <span>ลบโปรเจคที่เลือก ({selectedProjectIds.length})</span>
                 </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExportProjects("json")}
-                  className="flex items-center gap-1"
-                >
-                  <span>ส่งออก</span>
-                </Button>
-              </div>
+              )}
             </div>
           </div>
 
           <ProjectsTable
             projects={projects}
-            onDeleteProject={id => apiService.deleteProject(id).then(() => refetch())}
-            onViewJobs={id => console.log("View jobs for project", id)}
-            selectedProjectId={selectedProject?.id || null}
+            isLoading={isLoading}
             selectedProjectIds={selectedProjectIds}
             setSelectedProjectIds={setSelectedProjectIds}
           />

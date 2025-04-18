@@ -16,9 +16,9 @@ import { PlusCircle, Loader2 } from "lucide-react";
 
 export interface ProjectSelectorProps {
   projects: Project[];
-  selectedProjectId?: string;
+  selectedProjectId: string;
   onSelectProject: (projectId: string) => void;
-  onCreateProject?: (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => void;
+  onCreateProject: (projectData: Omit<Project, "id" | "createdAt" | "updatedAt">) => void;
   compact?: boolean;
   isLoading?: boolean;
   isOpen?: boolean;
@@ -56,7 +56,7 @@ export function ProjectSelector({
 
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjectName.trim() || !onCreateProject) return;
+    if (!newProjectName.trim()) return;
     
     setIsCreating(true);
     
@@ -84,10 +84,7 @@ export function ProjectSelector({
               <span className="text-sm">Loading projects...</span>
             </div>
           ) : (
-            <Select 
-              value={selectedProjectId || ""} 
-              onValueChange={onSelectProject}
-            >
+            <Select value={selectedProjectId} onValueChange={onSelectProject}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a project" />
               </SelectTrigger>
@@ -108,64 +105,62 @@ export function ProjectSelector({
           )}
         </div>
         
-        {onCreateProject && (
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                New Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create a New Project</DialogTitle>
-                <DialogDescription>
-                  Enter the details for your new project.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <form onSubmit={handleCreateProject}>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={newProjectName}
-                      onChange={(e) => setNewProjectName(e.target.value)}
-                      className="col-span-3"
-                      placeholder="Project Name"
-                      required
-                      autoFocus
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right">
-                      Description
-                    </Label>
-                    <Input
-                      id="description"
-                      value={newProjectDescription}
-                      onChange={(e) => setNewProjectDescription(e.target.value)}
-                      className="col-span-3"
-                      placeholder="Project Description (Optional)"
-                    />
-                  </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              New Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create a New Project</DialogTitle>
+              <DialogDescription>
+                Enter the details for your new project.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleCreateProject}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="name" className="text-right">
+                    Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={newProjectName}
+                    onChange={(e) => setNewProjectName(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Project Name"
+                    required
+                    autoFocus
+                  />
                 </div>
-                <DialogFooter>
-                  <Button 
-                    type="submit" 
-                    disabled={!newProjectName.trim() || isCreating}
-                  >
-                    {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Create Project
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        )}
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Input
+                    id="description"
+                    value={newProjectDescription}
+                    onChange={(e) => setNewProjectDescription(e.target.value)}
+                    className="col-span-3"
+                    placeholder="Project Description (Optional)"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={!newProjectName.trim() || isCreating}
+                >
+                  {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Create Project
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
