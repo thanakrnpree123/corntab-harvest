@@ -35,6 +35,18 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProjectBatchActions } from "@/components/ProjectBatchActions";
 
+// Mock data functions
+const getMockProjects = () => [];
+const getAllMockJobs = () => [];
+const getMockJobs = (projectId: string) => [];
+const createMockJob = (jobData: Partial<CronJob>) => ({});
+const mockToggleJobStatus = (job: CronJob, newStatus: JobStatus) => {};
+const mockDeleteJob = (jobId: string) => {};
+const mockDuplicateJob = (job: CronJob) => {};
+const mockImportJob = (job: Partial<CronJob>) => {};
+const mockDeleteProject = (projectId: string) => {};
+const mockImportProject = (projectWithJobs: ProjectWithJobs) => {};
+
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -951,5 +963,50 @@ export default function JobsPage() {
                                 </AlertDialog>
                               );
                             }}
-                            onDeleteJob={(jobId) => {
-                              const job = jobs.find(j
+                            onDeleteJob={handleDeleteJob}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-8 text-center">
+                            <p className="mb-4 text-muted-foreground">ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา</p>
+                            <Button onClick={() => setIsCreateModalOpen(true)}>
+                              <PlusCircle className="mr-2 h-4 w-4" />
+                              เพิ่มงานใหม่
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <p className="mb-4 text-muted-foreground">ยังไม่มีโปรเจค กรุณาสร้างโปรเจคเพื่อเริ่มต้นใช้งาน</p>
+              <Button onClick={() => setIsCreateProjectModalOpen(true)}>
+                <FolderPlus className="mr-2 h-4 w-4" />
+                สร้างโปรเจคใหม่
+              </Button>
+            </div>
+          )
+        )}
+      </div>
+
+      <CreateJobModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateJob={handleCreateJob}
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+      />
+
+      <JobDetails
+        job={selectedJob}
+        isOpen={isDetailSheetOpen}
+        onClose={() => setIsDetailSheetOpen(false)}
+        onUpdate={refetchJobs}
+        onDelete={handleDeleteJob}
+      />
+    </PageLayout>
+  );
+}
