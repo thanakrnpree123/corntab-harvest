@@ -1,4 +1,4 @@
-import { Project, CronJob, JobStatus } from "@/lib/types";
+import { Project } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -56,7 +56,6 @@ interface ProjectsTableProps {
   onViewJobs: (projectId: string) => void;
   selectedProjectId: string | null;
 
-  // ✅ ใหม่
   selectedProjectIdsPops: string[];
   onSelectProject: (projectId: string, checked: boolean) => void;
   onSelectAllProjects: (checked: boolean) => void;
@@ -80,6 +79,9 @@ export function ProjectsTable({
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<Date>();
+  const [sortBy, setSortBy] = useState("nameAsc");
 
   useEffect(() => {
     const loadAllProjectJobs = async () => {
@@ -276,18 +278,47 @@ export function ProjectsTable({
     }
   };
 
+  const filteredProjects = projects
+    .filter(project => {
+      const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      if (dateFilter) {
+        const projectDate = new Date(project.createdAt);
+        return matchesSearch && 
+          projectDate.getFullYear() === dateFilter.getFullYear() &&
+          projectDate.getMonth() === dateFilter.getMonth() &&
+          projectDate.getDate() === dateFilter.getDate();
+      }
+      
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "nameAsc":
+          return a.name.localeCompare(b.name);
+        case "nameDesc":
+          return b.name.localeCompare(a.name);
+        case "dateAsc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case "dateDesc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
+
   return (
     <div className="w-full overflow-x-auto">
-      {/* <div className="mb-4">
-        <ProjectBatchActions
-          projects={projects}
-          selectedProjectIds={selectedProjectIds}
-          onExport={handleBatchExport}
-          onDelete={handleBatchDelete}
-          disabled={projects.length === 0}
-        />
-      </div> */}
-
+      <ProjectFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        dateFilter={dateFilter}
+        onDateFilterChange={setDateFilter}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
+      
       <Table className="w-full">
         <TableHeader>
           <TableRow>
@@ -314,7 +345,7 @@ export function ProjectsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {projects.length === 0 ? (
+          {filteredProjects.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={5}
@@ -324,7 +355,7 @@ export function ProjectsTable({
               </TableCell>
             </TableRow>
           ) : (
-            projects.map((project) => {
+            filteredProjects.map((project) => {
               const isSelected = project.id === selectedProjectId;
               const isOpen = openProjects[project.id] || false;
               const isLoading = loadingJobs[project.id] || false;
