@@ -126,7 +126,7 @@ export default function JobsPage() {
   const handleBatchDelete = async (projectIds: string[]) => {
     try {
       for (const projectId of projectIds) {
-        await apiService.deleteProject(projectId);
+        await apiService.deleteProject(projectId); // ← ใช้ API ของคุณ
       }
       setSelectedProjectIds([]);
     } catch (error) {
@@ -453,10 +453,10 @@ export default function JobsPage() {
           variant: "destructive",
         });
 
-          // If unsuccessful, use mock data
-          mockToggleJobStatus(job, newStatus);
-          refetchJobs();
-          refetchAllJobs();
+        // If unsuccessful, use mock data
+        mockToggleJobStatus(job, newStatus);
+        refetchJobs();
+        refetchAllJobs();
       })
       .finally(() => {
         setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
@@ -745,7 +745,6 @@ export default function JobsPage() {
               <CardContent className="p-0">
                 <ProjectsTable
                   projects={projects}
-                  isLoading={isProjectLoading}
                   onAddJob={(projectId) => {
                     setSelectedProjectId(projectId);
                     setIsCreateModalOpen(true);

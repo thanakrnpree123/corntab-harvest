@@ -11,8 +11,8 @@ import { toast } from "@/components/ui/use-toast";
 
 interface ProjectCardProps {
   project: Project;
-  onAddJob?: (projectId: string) => void;
-  onDeleteProject?: (projectId: string) => void;
+  onAddJob: (projectId: string) => void;
+  onDeleteProject: (projectId: string) => void;
   onViewJobs: (projectId: string) => void;
   isSelected: boolean;
 }
@@ -37,23 +37,19 @@ export function ProjectCard({
   };
 
   const handleAddJob = () => {
-    if (onAddJob) {
-      onAddJob(project.id);
-      toast({
-        title: "เพิ่มงานใหม่",
-        description: `กำลังเพิ่มงานใหม่ในโปรเจค "${project.name}"`,
-      });
-    }
+    onAddJob(project.id);
+    toast({
+      title: "เพิ่มงานใหม่",
+      description: `กำลังเพิ่มงานใหม่ในโปรเจค "${project.name}"`,
+    });
   };
 
   const handleDeleteProject = () => {
-    if (onDeleteProject) {
-      onDeleteProject(project.id);
-      toast({
-        title: "ลบโปรเจค",
-        description: `โปรเจค "${project.name}" ถูกลบเรียบร้อยแล้ว`,
-      });
-    }
+    onDeleteProject(project.id);
+    toast({
+      title: "ลบโปรเจค",
+      description: `โปรเจค "${project.name}" ถูกลบเรียบร้อยแล้ว`,
+    });
   };
 
   return (
@@ -71,45 +67,41 @@ export function ProjectCard({
               {project.name}
             </CardTitle>
             <div className="flex gap-2">
-              {onAddJob && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleAddJob}
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add Job
-                </Button>
-              )}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleAddJob}
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add Job
+              </Button>
               
-              {onDeleteProject && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete "{project.name}"? This action cannot be undone.
-                        All jobs within this project will also be deleted.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDeleteProject}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete Project
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{project.name}"? This action cannot be undone.
+                      All jobs within this project will also be deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDeleteProject}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete Project
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
               
               <CollapsibleTrigger className="p-2 rounded-md hover:bg-muted">
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
