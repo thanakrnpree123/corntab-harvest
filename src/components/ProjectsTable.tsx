@@ -1,4 +1,4 @@
-import { Project } from "@/lib/types";
+import { Project, CronJob } from "@/lib/types";
 import {
   Table,
   TableBody,
@@ -48,6 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { JobDetails } from "./JobDetails";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProjectBatchActions } from "./ProjectBatchActions";
+import { ProjectFilters } from "./ProjectFilters";
 
 interface ProjectsTableProps {
   projects: Project[];
