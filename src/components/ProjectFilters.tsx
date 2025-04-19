@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format as formatDate } from "date-fns";
 import { th } from "date-fns/locale/th";
 
 interface ProjectFiltersProps {
@@ -60,7 +59,7 @@ export function ProjectFilters({
             >
               <Calendar className="mr-2 h-4 w-4" />
               {dateFilter ? (
-                format(dateFilter, "PPP", { locale: th })
+                formatDate(dateFilter, "PPP", { locale: th })
               ) : (
                 "เลือกวันที่"
               )}
