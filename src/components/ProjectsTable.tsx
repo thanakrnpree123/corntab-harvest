@@ -11,9 +11,26 @@ import { useToast } from "@/hooks/use-toast";
 interface ProjectsTableProps {
   projects: Project[];
   isLoading: boolean;
+  onViewJobs?: (projectId: string) => void;
+  onDeleteProject?: (projectId: string) => void;
+  onAddJob?: (projectId: string) => void;
+  selectedProjectId?: string;
+  selectedProjectIdsPops?: string[];
+  onSelectProject?: (projectId: string, checked: boolean) => void;
+  onSelectAllProjects?: (checked: boolean) => void;
 }
 
-export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
+export function ProjectsTable({ 
+  projects, 
+  isLoading,
+  onViewJobs,
+  onDeleteProject,
+  onAddJob,
+  selectedProjectId,
+  selectedProjectIdsPops,
+  onSelectProject,
+  onSelectAllProjects
+}: ProjectsTableProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,6 +76,7 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
     return searchMatch && dateMatch;
   });
 
+  // Note: We need to remove the reference to project.jobs which doesn't exist in the type
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     let comparison = 0;
 
@@ -70,8 +88,11 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
         comparison =
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
+      // Either remove the "jobs" case or add additional type handling
       case "jobs":
-        comparison = (a.jobs?.length || 0) - (b.jobs?.length || 0);
+        // Since we don't have access to jobs in the Project type, 
+        // we'll default to no comparison for this case
+        comparison = 0;
         break;
       default:
         comparison = 0;
@@ -81,7 +102,11 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
   });
 
   const handleViewProjectJobs = (projectId: string) => {
-    navigate(`/jobs/${projectId}`);
+    if (onViewJobs) {
+      onViewJobs(projectId);
+    } else {
+      navigate(`/jobs/${projectId}`);
+    }
   };
 
   return (
@@ -114,7 +139,10 @@ export function ProjectsTable({ projects, isLoading }: ProjectsTableProps) {
               <ProjectCard
                 key={project.id}
                 project={project}
-                onClick={() => handleViewProjectJobs(project.id)}
+                onViewJobs={handleViewProjectJobs}
+                onAddJob={onAddJob ? () => onAddJob(project.id) : undefined}
+                onDeleteProject={onDeleteProject ? () => onDeleteProject(project.id) : undefined}
+                isSelected={selectedProjectId === project.id}
               />
             ))}
           </div>
