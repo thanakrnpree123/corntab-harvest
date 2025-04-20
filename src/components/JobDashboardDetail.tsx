@@ -115,7 +115,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
         const rowHeight = 48;
         const fiveRowsHeight = rowHeight * 5;
         
-        if (scrollTop + clientHeight >= fiveRowsHeight) {
+        if (scrollHeight > fiveRowsHeight) {
           setShowViewMore(true);
         } else {
           setShowViewMore(false);
@@ -126,6 +126,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
     const logsElement = logsRef.current;
     if (logsElement) {
       logsElement.addEventListener('scroll', checkScroll);
+      checkScroll();
     }
 
     return () => {
