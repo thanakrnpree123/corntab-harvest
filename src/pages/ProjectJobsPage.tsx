@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
-import { EditJobModal } from "@/components/EditJobModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,7 +46,6 @@ import {
   Pause,
   Copy,
   Trash2,
-  FileEdit,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -73,7 +71,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { JobActions } from "@/components/JobsActions";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -154,6 +151,7 @@ export default function ProjectJobsPage() {
     [key: string]: boolean;
   }>({});
   const { toast } = useToast();
+
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
@@ -162,8 +160,6 @@ export default function ProjectJobsPage() {
   const [dateFilter, setDateFilter] = useState<
     "today" | "week" | "month" | "all"
   >("all");
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [jobToEdit, setJobToEdit] = useState<CronJob | null>(null);
 
   const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ["project", projectId],
@@ -364,7 +360,7 @@ export default function ProjectJobsPage() {
 
         mockDeleteJob(jobId);
         refetchJobs();
-          setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
+        setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
       })
       .finally(() => {
         setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
@@ -455,7 +451,7 @@ export default function ProjectJobsPage() {
       })
       .catch((error) => {
         toast({
-          title: "เกิดข้อผิด���ลาดระหว่างการนำเข้า",
+          title: "เกิดข้อผิดพลาดระหว่างการนำเข้า",
           description: error.message,
           variant: "destructive",
         });
@@ -623,9 +619,9 @@ export default function ProjectJobsPage() {
           variant: "destructive",
         });
 
-          // Mock trigger for development purposes
-          mockTriggerJob(job);
-          refetchJobs();
+        // Mock trigger for development purposes
+        mockTriggerJob(job);
+        refetchJobs();
       })
       .finally(() => {
         setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
@@ -751,47 +747,6 @@ export default function ProjectJobsPage() {
         description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ CSV`,
       });
     }
-  };
-
-  const handleEditJob = (job: CronJob) => {
-    setJobToEdit(job);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditJobSubmit = (updatedJob: CronJob) => {
-    setIsJobActionInProgress((prev) => ({ ...prev, [updatedJob.id]: true }));
-
-    apiService.updateJob(updatedJob.id, updatedJob)
-      .then((response) => {
-        if (response.success) {
-          toast({
-            title: "อัปเดตงานสำเร็จ",
-            description: `อัปเดตงาน "${updatedJob.name}" เรียบร้อยแล้ว`,
-          });
-          refetchJobs();
-        } else {
-          toast({
-            title: "เกิดข้อผิดพลาด",
-            description: `ไม่สามารถอัปเดตงาน: ${response.error}`,
-            variant: "destructive",
-          });
-          // Still refetch to show mock updates during development
-          refetchJobs();
-        }
-      })
-      .catch((error) => {
-        toast({
-          title: "เกิดข้อผิดพลาด",
-          description: `ไม่สามารถอัปเดตงาน: ${error.message}`,
-          variant: "destructive",
-        });
-        // Still refetch to show mock updates during development
-        refetchJobs();
-      })
-      .finally(() => {
-        setIsJobActionInProgress((prev) => ({ ...prev, [updatedJob.id]: false }));
-        setIsEditModalOpen(false);
-      });
   };
 
   return (
@@ -985,30 +940,33 @@ export default function ProjectJobsPage() {
                   <table className="min-w-[600px] w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                           <Checkbox
-                            checked={selectedJobIds.length === sortedJobs.length && sortedJobs.length > 0}
+                            checked={
+                              selectedJobIds.length === sortedJobs.length &&
+                              sortedJobs.length > 0
+                            }
                             onCheckedChange={toggleSelectAll}
-                            aria-label="Select all jobs"
+                            className="mr-2"
                           />
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                          ชื่องาน
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Name
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                          ตารางเวลา
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
+                          Schedule
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                          สถานะ
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                          Status
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                          รันล่าสุด
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
+                          Last Run
                         </th>
-                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
-                          รันถัดไป
+                        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground hidden md:table-cell">
+                          Next Run
                         </th>
-                        <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                          การกระทำ
+                        <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
+                          Actions
                         </th>
                       </tr>
                     </thead>
@@ -1016,145 +974,143 @@ export default function ProjectJobsPage() {
                       {sortedJobs.map((job) => (
                         <tr
                           key={job.id}
-                          className="border-b hover:bg-muted/50 transition-colors"
+                          className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
+                          onClick={() => handleViewJobDetails(job)}
                         >
-                          <td className="px-4 py-3">
+                          <td
+                            className="p-4 align-middle"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Checkbox
                               checked={selectedJobIds.includes(job.id)}
                               onCheckedChange={(checked) =>
-                                toggleSelectJob(job.id, checked === true)
+                                toggleSelectJob(job.id, !!checked)
                               }
-                              aria-label={`Select ${job.name}`}
                             />
                           </td>
-                          <td
-                            className="px-4 py-3 cursor-pointer"
-                            onClick={() => handleViewJobDetails(job)}
-                          >
-                            <div className="flex flex-col">
-                              <div className="font-medium truncate max-w-[200px]">
-                                {job.name}
-                              </div>
-                              <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                {job.endpoint}
-                              </div>
-                            </div>
+                          <td className="p-4 align-middle font-medium">
+                            {job.name}
                           </td>
-                          <td className="px-4 py-3 hidden md:table-cell">
-                            <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                          <td className="p-4 align-middle hidden md:table-cell">
+                            <code className="bg-muted px-1 py-0.5 rounded text-xs">
                               {job.schedule}
                             </code>
                           </td>
-                          <td className="px-4 py-3 hidden md:table-cell">
+                          <td className="p-4 align-middle">
                             <StatusBadge status={job.status} />
                           </td>
-                          <td className="px-4 py-3 hidden md:table-cell">
-                            {job.lastRun ? (
-                              <span className="text-xs text-muted-foreground">
-                                {dayjs(job.lastRun).fromNow()}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">
-                                -
-                              </span>
-                            )}
+                          <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
+                            {job.lastRun
+                              ? dayjs(job.lastRun).fromNow()
+                              : "Never"}
                           </td>
-                          <td className="px-4 py-3 hidden md:table-cell">
-                            {job.nextRun ? (
-                              <span className="text-xs text-muted-foreground">
-                                {dayjs(job.nextRun).fromNow()}
-                              </span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">
-                                -
-                              </span>
-                            )}
+                          <td className="p-4 align-middle hidden md:table-cell text-muted-foreground">
+                            {job.nextRun
+                              ? dayjs(job.nextRun).format("DD/MM/YYYY HH:mm")
+                              : "-"}
                           </td>
-                          <td className="px-4 py-3 text-right">
-                            <JobActions
-                              job={job}
-                              onViewDetails={handleViewJobDetails}
-                              onToggleStatus={() => (
-                                <Button
+                          <td
+                            className="p-4 align-middle text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <div className="flex justify-end items-center gap-2">
+                            <Button
                                   variant="ghost"
-                                  size="icon"
-                                  aria-label={job.status === "paused" ? "Resume job" : "Pause job"}
-                                  onClick={() => toggleJobStatus(job.id)}
-                                  disabled={isJobActionInProgress[job.id]}
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTriggerJob(job.id);
+                                  }}
+                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
                                 >
                                   {isJobActionInProgress[job.id] ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : job.status === "paused" ? (
-                                    <Play className="h-4 w-4" />
                                   ) : (
-                                    <Pause className="h-4 w-4" />
+                                    <Play className="h-4 w-4" />
                                   )}
                                 </Button>
-                              )}
-                              onEditJob={handleEditJob}
-                              onDeleteJob={() => (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      aria-label="Delete job"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
-                                        ยืนยันการลบงาน
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        คุณแน่ใจหรือไม่ว่าต้องการลบงาน "{job.name}"? การกระทำนี้ไม่สามารถย้อนกลับได้
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleDeleteJob(job.id)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <EllipsisVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-[160px]"
+                                >
+                                  
+                                 
+                                  <DropdownMenuItem
+                                    onClick={() => toggleJobStatus(job.id)}
+                                    className="flex items-center cursor-pointer"
+                                  >
+                                    {job.status === "paused" ? (
+                                      <>
+                                        <Play className="mr-2 h-4 w-4" />
+                                        <span>Activate</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Pause className="mr-2 h-4 w-4" />
+                                        <span>Pause</span>
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDuplicateJob(job.id)}
+                                    className="flex items-center cursor-pointer"
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Edit</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDuplicateJob(job.id)}
+                                    className="flex items-center cursor-pointer"
+                                  >
+                                    <Copy className="mr-2 h-4 w-4" />
+                                    <span>Duplicate</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem
+                                        onSelect={(e) => e.preventDefault()}
+                                        className="flex items-center cursor-pointer text-destructive focus:text-destructive"
                                       >
-                                        ลบงาน
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              )}
-                              onDuplicateJob={() => (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label="Duplicate job"
-                                  onClick={() => handleDuplicateJob(job.id)}
-                                  disabled={isJobActionInProgress[job.id]}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              )}
-                              onTriggerJob={() => (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label="Trigger job now"
-                                  onClick={() => handleTriggerJob(job.id)}
-                                  disabled={isJobActionInProgress[job.id] || job.status === "paused"}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Play className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              )}
-                            />
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        <span>Delete</span>
+                                      </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          ยืนยันการลบงาน
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          คุณต้องการลบงาน "{job.name}"
+                                          ใช่หรือไม่?
+                                          การกระทำนี้ไม่สามารถยกเลิกได้
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          ยกเลิก
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() =>
+                                            handleDeleteJob(job.id)
+                                          }
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          ลบงาน
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1162,9 +1118,9 @@ export default function ProjectJobsPage() {
                   </table>
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                  <p className="text-muted-foreground mb-4">
-                    ยังไม่มีงานในโปรเจคนี้
+                <div className="flex flex-col items-center justify-center p-8 text-center">
+                  <p className="mb-4 text-muted-foreground">
+                    ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา
                   </p>
                   <Button onClick={() => setIsCreateModalOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -1177,35 +1133,22 @@ export default function ProjectJobsPage() {
         </div>
       </div>
 
-      {isCreateModalOpen && (
-        <CreateJobModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreateJob={handleCreateJob}
-          projects={[project as Project].filter(Boolean)}
-          selectedProjectId={projectId || ""}
-        />
-      )}
+      <CreateJobModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreateJob={handleCreateJob}
+        projects={[project]}
+        selectedProjectId={projectId || ""}
+      />
 
-      {isDetailSheetOpen && selectedJob && (
-        <JobDetails
-          job={selectedJob}
-          isOpen={isDetailSheetOpen}
-          onClose={() => setIsDetailSheetOpen(false)}
-          onUpdate={refetchJobs}
-          onDelete={handleDeleteJob}
-          onTrigger={handleTriggerJob}
-        />
-      )}
-
-      {isEditModalOpen && jobToEdit && (
-        <EditJobModal
-          open={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          onSubmit={handleEditJobSubmit}
-          job={jobToEdit}
-        />
-      )}
+      <JobDetails
+        job={selectedJob}
+        isOpen={isDetailSheetOpen}
+        onClose={() => setIsDetailSheetOpen(false)}
+        onUpdate={refetchJobs}
+        onDelete={handleDeleteJob}
+        onTrigger={handleTriggerJob}
+      />
     </PageLayout>
   );
 }
