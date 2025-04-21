@@ -145,6 +145,8 @@ export default function ProjectJobsPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editJobData, setEditJobData] = useState<CronJob | null>(null);
   const [selectedJob, setSelectedJob] = useState<CronJob | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -210,19 +212,8 @@ export default function ProjectJobsPage() {
   });
 
   const handleCreateJob = (jobData: Partial<CronJob>) => {
-    const newJobData = {
-      ...jobData,
-      projectId: projectId,
-      name: jobData.name || "",
-      schedule: jobData.schedule || "",
-      endpoint: jobData.endpoint || "",
-      httpMethod: jobData.httpMethod || "GET",
-      useLocalTime: jobData.useLocalTime || false,
-      timezone: jobData.timezone || "UTC",
-    };
-
     apiService
-      .createJob(newJobData as any)
+      .createJob(jobData as any)
       .then((response) => {
         if (response.success && response.data) {
           toast({
@@ -244,9 +235,8 @@ export default function ProjectJobsPage() {
           description: `ไม่สามารถสร้างงาน: ${error.message}`,
           variant: "destructive",
         });
-
         const mockJob = createMockJob({
-          ...newJobData,
+          ...jobData,
           id: `mock-${Date.now()}`,
         });
         refetchJobs();
@@ -255,6 +245,56 @@ export default function ProjectJobsPage() {
           description: "เนื่องจาก API ไม่พร้อมใช้งาน จึงสร้างข้อมูลทดสอบให้แทน",
         });
       });
+    setIsCreateModalOpen(false);
+    setIsEditMode(false);
+    setEditJobData(null);
+  };
+
+  const handleEditJob = (job: CronJob) => {
+    setEditJobData(job);
+    setIsEditMode(true);
+    setIsCreateModalOpen(true);
+    toast({
+      title: "แก้ไขงาน",
+      description: `กำลังแก้ไขงาน "${job.name}"`,
+    });
+  };
+
+  const handleSubmitEditJob = (updatedJobData: Partial<CronJob>) => {
+    if (!updatedJobData.id) return;
+    apiService
+      .updateJob(updatedJobData.id, updatedJobData)
+      .then((response) => {
+        if (response.success && response.data) {
+          toast({
+            title: "บันทึกการแก้ไขสำเร็จ",
+            description: `แก้ไขงาน "${updatedJobData.name}" เรียบร้อยแล้ว`,
+          });
+          refetchJobs();
+        } else {
+          toast({
+            title: "เกิดข้อผิดพลาด",
+            description: `ไม่สามารถแก้ไขงาน: ${response.error}`,
+            variant: "destructive",
+          });
+        }
+      })
+      .catch((error) => {
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: `ไม่สามารถแก้ไขงาน: ${error.message}`,
+          variant: "destructive",
+        });
+      });
+    setIsCreateModalOpen(false);
+    setIsEditMode(false);
+    setEditJobData(null);
+  };
+
+  const handleCloseModal = () => {
+    setIsCreateModalOpen(false);
+    setIsEditMode(false);
+    setEditJobData(null);
   };
 
   const handleViewJobDetails = (job: CronJob) => {
@@ -1015,21 +1055,21 @@ export default function ProjectJobsPage() {
                             onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex justify-end items-center gap-2">
-                            <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleTriggerJob(job.id);
-                                  }}
-                                  disabled={isJobActionInProgress[job.id] || job.status === 'running'}
-                                >
-                                  {isJobActionInProgress[job.id] ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Play className="h-4 w-4" />
-                                  )}
-                                </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTriggerJob(job.id);
+                                }}
+                                disabled={isJobActionInProgress[job.id] || job.status === 'running'}
+                              >
+                                {isJobActionInProgress[job.id] ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Play className="h-4 w-4" />
+                                )}
+                              </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="icon">
@@ -1040,8 +1080,6 @@ export default function ProjectJobsPage() {
                                   align="end"
                                   className="w-[160px]"
                                 >
-                                  
-                                 
                                   <DropdownMenuItem
                                     onClick={() => toggleJobStatus(job.id)}
                                     className="flex items-center cursor-pointer"
@@ -1136,8 +1174,10 @@ export default function ProjectJobsPage() {
 
       <CreateJobModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreateJob={handleCreateJob}
+        onClose={handleCloseModal}
+        onCreateJob={!isEditMode ? handleCreateJob : undefined}
+        onEditJob={isEditMode ? handleSubmitEditJob : undefined}
+        editJobData={isEditMode ? editJobData : undefined}
         projects={[project]}
         selectedProjectId={projectId || ""}
       />

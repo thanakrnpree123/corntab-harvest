@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,6 @@ import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmailPreview } from "./EmailPreview";
 
-// Common HTTP methods
 const httpMethods = [
   { value: "GET", label: "GET" },
   { value: "POST", label: "POST" },
@@ -44,7 +43,6 @@ const httpMethods = [
   { value: "DELETE", label: "DELETE" },
 ];
 
-// Common timezone list
 const commonTimezones = [
   { value: "UTC", label: "UTC" },
   { value: "Asia/Bangkok", label: "Asia/Bangkok (UTC+7)" },
@@ -59,7 +57,9 @@ const commonTimezones = [
 interface CreateJobModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateJob: (jobData: any) => void;
+  onCreateJob?: (jobData: any) => void;
+  onEditJob?: (jobData: any) => void;
+  editJobData?: any | null;
   projects: Project[];
   selectedProjectId: string;
 }
@@ -73,6 +73,8 @@ export function CreateJobModal({
   isOpen,
   onClose,
   onCreateJob,
+  onEditJob,
+  editJobData,
   projects,
   selectedProjectId,
 }: CreateJobModalProps) {
@@ -106,9 +108,81 @@ export function CreateJobModal({
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     } catch {
-      return "UTC"; // Default to UTC if browser API not available
+      return "UTC";
     }
   });
+
+  useEffect(() => {
+    if (isOpen && editJobData) {
+      setJobName(editJobData.name || "");
+      setEndpoint(editJobData.endpoint || "");
+      setHttpMethod(editJobData.httpMethod || "GET");
+      setRequestBody(editJobData.requestBody || "");
+      setSchedule(editJobData.schedule || "");
+      setDescription(editJobData.description || "");
+      setProjectId(editJobData.projectId || selectedProjectId);
+      setUseLocalTime(editJobData.useLocalTime ?? true);
+      setScheduleType("cron");
+      setTimezone(editJobData.timezone || timezone);
+
+      if (editJobData.httpMethod !== "GET" && editJobData.requestBody) {
+        try {
+          const parsed = JSON.parse(editJobData.requestBody);
+          if (
+            typeof parsed === "object" &&
+            parsed !== null &&
+            !Array.isArray(parsed)
+          ) {
+            setRequestBodyType("formdata");
+            setFormDataPairs(
+              Object.entries(parsed).map(([key, value]) => ({
+                key,
+                value: String(value ?? ""),
+              })),
+            );
+          } else {
+            setRequestBodyType("json");
+            setFormDataPairs([{ key: "", value: "" }]);
+          }
+        } catch {
+          setRequestBodyType("json");
+          setFormDataPairs([{ key: "", value: "" }]);
+        }
+      } else {
+        setRequestBodyType("json");
+        setFormDataPairs([{ key: "", value: "" }]);
+      }
+
+      let hasEmail = false;
+      if (editJobData.emailNotifications) {
+        try {
+          const emailObj = JSON.parse(editJobData.emailNotifications);
+          setSendEmailNotifications(true);
+          setEmailRecipients(
+            (emailObj.recipients || []).join(", "),
+          );
+          setNotifyOnSuccess(emailObj.onSuccess ?? true);
+          setNotifyOnFailure(emailObj.onFailure ?? true);
+          hasEmail = true;
+        } catch {
+          setSendEmailNotifications(false);
+          setEmailRecipients("");
+          setNotifyOnSuccess(true);
+          setNotifyOnFailure(true);
+        }
+      }
+      if (!hasEmail) {
+        setSendEmailNotifications(false);
+        setEmailRecipients("");
+        setNotifyOnSuccess(true);
+        setNotifyOnFailure(true);
+      }
+      setIsJsonValid(true);
+      setEmailValidation({ isValid: true, message: "" });
+    } else if (isOpen && !editJobData) {
+      resetForm();
+    }
+  }, [isOpen, editJobData]);
 
   const validateJson = (jsonString: string) => {
     if (!jsonString) return true;
@@ -182,7 +256,7 @@ export function CreateJobModal({
     return JSON.stringify(dataObject);
   };
 
-  const handleCreateJob = () => {
+  const handleSubmit = () => {
     if (!jobName || !endpoint || !schedule) {
       toast({
         title: "ข้อมูลไม่ครบถ้วน",
@@ -192,7 +266,6 @@ export function CreateJobModal({
       return;
     }
 
-    // Validate JSON if using JSON body type
     if (
       httpMethod !== "GET" &&
       requestBodyType === "json" &&
@@ -206,7 +279,6 @@ export function CreateJobModal({
       return;
     }
 
-    // Validate email format if sending email notifications
     if (sendEmailNotifications && !validateEmails(emailRecipients)) {
       toast({
         title: "อีเมลไม่ถูกต้อง",
@@ -226,7 +298,6 @@ export function CreateJobModal({
           : buildFormDataBody()
         : "";
 
-    // สร้างโครงสร้างข้อมูลสำหรับการส่งอีเมล
     const emailSettings = sendEmailNotifications
       ? {
           recipients: emailRecipients.split(",").map((email) => email.trim()),
@@ -235,7 +306,8 @@ export function CreateJobModal({
         }
       : null;
 
-    const newJob = {
+    const jobPayload = {
+      ...(editJobData ? { id: editJobData.id } : {}),
       name: jobName,
       endpoint,
       httpMethod,
@@ -245,35 +317,37 @@ export function CreateJobModal({
       projectId,
       timezone: useLocalTime ? timezone : "UTC",
       useLocalTime,
-      emailNotifications: emailSettings ? JSON.stringify(emailSettings) : null,
-      tags: [],
+      emailNotifications: emailSettings
+        ? JSON.stringify(emailSettings)
+        : null,
+      tags: editJobData?.tags || [],
+      status: editJobData?.status,
     };
 
     try {
-      onCreateJob(newJob);
+      if (editJobData && onEditJob) {
+        onEditJob(jobPayload);
+        toast({
+          title: "บันทึกการแก้ไข",
+          description: `อัปเดต Job "${jobName}" เรียบร้อยแล้ว`,
+        });
+      } else if (!editJobData && onCreateJob) {
+        onCreateJob(jobPayload);
+        toast({
+          title: "กำลังสร้าง Job",
+          description: "กรุณารอสักครู่...",
+        });
+      }
 
-      // แสดงการแจ้งเตือนว่ากำลังสร้าง Job
-      toast({
-        title: "กำลังสร้าง Job",
-        description: "กรุณารอสักครู่...",
-      });
-
-      // จำลองการส่งข้อมูลไปยัง API (ใน production จะถูกแทนที่ด้วยการเรียก API จริง)
       setTimeout(() => {
         resetForm();
         onClose();
-
-        toast({
-          title: "สร้าง Job เรียบร้อย",
-          description: `"${jobName}" ถูกสร้างเรียบร้อยแล้ว${sendEmailNotifications ? " และระบบได้ส่งอีเมลแจ้งเตือนแล้ว" : ""}`,
-        });
-
         setIsSubmitting(false);
       }, 1500);
     } catch (error) {
       toast({
         title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถสร้าง Job ได้ กรุณาลองใหม่อีกครั้ง",
+        description: "ไม่สามารถประมวลผลข้อมูล Job",
         variant: "destructive",
       });
       setIsSubmitting(false);
@@ -298,7 +372,6 @@ export function CreateJobModal({
     setNotifyOnSuccess(true);
     setNotifyOnFailure(true);
     setEmailValidation({ isValid: true, message: "" });
-    // Don't reset timezone to preserve user preference
   };
 
   const handleCancel = () => {
@@ -316,9 +389,13 @@ export function CreateJobModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[650px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>สร้าง Job ใหม่</DialogTitle>
+          <DialogTitle>
+            {editJobData ? "แก้ไขงาน" : "สร้าง Job ใหม่"}
+          </DialogTitle>
           <DialogDescription>
-            เพิ่ม Cron Job ใหม่เข้าสู่ระบบบริหารจัดการ
+            {editJobData
+              ? "แก้ไขข้อมูล Cron Job"
+              : "เพิ่ม Cron Job ใหม่เข้าสู่ระบบบริหารจัดการ"}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
@@ -652,13 +729,14 @@ export function CreateJobModal({
           >
             ยกเลิก
           </Button>
-          <Button onClick={handleCreateJob} disabled={isSubmitting}>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> กำลังสร้าง...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {editJobData ? "กำลังบันทึก..." : "กำลังสร้าง..."}
               </>
             ) : (
-              "สร้าง Job"
+              editJobData ? "บันทึกการแก้ไข" : "สร้าง Job"
             )}
           </Button>
         </DialogFooter>
