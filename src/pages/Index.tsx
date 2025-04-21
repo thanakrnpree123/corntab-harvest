@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
@@ -108,8 +109,8 @@ export default function Index() {
 
   const recentJobs = [...jobs].sort((a, b) => 
     new Date(b.lastRun || 0).getTime() - new Date(a.lastRun || 0).getTime()
-  ).slice(0, 5);
-  
+  ).slice(0, 50);  // ให้เพียงพอ เผื่อ scroll
+
   const failedJobs = jobs.filter(job => job.status === "failed");
   const pausedJobs = jobs.filter(job => job.status === "paused");
   
@@ -120,6 +121,63 @@ export default function Index() {
     failed: failedJobs.length,
     success: jobs.filter(job => job.status === "success").length,
   };
+
+  // --- ส่วนใหม่: RecentJobsList แสดงสูงสุด 5 รายการ + "ดูเพิ่มเติม" ถ้ามากกว่า 5
+  function RecentJobsList({
+    jobs,
+    tab,
+    selectedJobId,
+    setSelectedJobId,
+    projects,
+    searchMsg,
+  }: {
+    jobs: CronJob[];
+    tab: string;
+    selectedJobId: string | null;
+    setSelectedJobId: (id: string) => void;
+    projects: Project[];
+    searchMsg: string;
+  }) {
+    const navigate = useNavigate();
+    const listRef = useRef<HTMLDivElement>(null);
+    const showViewMore = jobs.length > 5;
+    return (
+      <div
+        className="relative max-h-[298px] overflow-y-auto" // 50px*5 + gutter = 250-300px for tight rows
+        ref={listRef}
+      >
+        <div className="divide-y">
+          {jobs.length > 0 ? (
+            jobs.slice(0, 5).map((job) => (
+              <JobListItem 
+                key={job.id} 
+                job={job} 
+                projectName={projects.find(p => p.id === job.projectId)?.name}
+                isSelected={job.id === selectedJobId}
+                onSelect={() => setSelectedJobId(job.id)} 
+              />
+            ))
+          ) : (
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+              {searchMsg}
+            </div>
+          )}
+        </div>
+        {showViewMore && (
+          <div className="flex justify-center sticky bottom-0 bg-card pt-2 pb-3">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/logs')}
+            >
+              ดูเพิ่มเติม
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <PageLayout title="">
@@ -171,83 +229,56 @@ export default function Index() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="md:col-span-1 space-y-6">
-            <Card>
+            <Card className="h-full flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Recent Jobs</CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                <Tabs defaultValue="recent">
+              <CardContent className="p-0 flex-1 h-auto">
+                <Tabs defaultValue="recent" className="flex flex-col h-full">
                   <TabsList className="w-full bg-transparent border-b rounded-none">
                     <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
                     <TabsTrigger value="failed" className="flex-1">Failed</TabsTrigger>
                     <TabsTrigger value="paused" className="flex-1">Paused</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="recent" className="max-h-[50vh] overflow-y-auto">
-                    <div className="divide-y">
-                      {recentJobs.length > 0 ? (
-                        recentJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            projectName={projects.find(p => p.id === job.projectId)?.name}
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          No jobs have run yet
-                        </div>
-                      )}
-                    </div>
+                  <TabsContent value="recent" className="flex-1">
+                    <RecentJobsList
+                      jobs={recentJobs}
+                      tab="recent"
+                      selectedJobId={selectedJobId}
+                      setSelectedJobId={(id) => setSelectedJobId(id)}
+                      projects={projects}
+                      searchMsg="No jobs have run yet"
+                    />
                   </TabsContent>
                   
-                  <TabsContent value="failed" className="m-0 h-[300px] overflow-y-auto">
-                    <div className="divide-y">
-                      {failedJobs.length > 0 ? (
-                        failedJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job} 
-                            projectName={projects.find(p => p.id === job.projectId)?.name}
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          No failed jobs
-                        </div>
-                      )}
-                    </div>
+                  <TabsContent value="failed" className="flex-1">
+                    <RecentJobsList
+                      jobs={failedJobs}
+                      tab="failed"
+                      selectedJobId={selectedJobId}
+                      setSelectedJobId={(id) => setSelectedJobId(id)}
+                      projects={projects}
+                      searchMsg="No failed jobs"
+                    />
                   </TabsContent>
                   
-                  <TabsContent value="paused" className="m-0 h-[300px] overflow-y-auto">
-                    <div className="divide-y">
-                      {pausedJobs.length > 0 ? (
-                        pausedJobs.map((job) => (
-                          <JobListItem 
-                            key={job.id} 
-                            job={job}
-                            projectName={projects.find(p => p.id === job.projectId)?.name}
-                            isSelected={job.id === selectedJobId}
-                            onSelect={() => setSelectedJobId(job.id)} 
-                          />
-                        ))
-                      ) : (
-                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                          No paused jobs
-                        </div>
-                      )}
-                    </div>
+                  <TabsContent value="paused" className="flex-1">
+                    <RecentJobsList
+                      jobs={pausedJobs}
+                      tab="paused"
+                      selectedJobId={selectedJobId}
+                      setSelectedJobId={(id) => setSelectedJobId(id)}
+                      projects={projects}
+                      searchMsg="No paused jobs"
+                    />
                   </TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
           </div>
           
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 h-full">
             {selectedJob ? (
               <JobDashboardDetail job={selectedJob} onRefresh={refetchJobs} />
             ) : (

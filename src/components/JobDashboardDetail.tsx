@@ -143,38 +143,34 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
   // Wrapper on LogsDetail for display max 5 items + see more link
   function LimitedLogsDetail({ jobId }: { jobId: string }) {
     const navigate = useNavigate();
-
+    const [numLogs, setNumLogs] = useState<number>(0);
     const logsContainerRef = useRef<HTMLDivElement>(null);
-    const [showMore, setShowMore] = useState(false);
 
+    // Fetch logs count after LogsDetail renders
     useEffect(() => {
-      const checkShowMore = () => {
+      // try to access .querySelectorAll after card content is painted
+      setTimeout(() => {
         if (logsContainerRef.current) {
-          const { scrollHeight, clientHeight } = logsContainerRef.current;
-          if (scrollHeight > clientHeight) setShowMore(true);
-          else setShowMore(false);
+          const logItems = logsContainerRef.current.querySelectorAll('[data-log-item]');
+          setNumLogs(logItems.length);
         }
-      };
-
-      checkShowMore();
-      window.addEventListener("resize", checkShowMore);
-      return () => window.removeEventListener("resize", checkShowMore);
-    }, []);
+      }, 200);
+    }, [jobId]);
 
     return (
       <div className="relative">
         <div
-          className="overflow-y-auto max-h-[300px]"
-          style={{ maxHeight: 48 * 5 + 8 }} // 5 rows x 48px each + small gap
+          className="overflow-y-auto max-h-[298px]" // match height with RecentJobs Card
+          style={{ maxHeight: 48 * 5 + 8 }}
           ref={logsContainerRef}
         >
           <LogsDetail jobId={jobId} />
         </div>
-        {showMore && (
-          <div className="flex justify-center">
+        {numLogs > 5 && (
+          <div className="flex justify-center sticky bottom-0 bg-card pt-2 pb-3">
             <Button
               variant="outline"
-              className="w-full mt-2"
+              className="w-full"
               onClick={() => navigate(`/logs?jobId=${jobId}`)}
             >
               ดูเพิ่มเติม
@@ -189,7 +185,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
   return (
     <div className="space-y-6 h-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-        <Card className="bg-card flex flex-col">
+        <Card className="bg-card flex flex-col h-full">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div>
@@ -199,7 +195,6 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
               <StatusBadge status={isRunningNow ? "running" : job.status} size="lg" />
             </div>
           </CardHeader>
-          
           <CardContent className="flex-1 overflow-y-auto">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -354,7 +349,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
           </CardContent>
         </Card>
 
-        <Card className="bg-card flex flex-col">
+        <Card className="bg-card flex flex-col h-full">
           <CardHeader className="pb-2">
             <CardTitle>ประวัติการทำงานล่าสุด</CardTitle>
           </CardHeader>
