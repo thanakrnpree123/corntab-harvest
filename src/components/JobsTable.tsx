@@ -104,9 +104,17 @@ export function JobsTable({
     setEditModalOpen(true);
   };
 
+  const handleCloseEditModal = () => {
+    // Use a setTimeout to ensure the modal is fully closed before resetting state
+    // This helps prevent issues with event handling
+    setTimeout(() => {
+      setEditModalOpen(false);
+      setEditModalJob(null);
+    }, 0);
+  };
+
   const handleSubmitEdit = (updatedJob: CronJob) => {
-    setEditModalOpen(false);
-    setEditModalJob(null);
+    handleCloseEditModal();
     if (onEditJob) {
       onEditJob(updatedJob);
     }
@@ -196,10 +204,7 @@ export function JobsTable({
       <EditJobModal
         open={editModalOpen}
         job={editModalJob}
-        onClose={() => {
-          setEditModalOpen(false);
-          setEditModalJob(null);
-        }}
+        onClose={handleCloseEditModal}
         onSubmit={handleSubmitEdit}
       />
     </div>
