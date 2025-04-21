@@ -25,13 +25,6 @@ export function JobActions({
   onTriggerJob,
 }: JobActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-
-  // Function for handling edit modal submission
-  const handleEditSubmit = (updatedJob: CronJob) => {
-    onEditJob(updatedJob);
-    setIsEditOpen(false);
-  };
 
   return (
     <div className="flex items-center gap-2">
@@ -51,19 +44,20 @@ export function JobActions({
             <button
               className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
               onClick={() => {
-                if (onTriggerJob) onTriggerJob(job.id);
+                if (onToggleStatus) onToggleStatus(job.id);
                 setDropdownOpen(false);
               }}
             >
-              <Play className="w-4 h-4" />
-              Activate
+              <Pause className="w-4 h-4" />
+              Pause
             </button>
             <button
               className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
               onClick={() => {
-                setIsEditOpen(true);
+                onEditJob(job);
                 setDropdownOpen(false);
               }}
+              data-testid="job-edit-btn"
             >
               <FileEdit className="w-4 h-4" />
               Edit
@@ -91,14 +85,6 @@ export function JobActions({
           </div>
         )}
       </div>
-      
-      {/* Edit Job Modal */}
-      <EditJobModal
-        open={isEditOpen}
-        job={job}
-        onClose={() => setIsEditOpen(false)}
-        onSubmit={handleEditSubmit}
-      />
     </div>
   );
 }
