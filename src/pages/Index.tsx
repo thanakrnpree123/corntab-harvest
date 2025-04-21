@@ -38,6 +38,8 @@ import {
   TabsTrigger,
   TabsContent
 } from "@/components/ui/tabs";
+import { StatsCard } from "@/components/StatsCard";
+import { JobListItem } from "@/components/JobListItem";
 
 export default function Index() {
   const navigate = useNavigate();
