@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -122,7 +121,6 @@ export default function Index() {
     success: jobs.filter(job => job.status === "success").length,
   };
 
-  // --- ส่วนใหม่: RecentJobsList แสดงสูงสุด 5 รายการ + "ดูเพิ่มเติม" ถ้ามากกว่า 5
   function RecentJobsList({
     jobs,
     tab,
@@ -139,40 +137,21 @@ export default function Index() {
     searchMsg: string;
   }) {
     const navigate = useNavigate();
-    const listRef = useRef<HTMLDivElement>(null);
-    const showViewMore = jobs.length > 5;
     return (
-      <div
-        className="relative max-h-[298px] overflow-y-auto" // 50px*5 + gutter = 250-300px for tight rows
-        ref={listRef}
-      >
-        <div className="divide-y">
-          {jobs.length > 0 ? (
-            jobs.slice(0, 5).map((job) => (
-              <JobListItem 
-                key={job.id} 
-                job={job} 
-                projectName={projects.find(p => p.id === job.projectId)?.name}
-                isSelected={job.id === selectedJobId}
-                onSelect={() => setSelectedJobId(job.id)} 
-              />
-            ))
-          ) : (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-              {searchMsg}
-            </div>
-          )}
-        </div>
-        {showViewMore && (
-          <div className="flex justify-center sticky bottom-0 bg-card pt-2 pb-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate('/logs')}
-            >
-              ดูเพิ่มเติม
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+      <div className="divide-y h-full">
+        {jobs.length > 0 ? (
+          jobs.slice(0, 5).map((job) => (
+            <JobListItem 
+              key={job.id} 
+              job={job} 
+              projectName={projects.find(p => p.id === job.projectId)?.name}
+              isSelected={job.id === selectedJobId}
+              onSelect={() => setSelectedJobId(job.id)} 
+            />
+          ))
+        ) : (
+          <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+            {searchMsg}
           </div>
         )}
       </div>

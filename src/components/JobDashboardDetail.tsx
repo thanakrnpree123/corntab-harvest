@@ -143,41 +143,69 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
   // Wrapper on LogsDetail for display max 5 items + see more link
   function LimitedLogsDetail({ jobId }: { jobId: string }) {
     const navigate = useNavigate();
-    const [numLogs, setNumLogs] = useState<number>(0);
-    const logsContainerRef = useRef<HTMLDivElement>(null);
+    const [logs, setLogs] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // Fetch logs count after LogsDetail renders
+    // Fetch logs directly here for control
     useEffect(() => {
-      // try to access .querySelectorAll after card content is painted
-      setTimeout(() => {
-        if (logsContainerRef.current) {
-          const logItems = logsContainerRef.current.querySelectorAll('[data-log-item]');
-          setNumLogs(logItems.length);
-        }
-      }, 200);
+      setIsLoading(true);
+      apiService.getJobLogs(jobId)
+        .then(response => {
+          if (response.success && response.data) {
+            setLogs(response.data);
+          } else {
+            setLogs([]);
+          }
+        })
+        .finally(() => setIsLoading(false));
     }, [jobId]);
 
+    // Limit to 5 items + show "ดูเพิ่มเติม" if there are more than 5
     return (
       <div className="relative">
-        <div
-          className="overflow-y-auto max-h-[298px]" // match height with RecentJobs Card
-          style={{ maxHeight: 48 * 5 + 8 }}
-          ref={logsContainerRef}
-        >
-          <LogsDetail jobId={jobId} />
+        <div className="overflow-y-auto max-h-[310px] pr-1 rounded-md border border-muted bg-background">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-8 min-h-[160px]">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="text-center p-5 text-muted-foreground">ไม่พบข้อมูลล็อก</div>
+          ) : (
+            <>
+              {logs.slice(0, 5).map((log, index) => (
+                <div key={log.id} data-log-item className="border-b last:border-0 px-2 py-3 flex flex-col gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold">{log.status === "success" ? <CheckCircle className="inline size-4 text-green-500" /> : <AlertCircle className="inline size-4 text-red-500" />}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {log.startTime ? dayjs(log.startTime).format('dd/MM/yyyy HH:mm:ss') : "N/A"}
+                    </span>
+                    {log.duration && (
+                      <Badge variant="outline" className="ml-2">{log.duration.toFixed(2)}s</Badge>
+                    )}
+                  </div>
+                  <div className="text-xs truncate text-muted-foreground">
+                    {log.output || "ไม่มีข้อมูล"}
+                  </div>
+                  {log.error && (
+                    <div className="text-xs text-red-500 mt-1">ข้อผิดพลาด: {log.error}</div>
+                  )}
+                </div>
+              ))}
+              {logs.length > 5 && (
+                <div className="flex justify-center pt-2 pb-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => navigate(`/logs?jobId=${jobId}`)}
+                  >
+                    ดูเพิ่มเติม
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
-        {numLogs > 5 && (
-          <div className="flex justify-center sticky bottom-0 bg-card pt-2 pb-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate(`/logs?jobId=${jobId}`)}
-            >
-              ดูเพิ่มเติม
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        )}
       </div>
     );
   }
