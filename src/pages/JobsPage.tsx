@@ -744,7 +744,7 @@ export default function JobsPage() {
           <div className="space-y-6">
             <Card>
               <CardContent className="p-0">
-                {/* <ProjectsTable
+                <ProjectsTable
                   projects={projects}
                   onAddJob={(projectId) => {
                     setSelectedProjectId(projectId);
@@ -756,8 +756,8 @@ export default function JobsPage() {
                   selectedProjectIdsPops={selectedProjectIds}
                   onSelectProject={handleSelectProject}
                   onSelectAllProjects={handleSelectAllProjects}
-                /> */}
-                <JobsPageWithFilter
+                />
+                {/* <JobsPageWithFilter
                   allProjects={projects}
                   onAddJob={(projectId) => {
                     setSelectedProjectId(projectId);
@@ -769,7 +769,7 @@ export default function JobsPage() {
                   selectedProjectIds={selectedProjectIds}
                   onSelectProject={handleSelectProject}
                   onSelectAllProjects={handleSelectAllProjects}
-                />
+                /> */}
 
               </CardContent>
             </Card>
