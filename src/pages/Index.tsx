@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/StatsCard";
 import { JobListItem } from "@/components/JobListItem";
+import { RecentJobsList } from "@/components/RecentJobsList";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -121,43 +122,6 @@ export default function Index() {
     success: jobs.filter(job => job.status === "success").length,
   };
 
-  function RecentJobsList({
-    jobs,
-    tab,
-    selectedJobId,
-    setSelectedJobId,
-    projects,
-    searchMsg,
-  }: {
-    jobs: CronJob[];
-    tab: string;
-    selectedJobId: string | null;
-    setSelectedJobId: (id: string) => void;
-    projects: Project[];
-    searchMsg: string;
-  }) {
-    const navigate = useNavigate();
-    return (
-      <div className="divide-y h-full">
-        {jobs.length > 0 ? (
-          jobs.slice(0, 5).map((job) => (
-            <JobListItem 
-              key={job.id} 
-              job={job} 
-              projectName={projects.find(p => p.id === job.projectId)?.name}
-              isSelected={job.id === selectedJobId}
-              onSelect={() => setSelectedJobId(job.id)} 
-            />
-          ))
-        ) : (
-          <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-            {searchMsg}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
     <PageLayout title="">
       <div className="grid gap-6">
@@ -206,8 +170,8 @@ export default function Index() {
           <StatsCard title="Paused" value={jobStats.paused} color="gray" />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          <div className="md:col-span-1 space-y-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 h-[420px]">
+          <div className="md:col-span-1 h-full flex flex-col">
             <Card className="h-full flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Recent Jobs</CardTitle>
@@ -219,35 +183,29 @@ export default function Index() {
                     <TabsTrigger value="failed" className="flex-1">Failed</TabsTrigger>
                     <TabsTrigger value="paused" className="flex-1">Paused</TabsTrigger>
                   </TabsList>
-                  
-                  <TabsContent value="recent" className="flex-1">
+                  <TabsContent value="recent" className="flex-1 h-full">
                     <RecentJobsList
                       jobs={recentJobs}
-                      tab="recent"
                       selectedJobId={selectedJobId}
-                      setSelectedJobId={(id) => setSelectedJobId(id)}
+                      setSelectedJobId={setSelectedJobId}
                       projects={projects}
                       searchMsg="No jobs have run yet"
                     />
                   </TabsContent>
-                  
-                  <TabsContent value="failed" className="flex-1">
+                  <TabsContent value="failed" className="flex-1 h-full">
                     <RecentJobsList
                       jobs={failedJobs}
-                      tab="failed"
                       selectedJobId={selectedJobId}
-                      setSelectedJobId={(id) => setSelectedJobId(id)}
+                      setSelectedJobId={setSelectedJobId}
                       projects={projects}
                       searchMsg="No failed jobs"
                     />
                   </TabsContent>
-                  
-                  <TabsContent value="paused" className="flex-1">
+                  <TabsContent value="paused" className="flex-1 h-full">
                     <RecentJobsList
                       jobs={pausedJobs}
-                      tab="paused"
                       selectedJobId={selectedJobId}
-                      setSelectedJobId={(id) => setSelectedJobId(id)}
+                      setSelectedJobId={setSelectedJobId}
                       projects={projects}
                       searchMsg="No paused jobs"
                     />
@@ -256,8 +214,7 @@ export default function Index() {
               </CardContent>
             </Card>
           </div>
-          
-          <div className="md:col-span-2 h-full">
+          <div className="md:col-span-2 h-full flex flex-col">
             {selectedJob ? (
               <JobDashboardDetail job={selectedJob} onRefresh={refetchJobs} />
             ) : (
