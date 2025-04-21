@@ -1,4 +1,3 @@
-
 import { CronJob } from "@/lib/types";
 import {
   Table,
@@ -9,7 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { EditJobModal } from "./EditJobModal"; 
+import { EditJobModal } from "./EditJobModal";
 import { useEffect, useState } from "react";
 import { BatchJobsActions } from "./BatchJobsActions";
 import { JobRowDisplay } from "./JobRowDisplay";
@@ -50,7 +49,6 @@ export function JobsTable({
 }: JobsTableProps) {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [editModalJob, setEditModalJob] = useState<CronJob | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     setSelectedJobIds([]);
@@ -66,7 +64,7 @@ export function JobsTable({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedJobIds(jobs.map(job => job.id));
+      setSelectedJobIds(jobs.map((job) => job.id));
     } else {
       setSelectedJobIds([]);
     }
@@ -74,9 +72,9 @@ export function JobsTable({
 
   const handleSelectJob = (jobId: string, checked: boolean) => {
     if (checked) {
-      setSelectedJobIds(prev => [...prev, jobId]);
+      setSelectedJobIds((prev) => [...prev, jobId]);
     } else {
-      setSelectedJobIds(prev => prev.filter(id => id !== jobId));
+      setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
     }
   };
 
@@ -101,29 +99,20 @@ export function JobsTable({
 
   const handleEdit = (job: CronJob) => {
     setEditModalJob(job);
-    setEditModalOpen(true);
   };
 
   const handleCloseEditModal = () => {
-    setEditModalOpen(false);
     setEditModalJob(null);
   };
 
   const handleSubmitEdit = (updatedJob: CronJob) => {
-    setEditModalOpen(false);
-    
-    if (onEditJob) {
-      onEditJob(updatedJob);
-    }
-    
-    // รอให้ modal ปิดสมบูรณ์แล้วค่อยเคลียร์ข้อมูลงาน
-    setTimeout(() => {
-      setEditModalJob(null);
-      toast({
-        title: "บันทึกงานเรียบร้อย",
-        description: `งาน "${updatedJob.name}" แก้ไขข้อมูลสำเร็จ`,
-      });
-    }, 100);
+    if (onEditJob) onEditJob(updatedJob);
+    setEditModalJob(null);
+
+    toast({
+      title: "บันทึกงานเรียบร้อย",
+      description: `งาน "${updatedJob.name}" แก้ไขข้อมูลสำเร็จ`,
+    });
   };
 
   const showCheckbox = !!(onExportJobs || onBatchDeleteJobs);
@@ -142,15 +131,17 @@ export function JobsTable({
           />
         </div>
       )}
-      
+
       <div className="overflow-x-auto">
         <Table className="min-w-[600px]">
           <TableHeader>
             <TableRow>
               {showCheckbox && (
                 <TableHead className="w-[40px]">
-                  <Checkbox 
-                    checked={jobs.length > 0 && selectedJobIds.length === jobs.length} 
+                  <Checkbox
+                    checked={
+                      jobs.length > 0 && selectedJobIds.length === jobs.length
+                    }
                     onCheckedChange={handleSelectAll}
                     disabled={jobs.length === 0}
                     aria-label="Select all jobs"
@@ -160,22 +151,26 @@ export function JobsTable({
               <TableHead>Name</TableHead>
               <TableHead className="hidden md:table-cell">Schedule</TableHead>
               <TableHead>Status</TableHead>
-              {showLastRun && <TableHead className="hidden md:table-cell">Last Run</TableHead>}
-              {showNextRun && <TableHead className="hidden md:table-cell">Next Run</TableHead>}
+              {showLastRun && (
+                <TableHead className="hidden md:table-cell">Last Run</TableHead>
+              )}
+              {showNextRun && (
+                <TableHead className="hidden md:table-cell">Next Run</TableHead>
+              )}
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {jobs.length === 0 ? (
               <TableRow>
-                <TableCell 
+                <TableCell
                   colSpan={
-                    (showCheckbox ? 1 : 0) + 
-                    3 + 
-                    (showLastRun ? 1 : 0) + 
-                    (showNextRun ? 1 : 0) + 
+                    (showCheckbox ? 1 : 0) +
+                    3 +
+                    (showLastRun ? 1 : 0) +
+                    (showNextRun ? 1 : 0) +
                     1
-                  } 
+                  }
                   className="text-center py-6 text-muted-foreground"
                 >
                   No jobs found
@@ -203,9 +198,9 @@ export function JobsTable({
           </TableBody>
         </Table>
       </div>
-      {editModalOpen && (
+      {editModalJob && (
         <EditJobModal
-          open={editModalOpen}
+          open={true}
           job={editModalJob}
           onClose={handleCloseEditModal}
           onSubmit={handleSubmitEdit}
