@@ -10,7 +10,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CronJob } from "@/lib/types";
+import { CronJob, JobStatus } from "@/lib/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface EditJobModalProps {
   open: boolean;
@@ -22,7 +29,7 @@ interface EditJobModalProps {
 export function EditJobModal({ open, job, onClose, onSubmit }: EditJobModalProps) {
   const [name, setName] = useState("");
   const [schedule, setSchedule] = useState("");
-  const [status, setStatus] = useState<CronJob["status"]>("active");
+  const [status, setStatus] = useState<JobStatus>("idle");
 
   useEffect(() => {
     if (job) {
@@ -75,15 +82,21 @@ export function EditJobModal({ open, job, onClose, onSubmit }: EditJobModalProps
             </div>
             <div>
               <label className="block mb-1 text-sm font-medium">Status</label>
-              <select
-                className="w-full border rounded px-2 py-1"
+              <Select
                 value={status}
-                onChange={e => setStatus(e.target.value as CronJob["status"])}
+                onValueChange={(value: JobStatus) => setStatus(value)}
               >
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="error">Error</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="idle">Idle</SelectItem>
+                  <SelectItem value="running">Running</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="paused">Paused</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter className="mt-4 flex justify-end gap-2">
