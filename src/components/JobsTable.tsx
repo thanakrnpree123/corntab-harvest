@@ -105,25 +105,25 @@ export function JobsTable({
   };
 
   const handleCloseEditModal = () => {
-    // ปิด modal ก่อน โดยไม่ต้องรอ timeout
     setEditModalOpen(false);
-    // รีเซ็ตข้อมูล job เมื่อ modal ปิดเสร็จสมบูรณ์
     setEditModalJob(null);
   };
 
   const handleSubmitEdit = (updatedJob: CronJob) => {
-    // ปิด modal ก่อน
     setEditModalOpen(false);
-    // รีเซ็ตข้อมูล job
-    setEditModalJob(null);
-    // ดำเนินการแก้ไข
+    
     if (onEditJob) {
       onEditJob(updatedJob);
     }
-    toast({
-      title: "บันทึกงานเรียบร้อย",
-      description: `งาน "${updatedJob.name}" แก้ไขข้อมูลสำเร็จ`,
-    });
+    
+    // รอให้ modal ปิดสมบูรณ์แล้วค่อยเคลียร์ข้อมูลงาน
+    setTimeout(() => {
+      setEditModalJob(null);
+      toast({
+        title: "บันทึกงานเรียบร้อย",
+        description: `งาน "${updatedJob.name}" แก้ไขข้อมูลสำเร็จ`,
+      });
+    }, 100);
   };
 
   const showCheckbox = !!(onExportJobs || onBatchDeleteJobs);
@@ -203,7 +203,7 @@ export function JobsTable({
           </TableBody>
         </Table>
       </div>
-      {editModalJob && (
+      {editModalOpen && (
         <EditJobModal
           open={editModalOpen}
           job={editModalJob}
