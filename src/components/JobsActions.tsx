@@ -1,7 +1,7 @@
 
 import { CronJob } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Play, Edit, Copy, Trash2, MoreVertical } from "lucide-react";
+import { Play, FileEdit, Copy, Trash2, MoreVertical, Pause } from "lucide-react";
 import { useState } from "react";
 import { EditJobModal } from "./EditJobModal";
 
@@ -27,7 +27,7 @@ export function JobActions({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  // ฟังก์ชันเมื่อ submit modal แก้ไข
+  // Function for handling edit modal submission
   const handleEditSubmit = (updatedJob: CronJob) => {
     onEditJob(updatedJob);
     setIsEditOpen(false);
@@ -37,7 +37,7 @@ export function JobActions({
     <div className="flex items-center gap-2">
       {onTriggerJob && onTriggerJob(job.id)}
       {onToggleStatus(job.id)}
-      <div className="relative group">
+      <div className="relative">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -46,40 +46,43 @@ export function JobActions({
         >
           <MoreVertical className="h-4 w-4" />
         </Button>
-        {(dropdownOpen || true) && (
-          <div className="absolute right-0 mt-2 w-36 rounded-md border border-muted bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        {dropdownOpen && (
+          <div className="absolute right-0 mt-2 w-36 rounded-md border border-gray-200 bg-white shadow-lg z-20">
             <button
-              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
+              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
               onClick={() => {
                 if (onTriggerJob) onTriggerJob(job.id);
+                setDropdownOpen(false);
               }}
             >
               <Play className="w-4 h-4" />
               Activate
             </button>
             <button
-              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
+              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
               onClick={() => {
                 setIsEditOpen(true);
                 setDropdownOpen(false);
               }}
             >
-              <Edit className="w-4 h-4" />
+              <FileEdit className="w-4 h-4" />
               Edit
             </button>
             <button
-              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
+              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
               onClick={() => {
                 if (onDuplicateJob) onDuplicateJob(job.id);
+                setDropdownOpen(false);
               }}
             >
               <Copy className="w-4 h-4" />
               Duplicate
             </button>
             <button
-              className="flex items-center gap-2 w-full text-left px-3 py-2 text-destructive hover:bg-destructive/10"
+              className="flex items-center gap-2 w-full text-left px-3 py-2 text-red-500 hover:bg-red-50"
               onClick={() => {
                 if (onDeleteJob) onDeleteJob(job.id);
+                setDropdownOpen(false);
               }}
             >
               <Trash2 className="w-4 h-4" />
@@ -88,7 +91,8 @@ export function JobActions({
           </div>
         )}
       </div>
-      {/* Modal สำหรับแก้ไข */}
+      
+      {/* Edit Job Modal */}
       <EditJobModal
         open={isEditOpen}
         job={job}
@@ -98,4 +102,3 @@ export function JobActions({
     </div>
   );
 }
-
