@@ -235,7 +235,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-2">
+              {/* <div className="flex flex-wrap gap-2 pt-2">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button 
@@ -303,7 +303,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>

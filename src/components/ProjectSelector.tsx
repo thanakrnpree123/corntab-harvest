@@ -105,7 +105,7 @@ export function ProjectSelector({
           )}
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
               <PlusCircle className="h-4 w-4 mr-2" />
@@ -160,7 +160,7 @@ export function ProjectSelector({
               </DialogFooter>
             </form>
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
       </div>
     );
   }
