@@ -220,7 +220,7 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
                 <CardTitle>{job.name}</CardTitle>
                 <CardDescription>{job.description || "ไม่มีคำอธิบาย"}</CardDescription>
               </div>
-              <StatusBadge status={isRunningNow ? "running" : job.status} size="lg" />
+              {/* <StatusBadge status={isRunningNow ? "running" : job.status} size="lg" /> */}
             </div>
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto">
