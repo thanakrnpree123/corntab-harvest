@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -456,7 +455,7 @@ export default function ProjectJobsPage() {
       })
       .catch((error) => {
         toast({
-          title: "เกิดข้อผิดพลาดระหว่างการนำเข้า",
+          title: "เกิดข้อผิด���ลาดระหว่างการนำเข้า",
           description: error.message,
           variant: "destructive",
         });
@@ -1180,20 +1179,22 @@ export default function ProjectJobsPage() {
 
       {isCreateModalOpen && (
         <CreateJobModal
-          open={isCreateModalOpen}
+          isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          onSubmit={handleCreateJob}
+          onCreateJob={handleCreateJob}
+          projects={[project as Project].filter(Boolean)}
+          selectedProjectId={projectId || ""}
         />
       )}
 
       {isDetailSheetOpen && selectedJob && (
         <JobDetails
           job={selectedJob}
-          open={isDetailSheetOpen}
+          isOpen={isDetailSheetOpen}
           onClose={() => setIsDetailSheetOpen(false)}
-          onEditJob={handleEditJob}
-          onDeleteJob={handleDeleteJob}
-          onToggleStatus={toggleJobStatus}
+          onUpdate={refetchJobs}
+          onDelete={handleDeleteJob}
+          onTrigger={handleTriggerJob}
         />
       )}
 
