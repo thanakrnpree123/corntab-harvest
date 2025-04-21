@@ -44,6 +44,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProjectBatchActions } from "@/components/ProjectBatchActions";
+import { JobsPageWithFilter } from "./JobsPageWithFilter";
 
 export default function JobsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -743,7 +744,7 @@ export default function JobsPage() {
           <div className="space-y-6">
             <Card>
               <CardContent className="p-0">
-                <ProjectsTable
+                {/* <ProjectsTable
                   projects={projects}
                   onAddJob={(projectId) => {
                     setSelectedProjectId(projectId);
@@ -755,7 +756,21 @@ export default function JobsPage() {
                   selectedProjectIdsPops={selectedProjectIds}
                   onSelectProject={handleSelectProject}
                   onSelectAllProjects={handleSelectAllProjects}
+                /> */}
+                <JobsPageWithFilter
+                  allProjects={projects}
+                  onAddJob={(projectId) => {
+                    setSelectedProjectId(projectId);
+                    setIsCreateModalOpen(true);
+                  }}
+                  onDeleteProject={handleDeleteProject}
+                  onViewJobs={setSelectedProjectId}
+                  selectedProjectId={selectedProjectId}
+                  selectedProjectIds={selectedProjectIds}
+                  onSelectProject={handleSelectProject}
+                  onSelectAllProjects={handleSelectAllProjects}
                 />
+
               </CardContent>
             </Card>
 
@@ -1049,7 +1064,7 @@ export default function JobsPage() {
       <ProjectSelector
         projects={projects}
         selectedProjectId={""}
-        onSelectProject={() => {}}
+        onSelectProject={() => { }}
         onCreateProject={handleCreateProject}
         isOpen={isCreateProjectModalOpen}
         onClose={() => setIsCreateProjectModalOpen(false)}
