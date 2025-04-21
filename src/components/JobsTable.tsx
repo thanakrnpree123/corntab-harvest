@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Play } from "lucide-react";
+import { ChevronRight, Play, Edit as EditIcon } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -27,9 +27,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { useEffect, useState } from "react";
 import { BatchJobsActions } from "./BatchJobsActions";
+import { EditJobModal } from "./EditJobModal";
 import { Edit, MoreVertical, Copy, Trash2 } from "lucide-react";
 
-// Initialize dayjs plugins
 dayjs.extend(relativeTime);
 
 export interface JobsTableProps {
@@ -38,12 +38,13 @@ export interface JobsTableProps {
   onToggleStatus: (jobId: string) => React.ReactNode;
   onDeleteJob: (jobId: string) => React.ReactNode;
   onDuplicateJob?: (jobId: string) => React.ReactNode;
-  onTriggerJob?: (jobId: string) => React.ReactNode; // Add new prop for triggering jobs
+  onTriggerJob?: (jobId: string) => React.ReactNode;
   onExportJobs?: (jobIds: string[], format: "json" | "csv") => void;
   onImportJobs?: (jobs: Partial<CronJob>[]) => void;
   onBatchDeleteJobs?: (jobIds: string[]) => void;
   showLastRun?: boolean;
   showNextRun?: boolean;
+  onEditJob?: (job: CronJob) => void;
 }
 
 export function JobsTable({
@@ -58,10 +59,12 @@ export function JobsTable({
   onBatchDeleteJobs,
   showLastRun = true,
   showNextRun = true,
-}: JobsTableProps) {
+  onEditJob,
+}: JobsTableProps & { onEditJob?: (job: CronJob) => void }) {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
-  
-  // Reset selection when jobs change
+  const [editModalJob, setEditModalJob] = useState<CronJob | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
   useEffect(() => {
     setSelectedJobIds([]);
   }, [jobs]);
@@ -73,7 +76,7 @@ export function JobsTable({
       description: `กำลังดูรายละเอียดของงาน "${job.name}"`,
     });
   };
-  
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
       setSelectedJobIds(jobs.map(job => job.id));
@@ -81,7 +84,7 @@ export function JobsTable({
       setSelectedJobIds([]);
     }
   };
-  
+
   const handleSelectJob = (jobId: string, checked: boolean) => {
     if (checked) {
       setSelectedJobIds(prev => [...prev, jobId]);
@@ -89,24 +92,41 @@ export function JobsTable({
       setSelectedJobIds(prev => prev.filter(id => id !== jobId));
     }
   };
-  
+
   const handleExport = (format: "json" | "csv") => {
     if (onExportJobs && selectedJobIds.length > 0) {
       onExportJobs(selectedJobIds, format);
     }
   };
-  
+
   const handleImport = (jobsToImport: Partial<CronJob>[]) => {
     if (onImportJobs) {
       onImportJobs(jobsToImport);
     }
   };
-  
+
   const handleBatchDelete = () => {
     if (onBatchDeleteJobs && selectedJobIds.length > 0) {
       onBatchDeleteJobs(selectedJobIds);
       setSelectedJobIds([]);
     }
+  };
+
+  const handleEdit = (job: CronJob) => {
+    setEditModalJob(job);
+    setEditModalOpen(true);
+  };
+
+  const handleSubmitEdit = (updatedJob: CronJob) => {
+    setEditModalOpen(false);
+    setEditModalJob(null);
+    if (onEditJob) {
+      onEditJob(updatedJob);
+    }
+    toast({
+      title: "บันทึกงานเรียบร้อย",
+      description: `งาน "${updatedJob.name}" แก้ไขข้อมูลสำเร็จ`,
+    });
   };
 
   return (
@@ -243,18 +263,14 @@ export function JobsTable({
                       <div className="flex items-center gap-2">
                         {onTriggerJob && onTriggerJob(job.id)}
                         {onToggleStatus(job.id)}
-
-                        {/* Action dropdown: play, edit, duplicate, delete */}
                         <div className="relative group">
                           <Button variant="ghost" size="icon" aria-label="Open actions menu for job">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
-                          {/* Dropdown menu */}
                           <div className="absolute right-0 mt-2 w-36 rounded-md border border-muted bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20">
                             <button
                               className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
                               onClick={() => {
-                                // Trigger (Activate/Run) action handler
                                 if (onTriggerJob) onTriggerJob(job.id);
                               }}
                             >
@@ -264,11 +280,10 @@ export function JobsTable({
                             <button
                               className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
                               onClick={() => {
-                                // Edit action
-                                if (onDuplicateJob) onDuplicateJob(job.id);
+                                handleEdit(job);
                               }}
                             >
-                              <Edit className="w-4 h-4" />
+                              <EditIcon className="w-4 h-4" />
                               Edit
                             </button>
                             <button
@@ -291,7 +306,6 @@ export function JobsTable({
                             </button>
                           </div>
                         </div>
-
                       </div>
                       
                       <Button
@@ -310,6 +324,15 @@ export function JobsTable({
           </TableBody>
         </Table>
       </div>
+      <EditJobModal
+        open={editModalOpen}
+        job={editModalJob}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditModalJob(null);
+        }}
+        onSubmit={handleSubmitEdit}
+      />
     </div>
   );
 }
