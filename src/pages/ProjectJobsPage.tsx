@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiService } from "@/lib/api-service";
+import { EditJobModal } from "@/components/EditJobModal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,7 @@ import {
   Pause,
   Copy,
   Trash2,
+  FileEdit,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -151,6 +153,16 @@ export default function ProjectJobsPage() {
     [key: string]: boolean;
   }>({});
   const { toast } = useToast();
+  const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState<
+    "today" | "week" | "month" | "all"
+  >("all");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [jobToEdit, setJobToEdit] = useState<CronJob | null>(null);
 
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
@@ -360,7 +372,7 @@ export default function ProjectJobsPage() {
 
         mockDeleteJob(jobId);
         refetchJobs();
-        setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
+          setSelectedJobIds((prev) => prev.filter((id) => id !== jobId));
       })
       .finally(() => {
         setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
@@ -619,9 +631,9 @@ export default function ProjectJobsPage() {
           variant: "destructive",
         });
 
-        // Mock trigger for development purposes
-        mockTriggerJob(job);
-        refetchJobs();
+          // Mock trigger for development purposes
+          mockTriggerJob(job);
+          refetchJobs();
       })
       .finally(() => {
         setIsJobActionInProgress((prev) => ({ ...prev, [jobId]: false }));
@@ -747,6 +759,47 @@ export default function ProjectJobsPage() {
         description: `ส่งออกงาน ${jobsToExport.length} รายการในรูปแบบ CSV`,
       });
     }
+  };
+
+  const handleEditJob = (job: CronJob) => {
+    setJobToEdit(job);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditJobSubmit = (updatedJob: CronJob) => {
+    setIsJobActionInProgress((prev) => ({ ...prev, [updatedJob.id]: true }));
+
+    apiService.updateJob(updatedJob.id, updatedJob)
+      .then((response) => {
+        if (response.success) {
+          toast({
+            title: "อัปเดตงานสำเร็จ",
+            description: `อัปเดตงาน "${updatedJob.name}" เรียบร้อยแล้ว`,
+          });
+          refetchJobs();
+        } else {
+          toast({
+            title: "เกิดข้อผิดพลาด",
+            description: `ไม่สามารถอัปเดตงาน: ${response.error}`,
+            variant: "destructive",
+          });
+          // Still refetch to show mock updates during development
+          refetchJobs();
+        }
+      })
+      .catch((error) => {
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: `ไม่สามารถอัปเดตงาน: ${error.message}`,
+          variant: "destructive",
+        });
+        // Still refetch to show mock updates during development
+        refetchJobs();
+      })
+      .finally(() => {
+        setIsJobActionInProgress((prev) => ({ ...prev, [updatedJob.id]: false }));
+        setIsEditModalOpen(false);
+      });
   };
 
   return (
@@ -1039,8 +1092,6 @@ export default function ProjectJobsPage() {
                                   align="end"
                                   className="w-[160px]"
                                 >
-                                  
-                                 
                                   <DropdownMenuItem
                                     onClick={() => toggleJobStatus(job.id)}
                                     className="flex items-center cursor-pointer"
@@ -1058,10 +1109,10 @@ export default function ProjectJobsPage() {
                                     )}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => handleDuplicateJob(job.id)}
+                                    onClick={() => handleEditJob(job)}
                                     className="flex items-center cursor-pointer"
                                   >
-                                    <Copy className="mr-2 h-4 w-4" />
+                                    <FileEdit className="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
@@ -1148,6 +1199,13 @@ export default function ProjectJobsPage() {
         onUpdate={refetchJobs}
         onDelete={handleDeleteJob}
         onTrigger={handleTriggerJob}
+      />
+
+      <EditJobModal
+        open={isEditModalOpen}
+        job={jobToEdit}
+        onClose={() => setIsEditModalOpen(false)}
+        onSubmit={handleEditJobSubmit}
       />
     </PageLayout>
   );
