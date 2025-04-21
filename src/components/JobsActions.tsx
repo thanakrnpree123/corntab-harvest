@@ -3,6 +3,7 @@ import { CronJob } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Play, Edit, Copy, Trash2, MoreVertical } from "lucide-react";
 import { useState } from "react";
+import { EditJobModal } from "./EditJobModal";
 
 interface JobActionsProps {
   job: CronJob;
@@ -24,7 +25,14 @@ export function JobActions({
   onTriggerJob,
 }: JobActionsProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  // ฟังก์ชันเมื่อ submit modal แก้ไข
+  const handleEditSubmit = (updatedJob: CronJob) => {
+    onEditJob(updatedJob);
+    setIsEditOpen(false);
+  };
+
   return (
     <div className="flex items-center gap-2">
       {onTriggerJob && onTriggerJob(job.id)}
@@ -52,7 +60,8 @@ export function JobActions({
             <button
               className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
               onClick={() => {
-                onEditJob(job);
+                setIsEditOpen(true);
+                setDropdownOpen(false);
               }}
             >
               <Edit className="w-4 h-4" />
@@ -79,6 +88,14 @@ export function JobActions({
           </div>
         )}
       </div>
+      {/* Modal สำหรับแก้ไข */}
+      <EditJobModal
+        open={isEditOpen}
+        job={job}
+        onClose={() => setIsEditOpen(false)}
+        onSubmit={handleEditSubmit}
+      />
     </div>
   );
 }
+
