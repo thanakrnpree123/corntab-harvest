@@ -140,6 +140,52 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
     navigate(`/logs?jobId=${job.id}`);
   };
 
+  // Wrapper on LogsDetail for display max 5 items + see more link
+  function LimitedLogsDetail({ jobId }: { jobId: string }) {
+    const navigate = useNavigate();
+
+    const logsContainerRef = useRef<HTMLDivElement>(null);
+    const [showMore, setShowMore] = useState(false);
+
+    useEffect(() => {
+      const checkShowMore = () => {
+        if (logsContainerRef.current) {
+          const { scrollHeight, clientHeight } = logsContainerRef.current;
+          if (scrollHeight > clientHeight) setShowMore(true);
+          else setShowMore(false);
+        }
+      };
+
+      checkShowMore();
+      window.addEventListener("resize", checkShowMore);
+      return () => window.removeEventListener("resize", checkShowMore);
+    }, []);
+
+    return (
+      <div className="relative">
+        <div
+          className="overflow-y-auto max-h-[300px]"
+          style={{ maxHeight: 48 * 5 + 8 }} // 5 rows x 48px each + small gap
+          ref={logsContainerRef}
+        >
+          <LogsDetail jobId={jobId} />
+        </div>
+        {showMore && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              className="w-full mt-2"
+              onClick={() => navigate(`/logs?jobId=${jobId}`)}
+            >
+              ดูเพิ่มเติม
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 h-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
@@ -312,20 +358,8 @@ export function JobDashboardDetail({ job, onRefresh }: JobDashboardDetailProps) 
           <CardHeader className="pb-2">
             <CardTitle>ประวัติการทำงานล่าสุด</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 relative" ref={logsRef}>
-            <LogsDetail jobId={job.id} />
-            {showViewMore && (
-              <div className="sticky bottom-0 w-full bg-gradient-to-t from-background to-transparent pt-4 pb-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
-                  onClick={handleViewMoreClick}
-                >
-                  ดูเพิ่มเติม
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            )}
+          <CardContent className="flex-1 relative">
+            <LimitedLogsDetail jobId={job.id} />
           </CardContent>
         </Card>
       </div>

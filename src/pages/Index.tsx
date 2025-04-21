@@ -174,14 +174,6 @@ export default function Index() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Recent Jobs</CardTitle>
-                <Button 
-                  variant="link" 
-                  className="text-sm"
-                  onClick={() => navigate('/logs')}
-                >
-                  ดูเพิ่มเติม
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 <Tabs defaultValue="recent">
