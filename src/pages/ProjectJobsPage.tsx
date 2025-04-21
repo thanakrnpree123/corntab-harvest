@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -73,6 +74,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { JobActions } from "@/components/JobsActions";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -984,4 +986,225 @@ export default function ProjectJobsPage() {
                   <table className="min-w-[600px] w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                          <Checkbox
+                            checked={selectedJobIds.length === sortedJobs.length && sortedJobs.length > 0}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Select all jobs"
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground">
+                          ชื่องาน
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                          ตารางเวลา
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                          สถานะ
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                          รันล่าสุด
+                        </th>
+                        <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">
+                          รันถัดไป
+                        </th>
+                        <th className="px-4 py-3 text-right font-medium text-muted-foreground">
+                          การกระทำ
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedJobs.map((job) => (
+                        <tr
+                          key={job.id}
+                          className="border-b hover:bg-muted/50 transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            <Checkbox
+                              checked={selectedJobIds.includes(job.id)}
+                              onCheckedChange={(checked) =>
+                                toggleSelectJob(job.id, checked === true)
+                              }
+                              aria-label={`Select ${job.name}`}
+                            />
+                          </td>
+                          <td
+                            className="px-4 py-3 cursor-pointer"
+                            onClick={() => handleViewJobDetails(job)}
+                          >
+                            <div className="flex flex-col">
+                              <div className="font-medium truncate max-w-[200px]">
+                                {job.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                {job.endpoint}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            <code className="text-xs bg-muted px-1 py-0.5 rounded">
+                              {job.schedule}
+                            </code>
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            <StatusBadge status={job.status} />
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            {job.lastRun ? (
+                              <span className="text-xs text-muted-foreground">
+                                {dayjs(job.lastRun).fromNow()}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                -
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            {job.nextRun ? (
+                              <span className="text-xs text-muted-foreground">
+                                {dayjs(job.nextRun).fromNow()}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                -
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <JobActions
+                              job={job}
+                              onViewDetails={handleViewJobDetails}
+                              onToggleStatus={() => (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={job.status === "paused" ? "Resume job" : "Pause job"}
+                                  onClick={() => toggleJobStatus(job.id)}
+                                  disabled={isJobActionInProgress[job.id]}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : job.status === "paused" ? (
+                                    <Play className="h-4 w-4" />
+                                  ) : (
+                                    <Pause className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                              onEditJob={handleEditJob}
+                              onDeleteJob={() => (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      aria-label="Delete job"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        ยืนยันการลบงาน
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        คุณแน่ใจหรือไม่ว่าต้องการลบงาน "{job.name}"? การกระทำนี้ไม่สามารถย้อนกลับได้
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteJob(job.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        ลบงาน
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                              onDuplicateJob={() => (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label="Duplicate job"
+                                  onClick={() => handleDuplicateJob(job.id)}
+                                  disabled={isJobActionInProgress[job.id]}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Copy className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                              onTriggerJob={() => (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label="Trigger job now"
+                                  onClick={() => handleTriggerJob(job.id)}
+                                  disabled={isJobActionInProgress[job.id] || job.status === "paused"}
+                                >
+                                  {isJobActionInProgress[job.id] ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Play className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  <p className="text-muted-foreground mb-4">
+                    ยังไม่มีงานในโปรเจคนี้
+                  </p>
+                  <Button onClick={() => setIsCreateModalOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    เพิ่มงานใหม่
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {isCreateModalOpen && (
+        <CreateJobModal
+          open={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateJob}
+        />
+      )}
+
+      {isDetailSheetOpen && selectedJob && (
+        <JobDetails
+          job={selectedJob}
+          open={isDetailSheetOpen}
+          onClose={() => setIsDetailSheetOpen(false)}
+          onEditJob={handleEditJob}
+          onDeleteJob={handleDeleteJob}
+          onToggleStatus={toggleJobStatus}
+        />
+      )}
+
+      {isEditModalOpen && jobToEdit && (
+        <EditJobModal
+          open={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={handleEditJobSubmit}
+          job={jobToEdit}
+        />
+      )}
+    </PageLayout>
+  );
+}
