@@ -1,4 +1,3 @@
-
 import { CronJob } from "@/lib/types";
 import {
   Table,
@@ -8,14 +7,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { EditJobModal } from "./EditJobModal"; 
-import { useEffect, useState } from "react";
-import { BatchJobsActions } from "./BatchJobsActions";
-import { JobRowDisplay } from "./JobRowDisplay";
-import { toast } from "@/components/ui/use-toast";
+import { StatusBadge } from "@/components/ui/status-badge";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { Button } from "@/components/ui/button";
+import { ChevronRight, Play, Edit as EditIcon } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useEffect, useState } from "react";
+import { BatchJobsActions } from "./BatchJobsActions";
+import { EditJobModal } from "./EditJobModal";
+import { Edit, MoreVertical, Copy, Trash2 } from "lucide-react";
 
 dayjs.extend(relativeTime);
 
@@ -47,7 +60,7 @@ export function JobsTable({
   showLastRun = true,
   showNextRun = true,
   onEditJob,
-}: JobsTableProps) {
+}: JobsTableProps & { onEditJob?: (job: CronJob) => void }) {
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [editModalJob, setEditModalJob] = useState<CronJob | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -116,8 +129,6 @@ export function JobsTable({
     });
   };
 
-  const showCheckbox = !!(onExportJobs || onBatchDeleteJobs);
-
   return (
     <div className="space-y-4">
       {(onExportJobs || onImportJobs || onBatchDeleteJobs) && (
@@ -137,7 +148,7 @@ export function JobsTable({
         <Table className="min-w-[600px]">
           <TableHeader>
             <TableRow>
-              {showCheckbox && (
+              {(onExportJobs || onBatchDeleteJobs) && (
                 <TableHead className="w-[40px]">
                   <Checkbox 
                     checked={jobs.length > 0 && selectedJobIds.length === jobs.length} 
@@ -158,37 +169,157 @@ export function JobsTable({
           <TableBody>
             {jobs.length === 0 ? (
               <TableRow>
-                <TableCell 
-                  colSpan={
-                    (showCheckbox ? 1 : 0) + 
-                    3 + 
-                    (showLastRun ? 1 : 0) + 
-                    (showNextRun ? 1 : 0) + 
-                    1
-                  } 
-                  className="text-center py-6 text-muted-foreground"
-                >
+                <TableCell colSpan={(onExportJobs || onBatchDeleteJobs) ? (showLastRun && showNextRun ? 7 : showLastRun || showNextRun ? 6 : 5) : (showLastRun && showNextRun ? 6 : showLastRun || showNextRun ? 5 : 4)} className="text-center py-6 text-muted-foreground">
                   No jobs found
                 </TableCell>
               </TableRow>
             ) : (
-              jobs.map((job) => (
-                <JobRowDisplay
-                  key={job.id}
-                  job={job}
-                  isSelected={selectedJobIds.includes(job.id)}
-                  onSelect={handleSelectJob}
-                  onViewDetails={handleViewDetails}
-                  onToggleStatus={onToggleStatus}
-                  onDeleteJob={onDeleteJob}
-                  onDuplicateJob={onDuplicateJob}
-                  onTriggerJob={onTriggerJob}
-                  onEditJob={handleEdit}
-                  showCheckbox={showCheckbox}
-                  showLastRun={showLastRun}
-                  showNextRun={showNextRun}
-                />
-              ))
+              jobs.map((job) => {
+                return (
+                  <TableRow key={job.id}>
+                    {(onExportJobs || onBatchDeleteJobs) && (
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedJobIds.includes(job.id)} 
+                          onCheckedChange={(checked) => handleSelectJob(job.id, checked === true)}
+                          aria-label={`Select job ${job.name}`}
+                        />
+                      </TableCell>
+                    )}
+                    <TableCell className="font-medium">
+                      <div className="font-medium">{job.name}</div>
+                      <div className="text-xs text-muted-foreground md:hidden">
+                        {job.schedule}
+                      </div>
+                      {showLastRun && (
+                        <div className="text-xs text-muted-foreground md:hidden">
+                          Last: {job.lastRun 
+                            ? dayjs(job.lastRun).format("MM/DD HH:mm") 
+                            : "Never"}
+                        </div>
+                      )}
+                      {showNextRun && (
+                        <div className="text-xs text-muted-foreground md:hidden">
+                          Next: {job.nextRun 
+                            ? dayjs(job.nextRun).format("MM/DD HH:mm") 
+                            : "Not scheduled"}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <code className="bg-muted text-xs px-1 py-0.5 rounded">
+                        {job.schedule}
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={job.status} />
+                    </TableCell>
+                    {showLastRun && (
+                      <TableCell className="hidden md:table-cell">
+                        {job.lastRun ? (
+                          <div>
+                            <div className="text-xs text-muted-foreground">
+                              {dayjs(job.lastRun).format("MMM DD, YYYY - HH:mm")}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {dayjs(job.lastRun).fromNow()}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Never
+                          </span>
+                        )}
+                      </TableCell>
+                    )}
+                    {showNextRun && (
+                      <TableCell className="hidden md:table-cell">
+                        {job.nextRun ? (
+                          <div>
+                            <div className="text-xs text-muted-foreground">
+                              {dayjs(job.nextRun).format("MMM DD, YYYY - HH:mm")}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {dayjs(job.nextRun).fromNow()}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            Not scheduled
+                          </span>
+                        )}
+                      </TableCell>
+                    )}
+                    <TableCell className="text-right flex justify-end items-center gap-2 flex-wrap">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleViewDetails(job)}
+                        className="hidden sm:inline-flex"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+
+                      <div className="flex items-center gap-2">
+                        {onTriggerJob && onTriggerJob(job.id)}
+                        {onToggleStatus(job.id)}
+                        <div className="relative group">
+                          <Button variant="ghost" size="icon" aria-label="Open actions menu for job">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                          <div className="absolute right-0 mt-2 w-36 rounded-md border border-muted bg-background shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                            <button
+                              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
+                              onClick={() => {
+                                if (onTriggerJob) onTriggerJob(job.id);
+                              }}
+                            >
+                              <Play className="w-4 h-4" />
+                              Activate
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
+                              onClick={() => {
+                                handleEdit(job);
+                              }}
+                            >
+                              <EditIcon className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-muted/50"
+                              onClick={() => {
+                                if (onDuplicateJob) onDuplicateJob(job.id);
+                              }}
+                            >
+                              <Copy className="w-4 h-4" />
+                              Duplicate
+                            </button>
+                            <button
+                              className="flex items-center gap-2 w-full text-left px-3 py-2 text-destructive hover:bg-destructive/10"
+                              onClick={() => {
+                                if (onDeleteJob) onDeleteJob(job.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(job)}
+                        className="sm:hidden w-full mt-1"
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
