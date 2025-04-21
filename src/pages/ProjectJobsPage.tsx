@@ -1097,7 +1097,7 @@ export default function ProjectJobsPage() {
                                     )}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => handleDuplicateJob(job.id)}
+                                    onClick={() => handleEditJob(job)}
                                     className="flex items-center cursor-pointer"
                                   >
                                     <FileEdit className="mr-2 h-4 w-4" />
