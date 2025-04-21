@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -312,41 +311,6 @@ function JobListItem({ job, projectName, isSelected, onSelect }: {
         </div>
       </div>
     </button>
-  );
-}
-
-function StatsCard({ 
-  title,
-  value,
-  color = "blue",
-  icon: Icon = Activity
-}: {
-  title: string;
-  value: number;
-  color?: "blue" | "green" | "red" | "gray";
-  icon?: React.ComponentType<{ className?: string }>;
-}) {
-  const colorClasses = {
-    blue: "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
-    green: "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400",
-    red: "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400",
-    gray: "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
-  };
-  
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-1">{title}</p>
-            <p className="text-3xl font-bold">{value}</p>
-          </div>
-          <div className={`p-2 rounded-full ${colorClasses[color]}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
