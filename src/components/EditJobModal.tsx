@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CronJob } from "@/lib/types";
+import { CronJob, JobStatus } from "@/lib/types";
 
 interface EditJobModalProps {
   open: boolean;
@@ -22,7 +22,7 @@ interface EditJobModalProps {
 export function EditJobModal({ open, job, onClose, onSubmit }: EditJobModalProps) {
   const [name, setName] = useState("");
   const [schedule, setSchedule] = useState("");
-  const [status, setStatus] = useState<CronJob["status"]>("active");
+  const [status, setStatus] = useState<JobStatus>("active");
 
   useEffect(() => {
     if (job) {
@@ -78,7 +78,7 @@ export function EditJobModal({ open, job, onClose, onSubmit }: EditJobModalProps
               <select
                 className="w-full border rounded px-2 py-1"
                 value={status}
-                onChange={e => setStatus(e.target.value as CronJob["status"])}
+                onChange={e => setStatus(e.target.value as JobStatus)}
               >
                 <option value="active">Active</option>
                 <option value="paused">Paused</option>
