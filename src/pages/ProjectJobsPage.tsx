@@ -46,6 +46,7 @@ import {
   Pause,
   Copy,
   Trash2,
+  FileEdit,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -1061,7 +1062,7 @@ export default function ProjectJobsPage() {
                                     onClick={() => handleDuplicateJob(job.id)}
                                     className="flex items-center cursor-pointer"
                                   >
-                                    <Copy className="mr-2 h-4 w-4" />
+                                    <FileEdit className="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
