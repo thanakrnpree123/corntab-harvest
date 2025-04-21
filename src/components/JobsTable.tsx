@@ -105,19 +105,18 @@ export function JobsTable({
   };
 
   const handleCloseEditModal = () => {
-    // Use a longer timeout to ensure the modal is fully closed before resetting state
-    // This helps prevent issues with event handling
-    setTimeout(() => {
-      setEditModalOpen(false);
-      // Add a second timeout to ensure state is fully reset after modal animations complete
-      setTimeout(() => {
-        setEditModalJob(null);
-      }, 300);
-    }, 100);
+    // ปิด modal ก่อน โดยไม่ต้องรอ timeout
+    setEditModalOpen(false);
+    // รีเซ็ตข้อมูล job เมื่อ modal ปิดเสร็จสมบูรณ์
+    setEditModalJob(null);
   };
 
   const handleSubmitEdit = (updatedJob: CronJob) => {
-    handleCloseEditModal();
+    // ปิด modal ก่อน
+    setEditModalOpen(false);
+    // รีเซ็ตข้อมูล job
+    setEditModalJob(null);
+    // ดำเนินการแก้ไข
     if (onEditJob) {
       onEditJob(updatedJob);
     }
@@ -204,12 +203,14 @@ export function JobsTable({
           </TableBody>
         </Table>
       </div>
-      <EditJobModal
-        open={editModalOpen}
-        job={editModalJob}
-        onClose={handleCloseEditModal}
-        onSubmit={handleSubmitEdit}
-      />
+      {editModalJob && (
+        <EditJobModal
+          open={editModalOpen}
+          job={editModalJob}
+          onClose={handleCloseEditModal}
+          onSubmit={handleSubmitEdit}
+        />
+      )}
     </div>
   );
 }
