@@ -57,10 +57,11 @@ export default function JobsPage() {
   const [isJobActionInProgress, setIsJobActionInProgress] = useState<{
     [key: string]: boolean;
   }>({});
-  const { toast } = useToast();
+  const [projectSearch, setProjectSearch] = useState("");
   const [isProjectLoading, setIsProjectLoading] = useState(false);
 
-  // Filters
+  const { toast } = useToast();
+
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [sortBy, setSortBy] = useState<string>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -127,7 +128,7 @@ export default function JobsPage() {
   const handleBatchDelete = async (projectIds: string[]) => {
     try {
       for (const projectId of projectIds) {
-        await apiService.deleteProject(projectId); // ← ใช้ API ของคุณ
+        await apiService.deleteProject(projectId);
       }
       setSelectedProjectIds([]);
     } catch (error) {
@@ -135,7 +136,6 @@ export default function JobsPage() {
     }
   };
 
-  // Fetch projects
   const { data: projects = [], refetch: refetchProjects } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
@@ -145,7 +145,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockProjects();
       } catch (error) {
         console.warn("Using mock projects due to API error:", error);
@@ -156,19 +155,19 @@ export default function JobsPage() {
     },
   });
 
-  // Set first project as selected by default if none is selected
-  useEffect(() => {
-    if (projects.length > 0 && !selectedProjectId) {
-      setSelectedProjectId(projects[0].id);
-    }
-  }, [projects, selectedProjectId]);
+  const filteredProjects =
+    projectSearch.trim().length > 0
+      ? projects.filter(
+          (project) =>
+            project.name.toLowerCase().includes(projectSearch.toLowerCase()) ||
+            (project.description &&
+              project.description
+                .toLowerCase()
+                .includes(projectSearch.toLowerCase()))
+        )
+      : projects;
 
-  // Fetch jobs based on selected project
-  const {
-    data: jobs = [],
-    isLoading: isLoadingJobs,
-    refetch: refetchJobs,
-  } = useQuery({
+  const { data: jobs = [], isLoading: isLoadingJobs, refetch: refetchJobs } = useQuery({
     queryKey: ["jobs", selectedProjectId],
     queryFn: async () => {
       if (!selectedProjectId) return [];
@@ -178,7 +177,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getMockJobs(selectedProjectId);
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -188,7 +186,6 @@ export default function JobsPage() {
     enabled: !!selectedProjectId,
   });
 
-  // Fetch all jobs for import/export functionality
   const { data: allJobs = [], refetch: refetchAllJobs } = useQuery({
     queryKey: ["jobs"],
     queryFn: async () => {
@@ -197,7 +194,6 @@ export default function JobsPage() {
         if (response.success && response.data) {
           return response.data;
         }
-        // If not successful, use mock data
         return getAllMockJobs();
       } catch (error) {
         console.warn("Using mock jobs due to API error:", error);
@@ -206,9 +202,7 @@ export default function JobsPage() {
     },
   });
 
-  // Filter jobs based on search query and other filters
   const filteredJobs = jobs.filter((job) => {
-    // 1. Search query filter
     const searchMatch =
       !searchQuery ||
       job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -216,10 +210,8 @@ export default function JobsPage() {
       job.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.endpoint.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // 2. Status filter
     const statusMatch = statusFilter === "all" || job.status === statusFilter;
 
-    // 3. Date filter
     let dateMatch = true;
     const jobDate = new Date(job.createdAt);
 
@@ -240,7 +232,6 @@ export default function JobsPage() {
     return searchMatch && statusMatch && dateMatch;
   });
 
-  // Sort filtered jobs
   const sortedJobs = [...filteredJobs].sort((a, b) => {
     let comparison = 0;
 
@@ -256,7 +247,6 @@ export default function JobsPage() {
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
       case "lastRun":
-        // Handle null values
         if (!a.lastRun && !b.lastRun) comparison = 0;
         else if (!a.lastRun) comparison = 1;
         else if (!b.lastRun) comparison = -1;
@@ -311,7 +301,6 @@ export default function JobsPage() {
             description: "ลบโปรเจคเรียบร้อยแล้ว",
           });
 
-          // Select another project if the current one was deleted
           if (selectedProjectId === projectId) {
             const remainingProjects = projects.filter(
               (p) => p.id !== projectId,
@@ -332,7 +321,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
 
-          // Mock delete for demo
           mockDeleteProject(projectId);
           refetchProjects();
           refetchAllJobs();
@@ -345,7 +333,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
 
-        // Mock delete for demo
         mockDeleteProject(projectId);
         refetchProjects();
         refetchAllJobs();
@@ -380,6 +367,17 @@ export default function JobsPage() {
             description: `ไม่สามารถสร้างงาน: ${response.error}`,
             variant: "destructive",
           });
+
+          const mockJob = createMockJob({
+            ...newJobData,
+            id: `mock-${Date.now()}`,
+          });
+          refetchJobs();
+          refetchAllJobs();
+          toast({
+            title: "สร้างข้อมูลทดสอบแล้ว",
+            description: "เนื่องจาก API ไม่พร้อมใช้งาน จึงสร้างข้อมูลทดสอบให้แทน",
+          });
         }
       })
       .catch((error) => {
@@ -389,7 +387,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
 
-        // Create mock data for demo
         const mockJob = createMockJob({
           ...newJobData,
           id: `mock-${Date.now()}`,
@@ -441,7 +438,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
 
-          // If unsuccessful, use mock data
           mockToggleJobStatus(job, newStatus);
           refetchJobs();
           refetchAllJobs();
@@ -454,7 +450,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
 
-        // If unsuccessful, use mock data
         mockToggleJobStatus(job, newStatus);
         refetchJobs();
         refetchAllJobs();
@@ -484,7 +479,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
 
-          // If unsuccessful, use mock data
           mockDeleteJob(jobId);
           refetchJobs();
           refetchAllJobs();
@@ -497,7 +491,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
 
-        // If unsuccessful, use mock data
         mockDeleteJob(jobId);
         refetchJobs();
         refetchAllJobs();
@@ -530,7 +523,6 @@ export default function JobsPage() {
             variant: "destructive",
           });
 
-          // If unsuccessful, use mock data
           mockDuplicateJob(job);
           refetchJobs();
           refetchAllJobs();
@@ -543,7 +535,6 @@ export default function JobsPage() {
           variant: "destructive",
         });
 
-        // If unsuccessful, use mock data
         mockDuplicateJob(job);
         refetchJobs();
         refetchAllJobs();
@@ -554,7 +545,6 @@ export default function JobsPage() {
   };
 
   const handleImportJobs = (importedJobs: Partial<CronJob>[]) => {
-    // Add the current projectId to all imported jobs
     const jobsWithProject = importedJobs.map((job) => ({
       ...job,
       projectId: selectedProjectId,
@@ -565,7 +555,6 @@ export default function JobsPage() {
     let successCount = 0;
     let failCount = 0;
 
-    // Create each job one by one
     const createPromises = jobsWithProject.map((job) =>
       apiService
         .createJob(job as any)
@@ -575,7 +564,6 @@ export default function JobsPage() {
           return response;
         })
         .catch(() => {
-          // If unsuccessful, use mock data for demo
           mockImportJob(job);
           successCount++;
           return { success: true };
@@ -607,11 +595,9 @@ export default function JobsPage() {
     let failCount = 0;
     let newSelectedProjectId = selectedProjectId;
 
-    // Create each project and its jobs
     const importProjects = async () => {
       for (const projectWithJobs of projectsWithJobs) {
         try {
-          // Create the project
           const projectData = {
             name: projectWithJobs.name,
             description: projectWithJobs.description,
@@ -622,12 +608,10 @@ export default function JobsPage() {
           if (projectResponse.success && projectResponse.data) {
             const newProjectId = projectResponse.data.id;
 
-            // If this is the first successful import, select it
             if (successCount === 0) {
               newSelectedProjectId = newProjectId;
             }
 
-            // Create jobs for this project
             if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
               for (const job of projectWithJobs.jobs) {
                 const jobData = {
@@ -639,7 +623,6 @@ export default function JobsPage() {
                   await apiService.createJob(jobData as any);
                 } catch (error) {
                   console.error("Error creating job:", error);
-                  // Create mock job for demo
                   mockImportJob({
                     ...jobData,
                     projectId: newProjectId,
@@ -651,22 +634,18 @@ export default function JobsPage() {
             successCount++;
           } else {
             failCount++;
-            // Create mock project for demo
             mockImportProject(projectWithJobs);
           }
         } catch (error) {
           failCount++;
           console.error("Error importing project:", error);
-          // Create mock project for demo
           mockImportProject(projectWithJobs);
         }
       }
 
-      // Refresh data
       await refetchProjects();
       await refetchAllJobs();
 
-      // Set newly selected project
       if (newSelectedProjectId !== selectedProjectId) {
         setSelectedProjectId(newSelectedProjectId);
       }
@@ -686,7 +665,6 @@ export default function JobsPage() {
     });
   };
 
-  // Clear all filters
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("all");
@@ -696,7 +674,6 @@ export default function JobsPage() {
     setIsFilterOpen(false);
   };
 
-  // Active filter count
   const activeFiltersCount = [
     statusFilter !== "all",
     dateFilter !== "all",
@@ -717,7 +694,6 @@ export default function JobsPage() {
               <FolderPlus className="mr-2 h-4 w-4" />
               สร้างโปรเจคใหม่
             </Button>
-
             <ProjectExportImport
               projects={projects}
               jobs={allJobs}
@@ -733,6 +709,15 @@ export default function JobsPage() {
           </div>
         </div>
 
+        <div className="flex flex-row w-full justify-end mb-1">
+          <Input
+            placeholder="ค้นหาโปรเจค..."
+            className="w-full md:w-80"
+            value={projectSearch}
+            onChange={(e) => setProjectSearch(e.target.value)}
+          />
+        </div>
+
         {isProjectLoading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -740,12 +725,12 @@ export default function JobsPage() {
               กำลังโหลดโปรเจค...
             </span>
           </div>
-        ) : projects.length > 0 ? (
+        ) : filteredProjects.length > 0 ? (
           <div className="space-y-6">
             <Card>
               <CardContent className="p-0">
                 <ProjectsTable
-                  projects={projects}
+                  projects={filteredProjects}
                   onAddJob={(projectId) => {
                     setSelectedProjectId(projectId);
                     setIsCreateModalOpen(true);
@@ -757,287 +742,8 @@ export default function JobsPage() {
                   onSelectProject={handleSelectProject}
                   onSelectAllProjects={handleSelectAllProjects}
                 />
-                {/* <JobsPageWithFilter
-                  allProjects={projects}
-                  onAddJob={(projectId) => {
-                    setSelectedProjectId(projectId);
-                    setIsCreateModalOpen(true);
-                  }}
-                  onDeleteProject={handleDeleteProject}
-                  onViewJobs={setSelectedProjectId}
-                  selectedProjectId={selectedProjectId}
-                  selectedProjectIds={selectedProjectIds}
-                  onSelectProject={handleSelectProject}
-                  onSelectAllProjects={handleSelectAllProjects}
-                /> */}
-
               </CardContent>
             </Card>
-
-            {/* {selectedProjectId && (
-                <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 space-y-2 md:space-y-0">
-                      <div className="flex gap-2">
-                        <Input
-                          className="md:w-[200px]"
-                          placeholder="ค้นหางาน..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-
-                        <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="flex items-center gap-1">
-                              <Filter className="h-4 w-4" />
-                              <span>ตัวกรอง</span>
-                              {activeFiltersCount > 0 && (
-                                <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center">
-                                  {activeFiltersCount}
-                                </Badge>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[240px] p-4">
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm">สถานะ</h4>
-                                <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as any)}>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="เลือกสถานะ" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">ทั้งหมด</SelectItem>
-                                    <SelectItem value="idle">ว่าง</SelectItem>
-                                    <SelectItem value="running">กำลังทำงาน</SelectItem>
-                                    <SelectItem value="success">สำเร็จ</SelectItem>
-                                    <SelectItem value="failed">ล้มเหลว</SelectItem>
-                                    <SelectItem value="paused">หยุดชั่วคราว</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm">วันที่สร้าง</h4>
-                                <Select value={dateFilter} onValueChange={(val) => setDateFilter(val as any)}>
-                                  <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="เลือกช่วงเวลา" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">ทั้งหมด</SelectItem>
-                                    <SelectItem value="today">วันนี้</SelectItem>
-                                    <SelectItem value="week">7 วันที่ผ่านมา</SelectItem>
-                                    <SelectItem value="month">30 วันที่ผ่านมา</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              <Separator />
-
-                              <div className="space-y-2">
-                                <h4 className="font-medium text-sm">เรียงตาม</h4>
-                                <div className="flex gap-2">
-                                  <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger className="w-full">
-                                      <SelectValue placeholder="เรียงตาม" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="name">ชื่อ</SelectItem>
-                                      <SelectItem value="status">สถานะ</SelectItem>
-                                      <SelectItem value="date">วันที่สร้าง</SelectItem>
-                                      <SelectItem value="lastRun">รันล่าสุด</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-
-                                  <Select value={sortOrder} onValueChange={(val) => setSortOrder(val as any)}>
-                                    <SelectTrigger className="w-[80px]">
-                                      <SelectValue placeholder="ลำดับ" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="asc">A-Z</SelectItem>
-                                      <SelectItem value="desc">Z-A</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-
-                              <Button
-                                className="w-full"
-                                variant="outline"
-                                onClick={handleClearFilters}
-                              >
-                                ล้างตัวกรอง
-                              </Button>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-
-                      <Button onClick={() => setIsCreateModalOpen(true)}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        เพิ่มงาน
-                      </Button>
-                    </div>
-
-                    {jobs.length > 0 && (
-                      <JobExportImport jobs={jobs} onImport={handleImportJobs} />
-                    )}
-                  </div>
-
-                  <Card>
-                    <CardContent className="p-0">
-                      {isLoadingJobs ? (
-                        <div className="flex items-center justify-center p-8">
-                          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                          <span className="ml-2 text-muted-foreground">กำลังโหลดงาน...</span>
-                        </div>
-                      ) : (
-                        sortedJobs.length > 0 ? (
-                          <JobsTable
-                            jobs={sortedJobs}
-                            onViewDetails={handleViewJobDetails}
-                            onToggleStatus={(jobId) => {
-                              const job = jobs.find(j => j.id === jobId);
-                              if (!job) return null;
-
-                              if (isJobActionInProgress[jobId]) {
-                                return <Button variant="outline" size="sm" disabled>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Please wait
-                                </Button>;
-                              }
-
-                              // Determine the action based on current status
-                              const action = job.status === "paused" ? "activate" : "pause";
-                              const ActionDialog = ({ onConfirm }: { onConfirm: () => void }) => (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      variant={action === "pause" ? "outline" : "default"}
-                                      size="sm"
-                                    >
-                                      {action === "pause" ? "Pause" : "Activate"}
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
-                                        {action === "pause" ? "Pause Job" : "Activate Job"}
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        {action === "pause"
-                                          ? `Are you sure you want to pause "${job.name}"? The job will not run until you activate it again.`
-                                          : `Are you sure you want to activate "${job.name}"? The job will start running according to its schedule.`}
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={onConfirm}>
-                                        {action === "pause" ? "Pause" : "Activate"}
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              );
-
-                              return (
-                                <ActionDialog
-                                  onConfirm={() => toggleJobStatus(jobId)}
-                                />
-                              );
-                            }}
-                            onDuplicateJob={(jobId) => {
-                              const job = jobs.find(j => j.id === jobId);
-                              if (!job) return null;
-
-                              if (isJobActionInProgress[jobId]) {
-                                return <Button variant="outline" size="sm" disabled>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Please wait
-                                </Button>;
-                              }
-
-                              return (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Duplicate
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Duplicate Job</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to duplicate "{job.name}"?
-                                        A new job will be created with the same settings.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDuplicateJob(jobId)}>
-                                        Duplicate
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              );
-                            }}
-                            onDeleteJob={(jobId) => {
-                              const job = jobs.find(j => j.id === jobId);
-                              if (!job) return null;
-
-                              if (isJobActionInProgress[jobId]) {
-                                return <Button variant="destructive" size="sm" disabled>
-                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Please wait
-                                </Button>;
-                              }
-
-                              return (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">Delete</Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Job</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to delete "{job.name}"? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() => handleDeleteJob(jobId)}
-                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      >
-                                        Delete
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              );
-                            }}
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center p-8 text-center">
-                            <p className="text-muted-foreground mb-4">
-                              {searchQuery || statusFilter !== "all" || dateFilter !== "all"
-                                ? "ไม่พบงานที่ตรงกับเงื่อนไขการค้นหา"
-                                : "ไม่พบงานในโปรเจคนี้"}
-                            </p>
-                            <Button onClick={() => setIsCreateModalOpen(true)}>
-                              <PlusCircle className="mr-2 h-4 w-4" />
-                              สร้างงานแรก
-                            </Button>
-                          </div>
-                        )
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
-              )} */}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center p-8 text-center bg-muted/30 rounded-lg border">
@@ -1078,8 +784,6 @@ export default function JobsPage() {
     </PageLayout>
   );
 }
-
-// Mock functions for UI testing
 
 function getMockProjects(): Project[] {
   return [
@@ -1234,12 +938,10 @@ function getMockJobs(projectId: string): CronJob[] {
     },
   ];
 
-  // Return only jobs for the selected project
   return baseJobs.filter((job) => job.projectId === projectId);
 }
 
 function createMockJob(jobData: Partial<CronJob>): CronJob {
-  // Store in localStorage for mock persistence
   const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
 
   const newJob = {
@@ -1263,7 +965,6 @@ function createMockJob(jobData: Partial<CronJob>): CronJob {
 }
 
 function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
-  // Update mock job in localStorage
   const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
   const updatedJobs = mockJobs.map((j: CronJob) =>
     j.id === job.id ? { ...j, status: newStatus } : j,
@@ -1272,21 +973,18 @@ function mockToggleJobStatus(job: CronJob, newStatus: JobStatus) {
 }
 
 function mockDeleteJob(jobId: string) {
-  // Remove mock job from localStorage
   const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
   const updatedJobs = mockJobs.filter((j: CronJob) => j.id !== jobId);
   localStorage.setItem("mockJobs", JSON.stringify(updatedJobs));
 }
 
 function mockDeleteProject(projectId: string) {
-  // Remove project and its jobs from localStorage
   const mockProjects = JSON.parse(localStorage.getItem("mockProjects") || "[]");
   const updatedProjects = mockProjects.filter(
     (p: Project) => p.id !== projectId,
   );
   localStorage.setItem("mockProjects", JSON.stringify(updatedProjects));
 
-  // Also remove associated jobs
   const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
   const updatedJobs = mockJobs.filter(
     (j: CronJob) => j.projectId !== projectId,
@@ -1295,7 +993,6 @@ function mockDeleteProject(projectId: string) {
 }
 
 function mockDuplicateJob(job: CronJob) {
-  // Create duplicate in localStorage
   const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
 
   const newJob = {
@@ -1311,7 +1008,6 @@ function mockDuplicateJob(job: CronJob) {
 }
 
 function mockImportJob(job: Partial<CronJob>) {
-  // Add imported job to localStorage
   const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
 
   const newJob = {
@@ -1333,7 +1029,6 @@ function mockImportJob(job: Partial<CronJob>) {
 }
 
 function mockImportProject(projectWithJobs: ProjectWithJobs) {
-  // Add imported project to localStorage
   const mockProjects = JSON.parse(localStorage.getItem("mockProjects") || "[]");
 
   const newProjectId = `project-${Date.now()}`;
@@ -1348,7 +1043,6 @@ function mockImportProject(projectWithJobs: ProjectWithJobs) {
   mockProjects.push(newProject);
   localStorage.setItem("mockProjects", JSON.stringify(mockProjects));
 
-  // Add jobs for this project
   if (projectWithJobs.jobs && projectWithJobs.jobs.length > 0) {
     const mockJobs = JSON.parse(localStorage.getItem("mockJobs") || "[]");
 
@@ -1375,9 +1069,7 @@ function mockImportProject(projectWithJobs: ProjectWithJobs) {
   }
 }
 
-// Helper to calculate next run time based on cron expression
 function getNextRunTime(cronExpression: string): string {
-  // Simple implementation - just add random hours (1-24)
   const hours = Math.floor(Math.random() * 24) + 1;
   return new Date(Date.now() + hours * 3600000).toISOString();
 }
