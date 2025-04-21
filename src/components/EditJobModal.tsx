@@ -39,11 +39,28 @@ export function EditJobModal({ open, job, onClose, onSubmit }: EditJobModalProps
     }
   }, [job]);
 
+  // Reset the form when closed
+  useEffect(() => {
+    if (!open && job) {
+      // Wait for animation to complete before resetting
+      const timeout = setTimeout(() => {
+        setName(job.name);
+        setSchedule(job.schedule);
+        setStatus(job.status);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [open, job]);
+
+  const handleModalClose = () => {
+    onClose();
+  };
+
   if (!job) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={handleModalClose}>
+      <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>แก้ไขงาน</DialogTitle>
           <DialogDescription>
@@ -100,7 +117,7 @@ export function EditJobModal({ open, job, onClose, onSubmit }: EditJobModalProps
             </div>
           </div>
           <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleModalClose}>
               ยกเลิก
             </Button>
             <Button type="submit">บันทึก</Button>
