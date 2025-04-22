@@ -23,9 +23,13 @@ i18n
       }
     },
     fallbackLng: 'en',
-    lng: 'en', // Set default language to English
+    lng: 'en',
     interpolation: {
       escapeValue: false
+    },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage']
     }
   });
 

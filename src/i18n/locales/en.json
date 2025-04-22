@@ -18,7 +18,110 @@
     "loading": "Loading...",
     "noData": "No data found",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "actions": "Actions",
+    "filter": "Filter",
+    "search": "Search",
+    "clearFilters": "Clear Filters ({count})",
+    "status": "Status",
+    "dateRange": "Date Range",
+    "all": "All",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "createNew": "Create New",
+    "back": "Back"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your scheduled jobs",
+    "filterProjects": "Filter projects...",
+    "stats": {
+      "totalJobs": "Total Jobs",
+      "active": "Active",
+      "success": "Success",
+      "failed": "Failed",
+      "paused": "Paused"
+    },
+    "recentJobs": {
+      "title": "Recent Jobs",
+      "noJobs": "No jobs have run yet",
+      "noFailed": "No failed jobs",
+      "noPaused": "No paused jobs"
+    },
+    "selectJob": "Select a job from the list to view details"
+  },
+  "jobs": {
+    "title": "Jobs",
+    "subtitle": "Manage your scheduled jobs",
+    "createNew": "Create New Job",
+    "importExport": "Import/Export",
+    "searchJobs": "Search jobs...",
+    "filterByStatus": "Filter by status",
+    "filterByDate": "Filter by date",
+    "noJobsFound": "No jobs found",
+    "createFirst": "Create your first job",
+    "viewDetails": "View Details",
+    "jobDetails": "Job Details",
+    "schedule": "Schedule",
+    "nextRun": "Next Run",
+    "lastRun": "Last Run",
+    "runCount": "Run Count",
+    "successRate": "Success Rate",
+    "avgRuntime": "Average Runtime",
+    "notifications": "Notifications",
+    "webhook": "Webhook",
+    "deleteConfirm": "Are you sure you want to delete this job?",
+    "pauseConfirm": "Are you sure you want to pause this job?",
+    "resumeConfirm": "Are you sure you want to resume this job?"
+  },
+  "logs": {
+    "title": "Logs",
+    "subtitle": "View job execution history",
+    "filterLogs": "Filter logs",
+    "searchLogs": "Search logs...",
+    "noLogsFound": "No logs found",
+    "clearFilters": "Clear Filters",
+    "status": {
+      "all": "All Status",
+      "success": "Success",
+      "failed": "Failed",
+      "running": "Running"
+    },
+    "duration": "Duration",
+    "output": "Output",
+    "error": "Error",
+    "selectJobPrompt": "Select a job to view its logs",
+    "loadingLogs": "Loading logs...",
+    "refreshLogs": "Refresh Logs",
+    "logCount": "{count} logs",
+    "filterResults": "Showing {shown} of {total} logs"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage system users",
+    "createNew": "Create New User",
+    "searchUsers": "Search users...",
+    "noUsersFound": "No users found",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "lastActive": "Last Active",
+    "status": "Status",
+    "actions": "Actions",
+    "editUser": "Edit User",
+    "deleteUser": "Delete User",
+    "deleteConfirm": "Are you sure you want to delete this user?",
+    "roles": {
+      "admin": "Administrator",
+      "user": "User",
+      "viewer": "Viewer"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended"
+    }
   },
   "job": {
     "name": "Name",
@@ -59,13 +162,7 @@
     "exportDescription": "Choose export format for {count} projects",
     "close": "Close"
   },
-  "logs": {
-    "history": "History",
-    "jobHistory": "Job History: {name}",
-    "loading": "Loading logs...",
-    "noLogs": "No logs found"
-  },
-  "landing": {
+   "landing": {
     "hero": {
       "title": "Professional Cron Job Management",
       "description": "Manage, monitor, and schedule automated tasks for your team",
@@ -104,24 +201,5 @@
       "help": "Help",
       "allRightsReserved": "All rights reserved"
     }
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Overview of your scheduled jobs",
-    "filterProjects": "Filter projects...",
-    "stats": {
-      "totalJobs": "Total Jobs",
-      "active": "Active",
-      "success": "Success",
-      "failed": "Failed",
-      "paused": "Paused"
-    },
-    "recentJobs": {
-      "title": "Recent Jobs",
-      "noJobs": "No jobs have run yet",
-      "noFailed": "No failed jobs",
-      "noPaused": "No paused jobs"
-    },
-    "selectJob": "Select a job from the list to view details"
   }
 }

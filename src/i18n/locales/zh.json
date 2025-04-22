@@ -18,7 +18,19 @@
     "loading": "加载中...",
     "noData": "未找到数据",
     "error": "错误",
-    "success": "成功"
+    "success": "成功",
+    "actions": "操作",
+    "filter": "筛选",
+    "search": "搜索",
+    "clearFilters": "清除筛选 ({count})",
+    "status": "状态",
+    "dateRange": "日期范围",
+    "all": "全部",
+    "today": "今天",
+    "thisWeek": "本周",
+    "thisMonth": "本月",
+    "createNew": "新建",
+    "back": "返回"
   },
   "job": {
     "name": "名称",
@@ -123,5 +135,77 @@
       "noPaused": "没有暂停的任务"
     },
     "selectJob": "从列表中选择任务以查看详情"
+  },
+  "jobs": {
+    "title": "任务",
+    "subtitle": "管理计划任务",
+    "createNew": "创建新任务",
+    "importExport": "导入/导出",
+    "searchJobs": "搜索任务...",
+    "filterByStatus": "按状态筛选",
+    "filterByDate": "按日期筛选",
+    "noJobsFound": "未找到任务",
+    "createFirst": "创建你的第一个任务",
+    "viewDetails": "查看详情",
+    "jobDetails": "任务详情",
+    "schedule": "计划",
+    "nextRun": "下次运行",
+    "lastRun": "上次运行",
+    "runCount": "运行次数",
+    "successRate": "成功率",
+    "avgRuntime": "平均运行时间",
+    "notifications": "通知",
+    "webhook": "网络钩子",
+    "deleteConfirm": "确定要删除此任务吗？",
+    "pauseConfirm": "确定要暂停此任务吗？",
+    "resumeConfirm": "确定要恢复此任务吗？"
+  },
+  "logs": {
+    "title": "日志",
+    "subtitle": "查看任务执行历史",
+    "filterLogs": "筛选日志",
+    "searchLogs": "搜索日志...",
+    "noLogsFound": "未找到日志",
+    "clearFilters": "清除筛选",
+    "status": {
+      "all": "所有状态",
+      "success": "成功",
+      "failed": "失败",
+      "running": "运行中"
+    },
+    "duration": "持续时间",
+    "output": "输出",
+    "error": "错误",
+    "selectJobPrompt": "选择任务以查看日志",
+    "loadingLogs": "正在加载日志...",
+    "refreshLogs": "刷新日志",
+    "logCount": "{count} 条记录",
+    "filterResults": "显示 {shown} 条，共 {total} 条记录"
+  },
+  "users": {
+    "title": "用户",
+    "subtitle": "管理系统用户",
+    "createNew": "创建新用户",
+    "searchUsers": "搜索用户...",
+    "noUsersFound": "未找到用户",
+    "name": "姓名",
+    "email": "邮箱",
+    "role": "角色",
+    "lastActive": "最后活动",
+    "status": "状态",
+    "actions": "操作",
+    "editUser": "编辑用户",
+    "deleteUser": "删除用户",
+    "deleteConfirm": "确定要删除此用户吗？",
+    "roles": {
+      "admin": "管理员",
+      "user": "用户",
+      "viewer": "查看者"
+    },
+    "status": {
+      "active": "活跃",
+      "inactive": "不活跃",
+      "suspended": "已暂停"
+    }
   }
 }
