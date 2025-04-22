@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,14 +14,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
-  // โหลดข้อมูลผู้ใช้จาก localStorage
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     if (userStr) {
@@ -36,16 +37,16 @@ export function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: "Dashboard", href: "/" },
-    { name: "Jobs", href: "/jobs" },
-    { name: "Logs", href: "/logs" },
-    { name: "Users", href: "/users" },
+    { name: t('common.dashboard'), href: "/" },
+    { name: t('common.jobs'), href: "/jobs" },
+    { name: t('common.logs'), href: "/logs" },
+    { name: t('common.users'), href: "/users" },
   ];
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     toast({
-      title: "ออกจากระบบสำเร็จ",
+      title: t('common.logout'),
       description: "คุณได้ออกจากระบบแล้ว",
     });
     navigate("/login");
@@ -54,12 +55,11 @@ export function Navbar() {
   return (
     <header className="border-b">
       <div className="container flex h-14 items-center">
-      <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-            <AlarmClock className="h-6 w-6" />
-            <span>CornTab</span>
-          </Link>
+        <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+          <AlarmClock className="h-6 w-6" />
+          <span>CornTab</span>
+        </Link>
 
-        {/* Desktop menu */}
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mt-[0.45%] ml-[1%]">
           {navLinks.map((link) => (
             <Link
@@ -72,7 +72,6 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* Mobile menu */}
         <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button variant="outline" size="icon">
@@ -97,7 +96,7 @@ export function Navbar() {
         </Sheet>
 
         <div className="flex items-center ml-auto space-x-4">
-          {/* <ThemeSwitcher /> */}
+          <LanguageSwitcher />
           
           {user && (
             <DropdownMenu>
@@ -119,16 +118,16 @@ export function Navbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/users")}>
                   <User className="mr-2 h-4 w-4" />
-                  <span>โปรไฟล์</span>
+                  <span>{t('common.profile')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/settings")}>
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>ตั้งค่า</span>
+                  <span>{t('common.settings')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>ออกจากระบบ</span>
+                  <span>{t('common.logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

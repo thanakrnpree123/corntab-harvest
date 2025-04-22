@@ -1,0 +1,25 @@
+
+{
+  "common": {
+    "dashboard": "仪表板",
+    "jobs": "任务",
+    "logs": "日志",
+    "users": "用户",
+    "settings": "设置",
+    "profile": "个人资料",
+    "logout": "登出"
+  },
+  "job": {
+    "name": "名称",
+    "schedule": "计划",
+    "status": "状态",
+    "lastRun": "上次运行",
+    "nextRun": "下次运行",
+    "actions": "操作",
+    "noJobs": "未找到任务",
+    "edit": "编辑",
+    "delete": "删除",
+    "duplicate": "复制",
+    "trigger": "触发"
+  }
+}

@@ -1,0 +1,25 @@
+
+{
+  "common": {
+    "dashboard": "แดชบอร์ด",
+    "jobs": "งาน",
+    "logs": "บันทึก",
+    "users": "ผู้ใช้",
+    "settings": "ตั้งค่า",
+    "profile": "โปรไฟล์",
+    "logout": "ออกจากระบบ"
+  },
+  "job": {
+    "name": "ชื่อ",
+    "schedule": "กำหนดเวลา",
+    "status": "สถานะ",
+    "lastRun": "รันล่าสุด",
+    "nextRun": "รันถัดไป",
+    "actions": "การดำเนินการ",
+    "noJobs": "ไม่พบงาน",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "duplicate": "ทำซ้ำ",
+    "trigger": "เริ่มทำงาน"
+  }
+}

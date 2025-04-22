@@ -1,0 +1,25 @@
+
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "jobs": "Jobs",
+    "logs": "Logs",
+    "users": "Users",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "job": {
+    "name": "Name",
+    "schedule": "Schedule",
+    "status": "Status",
+    "lastRun": "Last Run",
+    "nextRun": "Next Run",
+    "actions": "Actions",
+    "noJobs": "No jobs found",
+    "edit": "Edit",
+    "delete": "Delete",
+    "duplicate": "Duplicate",
+    "trigger": "Trigger"
+  }
+}

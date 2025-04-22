@@ -15,6 +15,7 @@ import { JobRowDisplay } from "./JobRowDisplay";
 import { toast } from "@/components/ui/use-toast";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useTranslation } from 'react-i18next';
 
 dayjs.extend(relativeTime);
 
@@ -47,6 +48,7 @@ export function JobsTable({
   showNextRun = true,
   onEditJob,
 }: JobsTableProps) {
+  const { t } = useTranslation();
   const [selectedJobIds, setSelectedJobIds] = useState<string[]>([]);
   const [editModalJob, setEditModalJob] = useState<CronJob | null>(null);
 
@@ -148,16 +150,16 @@ export function JobsTable({
                   />
                 </TableHead>
               )}
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden md:table-cell">Schedule</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>{t('job.name')}</TableHead>
+              <TableHead className="hidden md:table-cell">{t('job.schedule')}</TableHead>
+              <TableHead>{t('job.status')}</TableHead>
               {showLastRun && (
-                <TableHead className="hidden md:table-cell">Last Run</TableHead>
+                <TableHead className="hidden md:table-cell">{t('job.lastRun')}</TableHead>
               )}
               {showNextRun && (
-                <TableHead className="hidden md:table-cell">Next Run</TableHead>
+                <TableHead className="hidden md:table-cell">{t('job.nextRun')}</TableHead>
               )}
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">{t('job.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,7 +175,7 @@ export function JobsTable({
                   }
                   className="text-center py-6 text-muted-foreground"
                 >
-                  No jobs found
+                  {t('job.noJobs')}
                 </TableCell>
               </TableRow>
             ) : (
