@@ -23,6 +23,7 @@ i18n
       }
     },
     fallbackLng: 'en',
+    lng: 'en', // Set default language to English
     interpolation: {
       escapeValue: false
     }

@@ -7,7 +7,19 @@
     "users": "Users",
     "settings": "Settings",
     "profile": "Profile",
-    "logout": "Logout"
+    "logout": "Logout",
+    "search": "Search",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "close": "Close",
+    "view": "View Details",
+    "loading": "Loading...",
+    "noData": "No data found",
+    "error": "Error",
+    "success": "Success"
   },
   "job": {
     "name": "Name",
@@ -20,6 +32,38 @@
     "edit": "Edit",
     "delete": "Delete",
     "duplicate": "Duplicate",
-    "trigger": "Trigger"
+    "trigger": "Trigger",
+    "viewDetails": "View Job Details",
+    "addNew": "Add New Job",
+    "deleteConfirm": "Are you sure you want to delete this job?",
+    "deleteSuccess": "Job deleted successfully",
+    "editSuccess": "Job updated successfully",
+    "addSuccess": "Job added successfully"
+  },
+  "project": {
+    "name": "Project Name",
+    "description": "Description",
+    "created": "Created Date",
+    "jobCount": "Job Count",
+    "noProjects": "No projects found",
+    "search": "Search projects...",
+    "jobs": "jobs",
+    "loadingJobs": "Loading jobs...",
+    "noJobsFound": "No jobs found in this project",
+    "addJob": "Add Job",
+    "deleteProject": "Delete Project",
+    "deleteConfirm": "Are you sure you want to delete this project? All jobs within this project will also be deleted.",
+    "delete": "Delete Project",
+    "deleteSelected": "Delete Selected",
+    "export": "Export",
+    "exportTitle": "Export Project Data",
+    "exportDescription": "Choose export format for {count} projects",
+    "close": "Close"
+  },
+  "logs": {
+    "history": "History",
+    "jobHistory": "Job History: {name}",
+    "loading": "Loading logs...",
+    "noLogs": "No logs found"
   }
 }

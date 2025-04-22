@@ -7,7 +7,19 @@
     "users": "用户",
     "settings": "设置",
     "profile": "个人资料",
-    "logout": "登出"
+    "logout": "登出",
+    "search": "搜索",
+    "add": "添加",
+    "edit": "编辑",
+    "delete": "删除",
+    "cancel": "取消",
+    "save": "保存",
+    "close": "关闭",
+    "view": "查看详情",
+    "loading": "加载中...",
+    "noData": "未找到数据",
+    "error": "错误",
+    "success": "成功"
   },
   "job": {
     "name": "名称",
@@ -20,6 +32,38 @@
     "edit": "编辑",
     "delete": "删除",
     "duplicate": "复制",
-    "trigger": "触发"
+    "trigger": "触发",
+    "viewDetails": "查看任务详情",
+    "addNew": "添加新任务",
+    "deleteConfirm": "确定要删除这个任务吗？",
+    "deleteSuccess": "任务删除成功",
+    "editSuccess": "任务更新成功",
+    "addSuccess": "任务添加成功"
+  },
+  "project": {
+    "name": "项目名称",
+    "description": "描述",
+    "created": "创建日期",
+    "jobCount": "任务数量",
+    "noProjects": "未找到项目",
+    "search": "搜索项目...",
+    "jobs": "任务",
+    "loadingJobs": "加载任务中...",
+    "noJobsFound": "该项目中未找到任务",
+    "addJob": "添加任务",
+    "deleteProject": "删除项目",
+    "deleteConfirm": "确定要删除这个项目吗？项目中的所有任务都将被删除。",
+    "delete": "删除项目",
+    "deleteSelected": "删除选中",
+    "export": "导出",
+    "exportTitle": "导出项目数据",
+    "exportDescription": "为 {count} 个项目选择导出格式",
+    "close": "关闭"
+  },
+  "logs": {
+    "history": "历史记录",
+    "jobHistory": "任务历史: {name}",
+    "loading": "加载日志中...",
+    "noLogs": "未找到日志"
   }
 }
