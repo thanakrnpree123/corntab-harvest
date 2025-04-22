@@ -1,4 +1,3 @@
-
 {
   "common": {
     "dashboard": "Dashboard",
@@ -65,5 +64,64 @@
     "jobHistory": "Job History: {name}",
     "loading": "Loading logs...",
     "noLogs": "No logs found"
+  },
+  "landing": {
+    "hero": {
+      "title": "Professional Cron Job Management",
+      "description": "Manage, monitor, and schedule automated tasks for your team",
+      "getStarted": "Get Started Free",
+      "watchDemo": "Watch Demo"
+    },
+    "features": {
+      "title": "Key Features",
+      "scheduling": {
+        "title": "Automated Scheduling",
+        "description": "Use Cron expressions to set complex schedules for your tasks - hourly, daily, or custom patterns"
+      },
+      "monitoring": {
+        "title": "Tracking and Notifications",
+        "description": "View job history, check errors, and receive notifications when jobs succeed or fail for quick troubleshooting"
+      },
+      "projects": {
+        "title": "Project Management",
+        "description": "Group jobs by project to help your team manage and track tasks more efficiently"
+      },
+      "history": {
+        "title": "Job History",
+        "description": "Keep complete job history for auditing and analysis, with smart search to find what you need quickly"
+      }
+    },
+    "cta": {
+      "title": "Start Using CornTab Today",
+      "description": "Reduce time spent managing repetitive tasks and boost team efficiency",
+      "startFree": "Start Free",
+      "contactSales": "Contact Sales"
+    },
+    "footer": {
+      "about": "Professional cron job management service for your team",
+      "products": "Products",
+      "company": "Company",
+      "help": "Help",
+      "allRightsReserved": "All rights reserved"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your scheduled jobs",
+    "filterProjects": "Filter projects...",
+    "stats": {
+      "totalJobs": "Total Jobs",
+      "active": "Active",
+      "success": "Success",
+      "failed": "Failed",
+      "paused": "Paused"
+    },
+    "recentJobs": {
+      "title": "Recent Jobs",
+      "noJobs": "No jobs have run yet",
+      "noFailed": "No failed jobs",
+      "noPaused": "No paused jobs"
+    },
+    "selectJob": "Select a job from the list to view details"
   }
 }

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/PageLayout";
 import { apiService } from "@/lib/api-service";
+import { useTranslation } from 'react-i18next';
 import { CronJob, Project } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { JobDashboardDetail } from "@/components/JobDashboardDetail";
@@ -45,6 +46,7 @@ import { RecentJobsList } from "@/components/RecentJobsList";
 export default function Index() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -127,8 +129,8 @@ export default function Index() {
       <div className="grid gap-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Overview of your scheduled jobs</p>
+            <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
+            <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -136,7 +138,7 @@ export default function Index() {
               <Filter className="h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="ค้นหาโปรเจค..."
+                placeholder={t('dashboard.filterProjects')}
                 className="px-2 py-1 text-sm border rounded-md"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -163,25 +165,25 @@ export default function Index() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-          <StatsCard title="Total Jobs" value={jobStats.total} />
-          <StatsCard title="Active" value={jobStats.active} />
-          <StatsCard title="Success" value={jobStats.success} color="green" icon={CheckCircle} />
-          <StatsCard title="Failed" value={jobStats.failed} color="red" icon={AlertTriangle} />
-          <StatsCard title="Paused" value={jobStats.paused} color="gray" />
+          <StatsCard title={t('dashboard.stats.totalJobs')} value={jobStats.total} />
+          <StatsCard title={t('dashboard.stats.active')} value={jobStats.active} />
+          <StatsCard title={t('dashboard.stats.success')} value={jobStats.success} color="green" icon={CheckCircle} />
+          <StatsCard title={t('dashboard.stats.failed')} value={jobStats.failed} color="red" icon={AlertTriangle} />
+          <StatsCard title={t('dashboard.stats.paused')} value={jobStats.paused} color="gray" />
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3 h-[420px]">
           <div className="md:col-span-1 h-full flex flex-col">
             <Card className="h-full flex flex-col">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle>Recent Jobs</CardTitle>
+                <CardTitle>{t('dashboard.recentJobs.title')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0 flex-1 h-auto">
                 <Tabs defaultValue="recent" className="flex flex-col h-full">
                   <TabsList className="w-full bg-transparent border-b rounded-none">
-                    <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
-                    <TabsTrigger value="failed" className="flex-1">Failed</TabsTrigger>
-                    <TabsTrigger value="paused" className="flex-1">Paused</TabsTrigger>
+                    <TabsTrigger value="recent" className="flex-1">{t('common.recent')}</TabsTrigger>
+                    <TabsTrigger value="failed" className="flex-1">{t('common.failed')}</TabsTrigger>
+                    <TabsTrigger value="paused" className="flex-1">{t('common.paused')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="recent" className="flex-1 h-full">
                     <RecentJobsList
@@ -189,7 +191,7 @@ export default function Index() {
                       selectedJobId={selectedJobId}
                       setSelectedJobId={setSelectedJobId}
                       projects={projects}
-                      searchMsg="No jobs have run yet"
+                      searchMsg={t('dashboard.recentJobs.noJobs')}
                     />
                   </TabsContent>
                   <TabsContent value="failed" className="flex-1 h-full">
@@ -198,7 +200,7 @@ export default function Index() {
                       selectedJobId={selectedJobId}
                       setSelectedJobId={setSelectedJobId}
                       projects={projects}
-                      searchMsg="No failed jobs"
+                      searchMsg={t('dashboard.recentJobs.noFailed')}
                     />
                   </TabsContent>
                   <TabsContent value="paused" className="flex-1 h-full">
@@ -207,7 +209,7 @@ export default function Index() {
                       selectedJobId={selectedJobId}
                       setSelectedJobId={setSelectedJobId}
                       projects={projects}
-                      searchMsg="No paused jobs"
+                      searchMsg={t('dashboard.recentJobs.noPaused')}
                     />
                   </TabsContent>
                 </Tabs>
@@ -220,7 +222,7 @@ export default function Index() {
             ) : (
               <Card className="h-full flex items-center justify-center p-6">
                 <div className="text-center text-muted-foreground">
-                  Select a job from the list to view details
+                  {t('dashboard.selectJob')}
                 </div>
               </Card>
             )}

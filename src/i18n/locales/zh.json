@@ -1,4 +1,3 @@
-
 {
   "common": {
     "dashboard": "仪表板",
@@ -65,5 +64,64 @@
     "jobHistory": "任务历史: {name}",
     "loading": "加载日志中...",
     "noLogs": "未找到日志"
+  },
+  "landing": {
+    "hero": {
+      "title": "专业的Cron任务管理",
+      "description": "为您的团队管理、监控和调度自动化任务",
+      "getStarted": "免费开始使用",
+      "watchDemo": "观看演示"
+    },
+    "features": {
+      "title": "主要功能",
+      "scheduling": {
+        "title": "自动调度",
+        "description": "使用Cron表达式为您的任务设置复杂的调度 - 每小时、每天或自定义模式"
+      },
+      "monitoring": {
+        "title": "跟踪和通知",
+        "description": "查看任务历史、检查错误，并在任务成功或失败时接收通知，以便快速故障排除"
+      },
+      "projects": {
+        "title": "项目管理",
+        "description": "按项目分组任务，帮助您的团队更有效地管理和跟踪任务"
+      },
+      "history": {
+        "title": "任务历史",
+        "description": "保存完整的任务历史记录以供审计和分析，配备智能搜索功能，快速找到所需信息"
+      }
+    },
+    "cta": {
+      "title": "今天就开始使用CornTab",
+      "description": "减少管理重复任务的时间，提高团队效率",
+      "startFree": "免费开始",
+      "contactSales": "联系销售"
+    },
+    "footer": {
+      "about": "为您的团队提供专业的cron任务管理服务",
+      "products": "产品",
+      "company": "公司",
+      "help": "帮助",
+      "allRightsReserved": "保留所有权利"
+    }
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "subtitle": "已安排任务概览",
+    "filterProjects": "筛选项目...",
+    "stats": {
+      "totalJobs": "总任务数",
+      "active": "活动中",
+      "success": "成功",
+      "failed": "失败",
+      "paused": "已暂停"
+    },
+    "recentJobs": {
+      "title": "最近任务",
+      "noJobs": "尚未运行任何任务",
+      "noFailed": "没有失败的任务",
+      "noPaused": "没有暂停的任务"
+    },
+    "selectJob": "从列表中选择任务以查看详情"
   }
 }
