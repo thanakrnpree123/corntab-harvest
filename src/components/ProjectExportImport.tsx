@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -18,6 +17,7 @@ import { ArrowDownToLine, ArrowUpFromLine, AlertTriangle, Upload } from "lucide-
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { validateFileContent } from "@/utils/fileValidation";
 
 export interface ProjectWithJobs extends Project {
   jobs: CronJob[];
@@ -41,11 +41,9 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
   const { toast } = useToast();
 
   const handleExport = (type: "json" | "csv") => {
-    // Create export data with projects and their jobs
     const exportData = projects.map(project => {
       const projectJobs = jobs.filter(job => job.projectId === project.id);
       
-      // Prepare jobs for export
       const formattedJobs = projectJobs.map(job => ({
         name: job.name,
         description: job.description,
@@ -77,7 +75,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
       filename = `projects-export-${new Date().toISOString().split('T')[0]}.json`;
       mimeType = "application/json";
     } else {
-      // For CSV, create different sections for projects and jobs
       const projectHeaders = ["project_id", "project_name", "project_description"].join(",");
       const jobHeaders = [
         "project_id",
@@ -97,7 +94,7 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
 
       const projectRows = projects.map((project, index) => {
         return [
-          index + 1, // Use index as project_id for CSV
+          index + 1,
           `"${(project.name || "").replace(/"/g, '""')}"`,
           `"${(project.description || "").replace(/"/g, '""')}"`,
         ].join(",");
@@ -108,7 +105,7 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
         const projectJobs = jobs.filter(job => job.projectId === project.id);
         projectJobs.forEach(job => {
           jobRows.push([
-            index + 1, // project_id corresponding to the projects section
+            index + 1,
             `"${(job.name || "").replace(/"/g, '""')}"`,
             `"${(job.description || "").replace(/"/g, '""')}"`,
             `"${(job.schedule || "").replace(/"/g, '""')}"`,
@@ -139,7 +136,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
       mimeType = "text/csv";
     }
 
-    // Create download link
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -162,7 +158,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
     try {
       let content = "";
       
-      // Get content based on import method
       if (importMethod === "manual") {
         content = importType === "json" ? jsonInput : csvInput;
       } else if (importMethod === "upload" && uploadedFile) {
@@ -172,7 +167,7 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
           const fileContent = e.target?.result as string;
           processImportContent(fileContent);
         };
-        return; // Early return to handle async file reading
+        return;
       } else {
         setImportError(importMethod === "upload" ? "กรุณาเลือกไฟล์ที่จะนำเข้า" : "กรุณาป้อนข้อมูล");
         return;
@@ -198,10 +193,16 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
 
   const processImportContent = (content: string) => {
     try {
+      const validation = validateFileContent(content, importType);
+      
+      if (!validation.isValid) {
+        setImportError(validation.error || "รูปแบบไฟล์ไม่ถูกต้อง");
+        return;
+      }
+
       let projectsToImport: ProjectWithJobs[] = [];
       
       if (importType === "json") {
-        // Parse JSON input
         if (!content.trim()) {
           setImportError("กรุณาป้อนข้อมูล JSON");
           return;
@@ -222,19 +223,17 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
           jobs: Array.isArray(project.jobs) ? project.jobs : []
         }));
       } else {
-        // Parse CSV input
         if (!csvInput.trim()) {
           setImportError("กรุณาป้อนข้อมูล CSV");
           return;
         }
         
         const lines = csvInput.split("\n");
-        if (lines.length < 3) { // Need at least headers and one data row
+        if (lines.length < 3) {
           setImportError("ข้อมูล CSV ไม่ถูกต้อง");
           return;
         }
         
-        // Find projects and jobs sections
         const projectsSectionStart = lines.indexOf("[PROJECTS]");
         const jobsSectionStart = lines.indexOf("[JOBS]");
         
@@ -243,7 +242,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
           return;
         }
         
-        // Parse projects
         const projectsStartLine = projectsSectionStart + 1;
         const projectsEndLine = jobsSectionStart > projectsSectionStart 
           ? jobsSectionStart - 1 
@@ -277,7 +275,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
           });
         }
         
-        // Parse jobs
         if (jobsSectionStart !== -1) {
           const jobsStartLine = jobsSectionStart + 1;
           if (jobsStartLine < lines.length) {
@@ -342,14 +339,12 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
         return;
       }
       
-      // Validate projects
       for (const project of projectsToImport) {
         if (!project.name) {
           setImportError("ทุกโปรเจคต้องมีชื่อ");
           return;
         }
         
-        // Validate jobs if present
         if (project.jobs) {
           for (const job of project.jobs) {
             if (!job.name) {
@@ -396,7 +391,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
     if (file) {
       setUploadedFile(file);
       
-      // Auto-detect file type based on extension
       if (file.name.endsWith('.json')) {
         setImportType('json');
       } else if (file.name.endsWith('.csv')) {
@@ -405,7 +399,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
     }
   };
 
-  // Helper function to parse CSV lines with proper handling of quoted values
   const parseCSVLine = (line: string): string[] | null => {
     const values: string[] = [];
     let currentValue = "";
@@ -416,15 +409,12 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
       
       if (char === '"') {
         if (insideQuotes && j + 1 < line.length && line[j + 1] === '"') {
-          // Handle escaped quotes
           currentValue += '"';
-          j++; // Skip next quote
+          j++;
         } else {
-          // Toggle quote state
           insideQuotes = !insideQuotes;
         }
       } else if (char === ',' && !insideQuotes) {
-        // End of value
         values.push(currentValue);
         currentValue = "";
       } else {
@@ -432,7 +422,6 @@ export function ProjectExportImport({ projects, jobs, onImport }: ProjectExportI
       }
     }
     
-    // Add the last value
     values.push(currentValue);
     
     return values;

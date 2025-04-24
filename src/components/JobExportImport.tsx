@@ -24,6 +24,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { validateFileContent } from "@/utils/fileValidation";
 
 export interface JobExportImportProps {
   jobs: CronJob[];
@@ -57,30 +58,41 @@ export function JobExportImport({
 
   const handleImport = () => {
     setImportError(null);
-
+    
     try {
       let content = "";
-
+      
       if (inputMethod === "manual") {
         content = importType === "json" ? jsonInput : csvInput;
-      } else if (inputMethod === "upload") {
-        if (!uploadedFile) {
-          setImportError("กรุณาอัปโหลดไฟล์");
-          return;
-        }
-        if (fileContent) {
-          content = fileContent;
-        } else {
-          setImportError("ไม่สามารถอ่านเนื้อหาไฟล์ได้");
-          return;
-        }
-      }
-
-      if (!content.trim()) {
-        setImportError(`กรุณาป้อนข้อมูล ${importType.toUpperCase()}`);
+      } else if (inputMethod === "upload" && uploadedFile) {
+        const reader = new FileReader();
+        reader.readAsText(uploadedFile);
+        reader.onload = (e) => {
+          const fileContent = e.target?.result as string;
+          validateAndProcessContent(fileContent);
+        };
+        return;
+      } else {
+        setImportError(importMethod === "upload" ? "กรุณาเลือกไฟล์ที่จะนำเข้า" : "กรุณาป้อนข้อมูล");
         return;
       }
+      
+      validateAndProcessContent(content);
+      
+    } catch (error) {
+      setImportError(`เกิดข้อผิดพลาด: ${(error as Error).message}`);
+    }
+  };
 
+  const validateAndProcessContent = (content: string) => {
+    const validation = validateFileContent(content, importType);
+    
+    if (!validation.isValid) {
+      setImportError(validation.error || "รูปแบบไฟล์ไม่ถูกต้อง");
+      return;
+    }
+
+    try {
       let jobsToImport: Partial<CronJob>[] = [];
 
       if (importType === "json") {
