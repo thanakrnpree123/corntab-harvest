@@ -20,7 +20,25 @@ interface ScheduleSelectorProps {
 export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
   const { t } = useTranslation();
   const [scheduleType, setScheduleType] = React.useState('minutes');
-  
+  const [scheduleValues, setScheduleValues] = React.useState({
+    minutes: '15',
+    hour: '0',
+    minute: '0',
+    day: '1',
+    month: '1'
+  });
+
+  const handleScheduleValueChange = (key: keyof typeof scheduleValues, newValue: string) => {
+    setScheduleValues(prev => ({ ...prev, [key]: newValue }));
+    const newSchedule = generateCronExpression(scheduleType, { ...scheduleValues, [key]: newValue });
+    onChange(newSchedule);
+  };
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
   const generateCronExpression = (type: string, values: Record<string, string>) => {
     switch(type) {
       case 'minutes':
@@ -32,49 +50,27 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
       case 'yearly':
         return `${values.minute} ${values.hour} ${values.day} ${values.month} *`;
       case 'custom':
-        return values.custom;
+        return value;
       default:
         return '';
     }
   };
 
-  const handleScheduleChange = (newType: string) => {
+  const handleScheduleTypeChange = (newType: string) => {
     setScheduleType(newType);
-    switch(newType) {
-      case 'minutes':
-        onChange('*/15 * * * *');
-        break;
-      case 'daily':
-        onChange('0 0 * * *');
-        break;
-      case 'monthly':
-        onChange('0 0 1 * *');
-        break;
-      case 'yearly':
-        onChange('0 0 1 1 *');
-        break;
-      case 'custom':
-        onChange('* * * * *');
-        break;
-    }
+    onChange(generateCronExpression(newType, scheduleValues));
   };
 
   return (
     <div className="space-y-4">
-      <RadioGroup
-        value={scheduleType}
-        onValueChange={handleScheduleChange}
-        className="space-y-4"
-      >
+      <RadioGroup value={scheduleType} onValueChange={handleScheduleTypeChange} className="space-y-4">
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="minutes" id="minutes" />
           <Label htmlFor="minutes" className="flex items-center gap-2">
-            {t('schedule.every')}
+            Every
             <Select
-              value="15"
-              onValueChange={(val) => 
-                onChange(generateCronExpression('minutes', { minutes: val }))
-              }
+              value={scheduleValues.minutes}
+              onValueChange={(val) => handleScheduleValueChange('minutes', val)}
             >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="15" />
@@ -87,19 +83,17 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
                 ))}
               </SelectContent>
             </Select>
-            {t('schedule.minutes')}
+            minute(s)
           </Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="daily" id="daily" />
           <Label htmlFor="daily" className="flex items-center gap-2">
-            {t('schedule.everyDayAt')}
+            Every day at
             <Select
-              value="0"
-              onValueChange={(val) =>
-                onChange(generateCronExpression('daily', { hour: val, minute: '0' }))
-              }
+              value={scheduleValues.hour}
+              onValueChange={(val) => handleScheduleValueChange('hour', val)}
             >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="00" />
@@ -114,10 +108,8 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
             </Select>
             :
             <Select
-              value="00"
-              onValueChange={(val) =>
-                onChange(generateCronExpression('daily', { hour: '0', minute: val }))
-              }
+              value={scheduleValues.minute}
+              onValueChange={(val) => handleScheduleValueChange('minute', val)}
             >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="00" />
@@ -136,12 +128,10 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="monthly" id="monthly" />
           <Label htmlFor="monthly" className="flex items-center gap-2">
-            {t('schedule.everyMonthOn')}
+            Every
             <Select
-              value="1"
-              onValueChange={(val) =>
-                onChange(generateCronExpression('monthly', { day: val, hour: '0', minute: '0' }))
-              }
+              value={scheduleValues.day}
+              onValueChange={(val) => handleScheduleValueChange('day', val)}
             >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="1" />
@@ -154,8 +144,11 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
                 ))}
               </SelectContent>
             </Select>
-            {t('schedule.atTime')}
-            <Select value="0" onValueChange={() => {}}>
+            of the month at
+            <Select
+              value={scheduleValues.hour}
+              onValueChange={(val) => handleScheduleValueChange('hour', val)}
+            >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="00" />
               </SelectTrigger>
@@ -168,7 +161,10 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
               </SelectContent>
             </Select>
             :
-            <Select value="00" onValueChange={() => {}}>
+            <Select
+              value={scheduleValues.minute}
+              onValueChange={(val) => handleScheduleValueChange('minute', val)}
+            >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="00" />
               </SelectTrigger>
@@ -186,8 +182,11 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="yearly" id="yearly" />
           <Label htmlFor="yearly" className="flex items-center gap-2">
-            {t('schedule.everyYearOn')}
-            <Select value="1" onValueChange={() => {}}>
+            Every year on
+            <Select
+              value={scheduleValues.day}
+              onValueChange={(val) => handleScheduleValueChange('day', val)}
+            >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="1" />
               </SelectTrigger>
@@ -199,15 +198,49 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Select value="1" onValueChange={() => {}}>
+            <Select
+              value={scheduleValues.month}
+              onValueChange={(val) => handleScheduleValueChange('month', val)}
+            >
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="January" />
               </SelectTrigger>
               <SelectContent>
-                {/* Fix for the map error - ensure we have an array before mapping */}
-                {(t('months', { returnObjects: true }) as string[])?.map((month: string, index: number) => (
+                {months.map((month, index) => (
                   <SelectItem key={index + 1} value={(index + 1).toString()}>
                     {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            at
+            <Select
+              value={scheduleValues.hour}
+              onValueChange={(val) => handleScheduleValueChange('hour', val)}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue placeholder="00" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 24 }, (_, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {i.toString().padStart(2, '0')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            :
+            <Select
+              value={scheduleValues.minute}
+              onValueChange={(val) => handleScheduleValueChange('minute', val)}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue placeholder="00" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 60 }, (_, i) => (
+                  <SelectItem key={i} value={i.toString()}>
+                    {i.toString().padStart(2, '0')}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -217,13 +250,13 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
 
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="custom" id="custom" />
-          <Label htmlFor="custom">{t('schedule.custom')}</Label>
+          <Label htmlFor="custom">Custom cron expression</Label>
         </div>
       </RadioGroup>
 
       {scheduleType === 'custom' && (
         <div className="pl-6">
-          <Label>{t('schedule.cronExpression')}</Label>
+          <Label>Cron expression</Label>
           <Input
             value={value}
             onChange={(e) => onChange(e.target.value)}
