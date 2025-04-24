@@ -59,7 +59,12 @@ export function CreateJobModal({
   const [description, setDescription] = useState("");
   const [scheduleType, setScheduleType] = useState("cron");
   const [projectId, setProjectId] = useState(selectedProjectId);
-  const [useLocalTime, setUseLocalTime] = useState(true);
+  const [useLocalTime, setUseLocalTime] = useState(() => {
+    if (editJobData) {
+      return editJobData.useLocalTime ?? true;
+    }
+    return true;
+  });
   const [sendEmailNotifications, setSendEmailNotifications] = useState(false);
   const [emailRecipients, setEmailRecipients] = useState("");
   const [isJsonValid, setIsJsonValid] = useState(true);
@@ -72,6 +77,9 @@ export function CreateJobModal({
   const [notifyOnFailure, setNotifyOnFailure] = useState(true);
 
   const [timezone, setTimezone] = useState(() => {
+    if (editJobData?.timezone) {
+      return editJobData.timezone;
+    }
     try {
       return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     } catch {
@@ -414,10 +422,14 @@ export function CreateJobModal({
               schedule: schedule,
               httpMethod: httpMethod,
             }}
+            useLocalTime={useLocalTime}
+            timezone={timezone}
             onSendEmailNotificationsChange={setSendEmailNotifications}
             onEmailRecipientsChange={setEmailRecipients}
             onNotifyOnSuccessChange={setNotifyOnSuccess}
             onNotifyOnFailureChange={setNotifyOnFailure}
+            onUseLocalTimeChange={setUseLocalTime}
+            onTimezoneChange={setTimezone}
             validateEmails={validateEmails}
           />
 
