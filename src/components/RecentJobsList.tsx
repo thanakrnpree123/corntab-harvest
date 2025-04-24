@@ -21,8 +21,8 @@ export function RecentJobsList({
   searchMsg = "No jobs have run yet"
 }: RecentJobsListProps) {
   const navigate = useNavigate();
-  const hasMore = jobs.length > 5;
-  const showJobs = jobs.slice(0, 5);
+  const hasMore = jobs.length > 10;
+  const showJobs = jobs.slice(0, 10);
 
   if (jobs.length === 0) {
     return (
@@ -33,17 +33,19 @@ export function RecentJobsList({
   }
 
   return (
-    <div className="flex flex-col h-full divide-y overflow-y-auto">
-      {showJobs.map((job, idx) => (
-        <div key={job.id} className="flex-0">
-          <JobListItem
-            job={job}
-            projectName={projects.find(p => p.id === job.projectId)?.name}
-            isSelected={job.id === selectedJobId}
-            onSelect={() => setSelectedJobId(job.id)}
-          />
-        </div>
-      ))}
+    <div className="flex flex-col h-full divide-y">
+      <div className="overflow-y-auto max-h-[500px]">
+        {showJobs.map((job, idx) => (
+          <div key={job.id} className="flex-0">
+            <JobListItem
+              job={job}
+              projectName={projects.find(p => p.id === job.projectId)?.name}
+              isSelected={job.id === selectedJobId}
+              onSelect={() => setSelectedJobId(job.id)}
+            />
+          </div>
+        ))}
+      </div>
       {hasMore && (
         <div className="flex flex-col items-center justify-center p-2">
           <Button
@@ -58,4 +60,32 @@ export function RecentJobsList({
       )}
     </div>
   );
+  
+
+  // return (
+  //   <div className="flex flex-col h-full divide-y overflow-y-auto">
+  //     {showJobs.map((job, idx) => (
+  //       <div key={job.id} className="flex-0">
+  //         <JobListItem
+  //           job={job}
+  //           projectName={projects.find(p => p.id === job.projectId)?.name}
+  //           isSelected={job.id === selectedJobId}
+  //           onSelect={() => setSelectedJobId(job.id)}
+  //         />
+  //       </div>
+  //     ))}
+  //     {hasMore && (
+  //       <div className="flex flex-col items-center justify-center p-2">
+  //         <Button
+  //           variant="ghost"
+  //           className="w-full text-muted-foreground"
+  //           onClick={() => navigate("/logs")}
+  //         >
+  //           ดูเพิ่มเติม
+  //           <ChevronRight className="h-4 w-4 ml-1" />
+  //         </Button>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 }
