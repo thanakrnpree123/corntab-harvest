@@ -162,7 +162,32 @@
     "exportDescription": "Choose export format for {count} projects",
     "close": "Close"
   },
-   "landing": {
+  "schedule": {
+    "title": "Schedule",
+    "every": "Every",
+    "minutes": "minute(s)",
+    "everyDayAt": "Every day at",
+    "everyMonthOn": "Every month on",
+    "everyYearOn": "Every year on",
+    "atTime": "at",
+    "custom": "Custom",
+    "cronExpression": "Cron expression"
+  },
+  "months": [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ],
+  "landing": {
     "hero": {
       "title": "Professional Cron Job Management",
       "description": "Manage, monitor, and schedule automated tasks for your team",

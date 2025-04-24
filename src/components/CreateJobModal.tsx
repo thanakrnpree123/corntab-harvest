@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmailPreview } from "./EmailPreview";
+import { ScheduleSelector } from "@/components/ui/schedule-selector";
 
 const httpMethods = [
   { value: "GET", label: "GET" },
@@ -557,32 +558,10 @@ export function CreateJobModal({
           )}
 
           <div className="grid gap-2">
-            <Label>ประเภทการตั้งเวลา</Label>
-            <Select value={scheduleType} onValueChange={setScheduleType}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="เลือกประเภทการตั้งเวลา" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cron">Cron Expression</SelectItem>
-                <SelectItem value="interval">Time Interval</SelectItem>
-                <SelectItem value="fixed">Fixed Time</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="text-xs text-muted-foreground mt-1">
-              ตัวอย่าง:{" "}
-              {scheduleExamples[scheduleType as keyof typeof scheduleExamples]}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="schedule">กำหนดการทำงาน *</Label>
-            <Input
-              id="schedule"
+            <Label>{t('schedule.title')}</Label>
+            <ScheduleSelector
               value={schedule}
-              onChange={(e) => setSchedule(e.target.value)}
-              placeholder={
-                scheduleExamples[scheduleType as keyof typeof scheduleExamples]
-              }
+              onChange={setSchedule}
             />
           </div>
 
