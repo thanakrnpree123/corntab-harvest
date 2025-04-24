@@ -4,6 +4,16 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Server, Calendar, Clock } from "lucide-react";
 import dayjs from "dayjs";
 
+// Add a ListHeader component for consistent styling
+function ListHeader() {
+  return (
+    <div className="w-full px-4 py-2 border-b bg-muted/30 flex items-center justify-between">
+      <div className="font-medium">Name</div>
+      <div className="font-medium">Status</div>
+    </div>
+  );
+}
+
 export function JobListItem({
   job,
   projectName,
@@ -52,3 +62,6 @@ export function JobListItem({
     </button>
   );
 }
+
+// Export the header component as well
+export { ListHeader };
