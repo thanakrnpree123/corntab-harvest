@@ -1,39 +1,15 @@
-
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { User, Role, Permission } from "@/lib/types";
-import { User as UserIcon, UserPlus, Edit, Trash, Shield, Key } from "lucide-react";
+import { UserTable } from "@/components/users/UserTable";
+import { RolesList } from "@/components/users/RolesList";
+import { AddUserDialog } from "@/components/users/AddUserDialog";
+import { EditRoleDialog } from "@/components/users/EditRoleDialog";
 
-// Mock data for users
 const mockUsers: User[] = [
   {
     id: "1",
@@ -79,7 +55,6 @@ const mockUsers: User[] = [
   }
 ];
 
-// Mock data for roles
 const mockRoles: Role[] = [
   {
     id: "1",
@@ -109,15 +84,11 @@ const UserManagement = () => {
   const [roles, setRoles] = useState<Role[]>(mockRoles);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   
-  // New user form state
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserRoleId, setNewUserRoleId] = useState("");
-  
-  // Edit role form state
   const [editRoleName, setEditRoleName] = useState("");
   const [editRolePermissions, setEditRolePermissions] = useState<Permission[]>([]);
 
@@ -172,7 +143,6 @@ const UserManagement = () => {
         : role
     );
 
-    // Update users with this role
     const updatedUsers = users.map(user => {
       if (user.role.id === selectedRole.id) {
         return {
@@ -182,8 +152,7 @@ const UserManagement = () => {
             name: editRoleName,
             permissions: editRolePermissions,
             updatedAt: new Date().toISOString()
-          },
-          updatedAt: new Date().toISOString()
+          }
         };
       }
       return user;
@@ -242,214 +211,36 @@ const UserManagement = () => {
                 <CardDescription>Manage user accounts and their roles</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Permissions</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.name}</TableCell>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.role.name}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {user.role.permissions.map((permission) => (
-                              <span 
-                                key={permission} 
-                                className="px-2 py-0.5 bg-slate-100 text-xs rounded-full"
-                              >
-                                {permission}
-                              </span>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <UserIcon className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleDeleteUser(user.id)}>
-                                <Trash className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <UserTable users={users} onDeleteUser={handleDeleteUser} />
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader>
-                <CardTitle>Roles</CardTitle>
-                <CardDescription>Manage roles and permissions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {roles.map((role) => (
-                    <div key={role.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
-                          <h3 className="font-medium">{role.name}</h3>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => openEditRoleDialog(role)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {role.permissions.map((permission) => (
-                          <span 
-                            key={permission} 
-                            className="px-2 py-0.5 bg-slate-100 text-xs rounded-full"
-                          >
-                            {permission}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <RolesList roles={roles} onEditRole={openEditRoleDialog} />
           </div>
         </div>
         
-        {/* Add User Dialog */}
-        <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user account and assign a role.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  value={newUserName}
-                  onChange={(e) => setNewUserName(e.target.value)}
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={newUserEmail}
-                  onChange={(e) => setNewUserEmail(e.target.value)}
-                  placeholder="john@example.com"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
-                <select
-                  id="role"
-                  value={newUserRoleId}
-                  onChange={(e) => setNewUserRoleId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Select a role</option>
-                  {roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddUser}>Add User</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <AddUserDialog
+          isOpen={isAddUserOpen}
+          onClose={() => setIsAddUserOpen(false)}
+          onSubmit={handleAddUser}
+          roles={roles}
+          newUserName={newUserName}
+          newUserEmail={newUserEmail}
+          newUserRoleId={newUserRoleId}
+          onNameChange={setNewUserName}
+          onEmailChange={setNewUserEmail}
+          onRoleChange={setNewUserRoleId}
+        />
         
-        {/* Edit Role Dialog */}
-        <Dialog open={isEditRoleOpen} onOpenChange={setIsEditRoleOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Role</DialogTitle>
-              <DialogDescription>
-                Update role name and permissions.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="roleName">Role Name</Label>
-                <Input
-                  id="roleName"
-                  value={editRoleName}
-                  onChange={(e) => setEditRoleName(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Permissions</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="view" 
-                      checked={editRolePermissions.includes("view")}
-                      onCheckedChange={() => togglePermission("view")}
-                    />
-                    <Label htmlFor="view" className="flex items-center">
-                      <Key className="mr-2 h-4 w-4" />
-                      View
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="create" 
-                      checked={editRolePermissions.includes("create")}
-                      onCheckedChange={() => togglePermission("create")}
-                    />
-                    <Label htmlFor="create" className="flex items-center">
-                      <Key className="mr-2 h-4 w-4" />
-                      Create
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="update" 
-                      checked={editRolePermissions.includes("update")}
-                      onCheckedChange={() => togglePermission("update")}
-                    />
-                    <Label htmlFor="update" className="flex items-center">
-                      <Key className="mr-2 h-4 w-4" />
-                      Update
-                    </Label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditRoleOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleEditRole}>Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <EditRoleDialog
+          isOpen={isEditRoleOpen}
+          onClose={() => setIsEditRoleOpen(false)}
+          onSubmit={handleEditRole}
+          roleName={editRoleName}
+          permissions={editRolePermissions}
+          onRoleNameChange={setEditRoleName}
+          onTogglePermission={togglePermission}
+        />
       </main>
     </div>
   );
