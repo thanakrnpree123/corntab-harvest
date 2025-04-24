@@ -22,7 +22,9 @@ import {
   Server, 
   Calendar, 
   Clock, 
-  Activity 
+  Activity ,
+  CirclePause,
+  History,
 } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import dayjs from "dayjs";
@@ -167,11 +169,11 @@ export default function Index() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
           <StatsCard title={t('dashboard.stats.totalJobs')} value={jobStats.total} />
-          {/* <StatsCard title={t('dashboard.stats.active')} value={jobStats.active} /> */}
-          <StatsCard title={t('dashboard.stats.paused')} value={jobStats.paused} color="gray" />
           <StatsCard title={t('dashboard.stats.success')} value={jobStats.success} color="green" icon={CheckCircle} />
           <StatsCard title={t('dashboard.stats.failed')} value={jobStats.failed} color="red" icon={AlertTriangle} />
-          <StatsCard title={t('idle')} value={jobStats.idle} color="gray" icon={AlertTriangle} />
+          {/* <StatsCard title={t('dashboard.stats.active')} value={jobStats.active} /> */}
+          <StatsCard title={t('dashboard.stats.paused')} value={jobStats.paused} color="gray" icon={CirclePause } />
+          <StatsCard title={t('Idle')} value={jobStats.idle} color="gray" icon={History} />
           
         </div>
 
