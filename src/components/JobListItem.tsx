@@ -14,7 +14,7 @@ function ListHeader() {
   );
 }
 
-export function JobListItem({
+function JobListItem({
   job,
   projectName,
   isSelected,
@@ -64,4 +64,4 @@ export function JobListItem({
 }
 
 // Export the header component as well
-export { ListHeader };
+export { ListHeader , JobListItem};
