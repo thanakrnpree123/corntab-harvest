@@ -44,6 +44,7 @@ import {
 import { StatsCard } from "@/components/StatsCard";
 import { JobListItem } from "@/components/JobListItem";
 import { RecentJobsList } from "@/components/RecentJobsList";
+import { HeaderTabs } from "@/components/HeaderTabs";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export default function Index() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("recent");
   
   const {
     data: projects = [],
@@ -130,6 +132,8 @@ export default function Index() {
   return (
     <PageLayout title="">
       <div className="grid gap-6">
+        <HeaderTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>
             <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
