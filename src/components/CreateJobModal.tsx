@@ -34,7 +34,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EmailPreview } from "./EmailPreview";
-import { ScheduleSelector } from "@/components/ui/schedule-selector";
+import { ScheduleSelector } from "@/components/ScheduleSelector";
+import { useTranslation } from "react-i18next";
 
 const httpMethods = [
   { value: "GET", label: "GET" },
@@ -79,6 +80,7 @@ export function CreateJobModal({
   projects,
   selectedProjectId,
 }: CreateJobModalProps) {
+  const { t } = useTranslation();
   const [jobName, setJobName] = useState("");
   const [endpoint, setEndpoint] = useState("");
   const [httpMethod, setHttpMethod] = useState("GET");

@@ -204,7 +204,8 @@ export function ScheduleSelector({ value, onChange }: ScheduleSelectorProps) {
                 <SelectValue placeholder="January" />
               </SelectTrigger>
               <SelectContent>
-                {t('months', { returnObjects: true })?.map((month: string, index: number) => (
+                {/* Fix for the map error - ensure we have an array before mapping */}
+                {(t('months', { returnObjects: true }) as string[])?.map((month: string, index: number) => (
                   <SelectItem key={index + 1} value={(index + 1).toString()}>
                     {month}
                   </SelectItem>
