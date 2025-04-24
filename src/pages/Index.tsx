@@ -122,6 +122,7 @@ export default function Index() {
     paused: pausedJobs.length,
     failed: failedJobs.length,
     success: jobs.filter(job => job.status === "success").length,
+    idle: jobs.filter(job => job.status === "idle").length,
   };
 
   return (
