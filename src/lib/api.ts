@@ -297,6 +297,28 @@ export const jobApi = {
             failCount: Math.floor(Math.random() * 10),
             averageRuntime: Math.random() * 2000,
             emailNotifications: i % 3 === 0 ? "test@example.com" : null
+          },
+          {
+            id: `job-${i}`,
+            name: `center-batch-ui`,
+            schedule: "0 */6 * * *",
+            endpoint: `https://api.example.com/endpoint-${i}`,
+            httpMethod: methods[i % methods.length],
+            requestBody: i % 2 === 0 ? JSON.stringify({ test: true }) : undefined,
+            description: `This is a mock job ${i}`,
+            projectId: "3",
+            status: "idle",
+            useLocalTime: i % 3 === 0,
+            timezone: "UTC",
+            lastRun: new Date().toISOString() ,
+            nextRun: new Date(Date.now() + 3600000).toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            tags: [`tag-${i}`, "mock"],
+            successCount: Math.floor(Math.random() * 50),
+            failCount: Math.floor(Math.random() * 10),
+            averageRuntime: Math.random() * 2000,
+            emailNotifications: i % 3 === 0 ? "test@example.com" : null
           }
         );
 
