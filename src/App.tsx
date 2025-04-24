@@ -10,7 +10,7 @@ import Index from "./pages/Index";
 import JobsPage from "./pages/JobsPage";
 import ProjectJobsPage from "./pages/ProjectJobsPage";
 import LogsPage from "./pages/LogsPage";
-import UserManagementPage from "./pages/UserManagementPage";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -62,7 +62,7 @@ function App() {
             />
             <Route 
               path="/users" 
-              element={isLoggedIn ? <UserManagementPage /> : <Navigate to="/login" />}
+              element={isLoggedIn ? <UserManagement /> : <Navigate to="/login" />}
             />
             <Route 
               path="/settings" 
