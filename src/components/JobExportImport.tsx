@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,7 +74,7 @@ export function JobExportImport({
         };
         return;
       } else {
-        setImportError(importMethod === "upload" ? "กรุณาเลือกไฟล์ที่จะนำเข้า" : "กรุณาป้อนข้อมูล");
+        setImportError(inputMethod === "upload" ? "กรุณาเลือกไฟล์ที่จะนำเข้า" : "กรุณาป้อนข้อมูล");
         return;
       }
       
