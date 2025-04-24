@@ -156,7 +156,7 @@ export const jobApi = {
         const statuses: JobStatus[] = ["idle", "running", "success", "failed", "paused"];
         const methods = ["GET", "POST", "PUT", "DELETE"];
         
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 1; i++) {
           const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
           mockJobs.push(
             {
@@ -167,7 +167,7 @@ export const jobApi = {
             httpMethod: methods[i % methods.length],
             requestBody: i % 2 === 0 ? JSON.stringify({ test: true }) : undefined,
             description: `This is a mock job ${i}`,
-            projectId: projectId || (i % 2 === 0 ? "1" : "2"),
+            projectId: projectId ||"1",
             status: randomStatus,
             useLocalTime: i % 3 === 0,
             timezone: "UTC",
@@ -189,7 +189,7 @@ export const jobApi = {
             httpMethod: methods[i % methods.length],
             requestBody: i % 2 === 0 ? JSON.stringify({ test: true }) : undefined,
             description: `This is a mock job ${i}`,
-            projectId: projectId || (i % 2 === 0 ? "1" : "2"),
+            projectId: projectId || "1", 
             status: randomStatus,
             useLocalTime: i % 3 === 0,
             timezone: "UTC",
@@ -211,7 +211,29 @@ export const jobApi = {
             httpMethod: methods[i % methods.length],
             requestBody: i % 2 === 0 ? JSON.stringify({ test: true }) : undefined,
             description: `This is a mock job ${i}`,
-            projectId: projectId || (i % 2 === 0 ? "1" : "2"),
+            projectId: projectId || "2",
+            status: randomStatus,
+            useLocalTime: i % 3 === 0,
+            timezone: "UTC",
+            lastRun: i % 2 === 0 ? new Date().toISOString() : null,
+            nextRun: new Date(Date.now() + 3600000).toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            tags: [`tag-${i}`, "mock"],
+            successCount: Math.floor(Math.random() * 50),
+            failCount: Math.floor(Math.random() * 10),
+            averageRuntime: Math.random() * 2000,
+            emailNotifications: i % 3 === 0 ? "test@example.com" : null
+          },
+          {
+            id: `job-${i}`,
+            name: `hsec-west-batch`,
+            schedule: "0 */6 * * *",
+            endpoint: `https://api.example.com/endpoint-${i}`,
+            httpMethod: methods[i % methods.length],
+            requestBody: i % 2 === 0 ? JSON.stringify({ test: true }) : undefined,
+            description: `This is a mock job ${i}`,
+            projectId: projectId || "2",
             status: randomStatus,
             useLocalTime: i % 3 === 0,
             timezone: "UTC",
