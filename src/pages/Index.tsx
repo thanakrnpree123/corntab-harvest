@@ -132,7 +132,7 @@ export default function Index() {
   return (
     <PageLayout title="">
       <div className="grid gap-6">
-        <HeaderTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* <HeaderTabs activeTab={activeTab} onTabChange={setActiveTab} /> */}
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
           <div>

@@ -21,7 +21,7 @@ export function RecentJobsList({
   searchMsg = "No jobs have run yet"
 }: RecentJobsListProps) {
   const navigate = useNavigate();
-  const hasMore = jobs.length > 5;
+  const hasMore = jobs.length > 10;
   const showJobs = jobs.slice(0, 5);
 
   if (jobs.length === 0) {
