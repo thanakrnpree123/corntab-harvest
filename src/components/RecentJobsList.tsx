@@ -35,7 +35,7 @@ export function RecentJobsList({
   return (
     <div className="flex flex-col h-full divide-y">
       <ListHeader />
-      <div className="overflow-y-auto max-h-[500px]">
+      <div className="overflow-y-auto max-h-[300px]">
         {showJobs.map((job, idx) => (
           <div key={job.id} className="flex-0">
             <JobListItem
