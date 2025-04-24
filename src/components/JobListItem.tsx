@@ -16,6 +16,11 @@ export function JobListItem({
   onSelect: () => void;
 }) {
   return (
+    <>
+    <div className="flex items-start justify-between mb-1">
+        <div className="font-medium truncate mr-2">Name</div>
+        <span>Status</span>
+      </div>
     <button
       className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors ${
         isSelected ? "bg-muted" : ""
@@ -50,5 +55,6 @@ export function JobListItem({
         </div>
       </div>
     </button>
+    </>
   );
 }
