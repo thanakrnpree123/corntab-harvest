@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { User, Role } from "@/lib/types";
+import { User, Role, Permission } from "@/lib/types";
 import { UserTable } from "@/components/users/UserTable";
 import { RolesList } from "@/components/users/RolesList";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
@@ -41,7 +42,7 @@ const mockUsers: User[] = [
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
-  const [roles] = useState<Role[]>(DEFAULT_ROLES);
+  const [roles, setRoles] = useState<Role[]>(DEFAULT_ROLES);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
