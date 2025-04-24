@@ -172,7 +172,7 @@ export default function Index() {
           <StatsCard title={t('dashboard.stats.success')} value={jobStats.success} color="green" icon={CheckCircle} />
           <StatsCard title={t('dashboard.stats.failed')} value={jobStats.failed} color="red" icon={AlertTriangle} />
           {/* <StatsCard title={t('dashboard.stats.active')} value={jobStats.active} /> */}
-          <StatsCard title={t('dashboard.stats.paused')} value={jobStats.paused} color="gray" icon={CirclePause } />
+          <StatsCard title={t('dashboard.stats.paused')} value={jobStats.paused} color="yellow" icon={CirclePause } />
           <StatsCard title={t('Idle')} value={jobStats.idle} color="gray" icon={History} />
           
         </div>
