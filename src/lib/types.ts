@@ -1,5 +1,4 @@
-
-export type Permission = "view" | "create" | "update" | "delete";
+export type Permission = "view" | "create" | "update" | "delete" | "trigger";
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -40,7 +39,6 @@ export interface CronJob {
   averageRuntime: number | null;
   emailNotifications?: string | null;
   webhookUrl?: string | null;
-  // Add the missing properties
   headers?: Record<string, string>;
   body?: string;
 }

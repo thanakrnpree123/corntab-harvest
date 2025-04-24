@@ -1,7 +1,7 @@
 
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
-export type Permission = 'view' | 'create' | 'update';
+export type Permission = 'view' | 'create' | 'update' | 'delete' | 'trigger';
 
 @Entity()
 export class Role {

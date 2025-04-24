@@ -8,8 +8,38 @@ class AuthService {
   private userRepository = AppDataSource.getRepository(User);
   private roleRepository = AppDataSource.getRepository(Role);
 
-  // สร้างฟังก์ชันสำหรับการลงทะเบียนผู้ใช้ใหม่
+  private async ensureDefaultRoles() {
+    const defaultRoles = [
+      {
+        name: "admin",
+        permissions: ["view", "create", "update", "delete"] as Permission[]
+      },
+      {
+        name: "viewer",
+        permissions: ["view"] as Permission[]
+      },
+      {
+        name: "controller",
+        permissions: ["view", "trigger"] as Permission[]
+      }
+    ];
+
+    for (const roleData of defaultRoles) {
+      const existingRole = await this.roleRepository.findOne({ 
+        where: { name: roleData.name } 
+      });
+
+      if (!existingRole) {
+        const newRole = this.roleRepository.create(roleData);
+        await this.roleRepository.save(newRole);
+      }
+    }
+  }
+
+  // Update the register method to ensure default roles exist
   async register(name: string, email: string, password: string): Promise<User | null> {
+    await this.ensureDefaultRoles();
+
     // ตรวจสอบว่ามีอีเมลนี้อยู่แล้วหรือไม่
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
@@ -19,15 +49,10 @@ class AuthService {
     // สร้างรหัสผ่านที่เข้ารหัสแล้ว
     const hashedPassword = this.hashPassword(password);
 
-    // หาบทบาทเริ่มต้น (user)
-    let userRole = await this.roleRepository.findOne({ where: { name: "user" } });
-    
-    // ถ้าไม่มีบทบาทผู้ใช้ ให้สร้างใหม่
-    if (!userRole) {
-      userRole = new Role();
-      userRole.name = "user";
-      userRole.permissions = ["view"];
-      await this.roleRepository.save(userRole);
+    // By default, assign viewer role to new users
+    const viewerRole = await this.roleRepository.findOne({ where: { name: "viewer" } });
+    if (!viewerRole) {
+      throw new Error("Default role not found");
     }
 
     // สร้างผู้ใช้ใหม่
@@ -35,7 +60,7 @@ class AuthService {
     newUser.name = name;
     newUser.email = email;
     newUser.password = hashedPassword;
-    newUser.roleId = userRole.id;
+    newUser.roleId = viewerRole.id;
 
     // บันทึกลงฐานข้อมูล
     return this.userRepository.save(newUser);
