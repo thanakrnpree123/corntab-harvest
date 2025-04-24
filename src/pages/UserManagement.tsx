@@ -4,24 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
-import { User, Role, Permission } from "@/lib/types";
+import { User, Role } from "@/lib/types";
 import { UserTable } from "@/components/users/UserTable";
 import { RolesList } from "@/components/users/RolesList";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditRoleDialog } from "@/components/users/EditRoleDialog";
+import { EditUserDialog } from "@/components/users/EditUserDialog";
+import { DEFAULT_ROLES } from "@/lib/constants";
 
 const mockUsers: User[] = [
   {
     id: "1",
     name: "John Doe",
     email: "john@example.com",
-    role: {
-      id: "1",
-      name: "Admin",
-      permissions: ["view", "create", "update"],
-      createdAt: "2023-01-01T00:00:00Z",
-      updatedAt: "2023-01-01T00:00:00Z"
-    },
+    role: DEFAULT_ROLES[0], // Admin
     createdAt: "2023-01-01T00:00:00Z",
     updatedAt: "2023-01-01T00:00:00Z"
   },
@@ -29,13 +25,7 @@ const mockUsers: User[] = [
     id: "2",
     name: "Jane Smith",
     email: "jane@example.com",
-    role: {
-      id: "2",
-      name: "Editor",
-      permissions: ["view", "update"],
-      createdAt: "2023-01-15T00:00:00Z",
-      updatedAt: "2023-01-15T00:00:00Z"
-    },
+    role: DEFAULT_ROLES[1], // Viewer
     createdAt: "2023-01-15T00:00:00Z",
     updatedAt: "2023-01-15T00:00:00Z"
   },
@@ -43,37 +33,7 @@ const mockUsers: User[] = [
     id: "3",
     name: "Bob Johnson",
     email: "bob@example.com",
-    role: {
-      id: "3",
-      name: "Viewer",
-      permissions: ["view"],
-      createdAt: "2023-02-01T00:00:00Z",
-      updatedAt: "2023-02-01T00:00:00Z"
-    },
-    createdAt: "2023-02-01T00:00:00Z",
-    updatedAt: "2023-02-01T00:00:00Z"
-  }
-];
-
-const mockRoles: Role[] = [
-  {
-    id: "1",
-    name: "Admin",
-    permissions: ["view", "create", "update"],
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z"
-  },
-  {
-    id: "2",
-    name: "Editor",
-    permissions: ["view", "update"],
-    createdAt: "2023-01-15T00:00:00Z",
-    updatedAt: "2023-01-15T00:00:00Z"
-  },
-  {
-    id: "3",
-    name: "Viewer",
-    permissions: ["view"],
+    role: DEFAULT_ROLES[2], // Controller
     createdAt: "2023-02-01T00:00:00Z",
     updatedAt: "2023-02-01T00:00:00Z"
   }
@@ -81,10 +41,12 @@ const mockRoles: Role[] = [
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
-  const [roles, setRoles] = useState<Role[]>(mockRoles);
+  const [roles] = useState<Role[]>(DEFAULT_ROLES);
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   const [newUserName, setNewUserName] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
@@ -190,6 +152,41 @@ const UserManagement = () => {
     );
   };
 
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setIsEditUserOpen(true);
+  };
+
+  const handleUserDetailsChange = (field: string, value: string) => {
+    if (!selectedUser) return;
+
+    if (field === 'roleId') {
+      const newRole = roles.find(role => role.id === value);
+      if (!newRole) return;
+
+      setSelectedUser({
+        ...selectedUser,
+        role: newRole
+      });
+    } else {
+      setSelectedUser({
+        ...selectedUser,
+        [field]: value
+      });
+    }
+  };
+
+  const handleUpdateUser = () => {
+    if (!selectedUser) return;
+
+    setUsers(users.map(user => 
+      user.id === selectedUser.id ? selectedUser : user
+    ));
+    setIsEditUserOpen(false);
+    setSelectedUser(null);
+    toast.success("User updated successfully");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <Navbar />
@@ -211,7 +208,11 @@ const UserManagement = () => {
                 <CardDescription>Manage user accounts and their roles</CardDescription>
               </CardHeader>
               <CardContent>
-                <UserTable users={users} onDeleteUser={handleDeleteUser} />
+                <UserTable 
+                  users={users} 
+                  onDeleteUser={handleDeleteUser}
+                  onEditUser={handleEditUser}
+                />
               </CardContent>
             </Card>
             
@@ -240,6 +241,14 @@ const UserManagement = () => {
           permissions={editRolePermissions}
           onRoleNameChange={setEditRoleName}
           onTogglePermission={togglePermission}
+        />
+        
+        <EditUserDialog
+          isOpen={isEditUserOpen}
+          onClose={() => setIsEditUserOpen(false)}
+          onSubmit={handleUpdateUser}
+          user={selectedUser}
+          onUserDetailsChange={handleUserDetailsChange}
         />
       </main>
     </div>

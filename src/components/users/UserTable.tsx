@@ -2,15 +2,16 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { User as UserIcon, Trash } from "lucide-react";
+import { User as UserIcon, Trash, Edit } from "lucide-react";
 import { User } from "@/lib/types";
 
 interface UserTableProps {
   users: User[];
   onDeleteUser: (userId: string) => void;
+  onEditUser: (user: User) => void;
 }
 
-export const UserTable = ({ users, onDeleteUser }: UserTableProps) => {
+export const UserTable = ({ users, onDeleteUser, onEditUser }: UserTableProps) => {
   return (
     <Table>
       <TableHeader>
@@ -50,6 +51,10 @@ export const UserTable = ({ users, onDeleteUser }: UserTableProps) => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onEditUser(user)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onDeleteUser(user.id)}>
                     <Trash className="mr-2 h-4 w-4" />
                     Delete
